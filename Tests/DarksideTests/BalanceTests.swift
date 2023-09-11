@@ -25,12 +25,20 @@ class BalanceTests: ZcashTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        
         self.coordinator = try await TestCoordinator(
             container: mockContainer,
             walletBirthday: birthday,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: "e9ff75a6", chainName: "main")
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: "e9ff75a6",
+            chainName: "main"
+        )
     }
 
     override func tearDown() async throws {
@@ -136,9 +144,10 @@ class BalanceTests: ZcashTestCase {
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2) // add enhance breakpoint here
-        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
-  
+        
         // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
+//        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
+  
 //        do {
 //            try await coordinator.sync(
 //                completion: { synchronizer in
@@ -286,9 +295,10 @@ class BalanceTests: ZcashTestCase {
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2) // add enhance breakpoint here
-        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
 
         // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
+//        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
+
 //        do {
 //            try await coordinator.sync(
 //                completion: { synchronizer in
@@ -497,9 +507,10 @@ class BalanceTests: ZcashTestCase {
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2) // add enhance breakpoint here
-        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
-
+        
         // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
+//        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
+
 //        do {
 //            try await coordinator.sync(
 //                completion: { synchronizer in

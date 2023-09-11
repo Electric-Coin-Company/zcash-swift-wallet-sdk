@@ -77,10 +77,6 @@ class TransactionEnhancementTests: ZcashTestCase {
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)
 
-        let derivationTool = DerivationTool(networkType: network.networkType)
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
-        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
-
         do {
             _ = try await rustBackend.createAccount(
                 seed: Environment.seedBytes,
@@ -112,14 +108,6 @@ class TransactionEnhancementTests: ZcashTestCase {
             logger: logger
         )
         try! await storage.create()
-        
-        let transactionRepository = MockTransactionRepository(
-            unminedCount: 0,
-            receivedCount: 0,
-            sentCount: 0,
-            scannedHeight: 0,
-            network: network
-        )
         
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         

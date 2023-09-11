@@ -32,7 +32,10 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
         tupple.serviceMock.getSubtreeRootsClosure = { _ in
-            AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)) }
+            AsyncThrowingStream { continuation in continuation.finish(
+                throwing: ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
+            )
+            }
         }
 
         do {
@@ -112,6 +115,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         }
     }
     
+    // swiftlint:disable large_tuple
     private func setupAction(
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> (

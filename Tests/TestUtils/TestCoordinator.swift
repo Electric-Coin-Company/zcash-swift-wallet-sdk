@@ -229,7 +229,13 @@ extension TestCoordinator {
 
         await self.synchronizer.blockProcessor.update(config: newConfig)
 
-        try service.reset(saplingActivation: saplingActivation, startSaplingTreeSize: startSaplingTreeSize, startOrchardTreeSize: startOrchardTreeSize, branchID: branchID, chainName: chainName)
+        try service.reset(
+            saplingActivation: saplingActivation,
+            startSaplingTreeSize: startSaplingTreeSize,
+            startOrchardTreeSize: startOrchardTreeSize,
+            branchID: branchID,
+            chainName: chainName
+        )
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {

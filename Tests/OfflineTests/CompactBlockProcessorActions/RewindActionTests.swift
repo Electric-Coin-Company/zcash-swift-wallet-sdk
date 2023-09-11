@@ -51,7 +51,7 @@ final class RewindActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
         let blockDownloaderServiceMock = BlockDownloaderServiceMock()
         
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.rewindLatestDownloadedBlockHeightClosure = { _ in }
         blockDownloaderServiceMock.rewindToClosure = { _ in }
         
@@ -99,7 +99,7 @@ final class RewindActionTests: ZcashTestCase {
             }
         )
         
-        await rustBackendMock.setRewindToHeightHeightClosure( { _ in } )
+        await rustBackendMock.setRewindToHeightHeightClosure({ _ in })
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in blockDownloaderServiceMock }
@@ -109,4 +109,3 @@ final class RewindActionTests: ZcashTestCase {
         return RewindAction(container: mockContainer)
     }
 }
-
