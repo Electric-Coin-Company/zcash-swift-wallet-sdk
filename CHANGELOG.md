@@ -1,5 +1,7 @@
 # Unreleased
 
+`CompactBlockProcessor` now processes compact blocks from the lightwalletd server with Spend-before-Sync algorithm (i.e. non-linear order). This feature shortens the time after which a wallet's spendable balance can be used.
+
 ### [#1196] Check logging level priorities
 The levels for logging have been updated according to Log Levels in Swift. (https://www.swift.org/server/guides/libraries/log-levels.html).
 There's one naming difference, instead of `notice` we use `event`. So the order is debug, info, event, warning, error.  
@@ -15,8 +17,10 @@ system itself won't remove these data.
 ### Changed
 
 Synchronizer's prepare(...) public API changed, `viewingKeys: [UnifiedFullViewingKey]` has been removed and `for walletMode: WalletInitMode` added.  
-`WalletInitMode` is an enum with 3 cases: .newWallet, .restoreWallet and .existingWallet. Use `.newWallet` when preparing the SDKSynchronizer for a brand new wallet 
-that has been generated. Use `.restoreWallet` when wallet is about to be restored from a seed and `.existingWallet` for all other scenarios.
+`WalletInitMode` is an enum with 3 cases: .newWallet, .restoreWallet and .existingWallet. 
+Use `.newWallet` when preparing the SDKSynchronizer for a brand new wallet 
+that has been generated. 
+Use `.restoreWallet` when wallet is about to be restored from a seed and `.existingWallet` for all other scenarios.
 
 ### Removed
 
@@ -26,7 +30,7 @@ of syncing the amount of data provided is reduced so it's consistent. Spend befo
 so both Height and Time don't make sense anymore. 
 
 ### [#1230] Remove linear sync from the SDK
-`latestScannedHeight` and `latestScannedTime` removed from the SynchronizerState. Concept of pending transaction changed, `func allPendingTransactions()` is no longer available. Use `public func allTransactions()` instead. 
+`allPendingTransactions()` is no longer available. Use `allTransactions()` instead. 
 
 # 0.22.0-beta
 
