@@ -64,6 +64,8 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanFinishTime = Date()
 
+            // TODO: [#1259] potential bug when rustBackend.scanBlocks scan less blocks than batchSize,
+            // https://github.com/zcash/ZcashLightClientKit/issues/1259
             lastScannedHeight = startHeight + Int(batchSize) - 1
             
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
@@ -71,7 +73,6 @@ extension BlockScannerImpl: BlockScanner {
                 try await didScan(lastScannedHeight, batchSize)
 
                 metrics.pushProgressReport(
-                    progress: 0,
                     start: scanStartTime,
                     end: scanFinishTime,
                     batchSize: Int(batchSize),

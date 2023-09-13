@@ -14,7 +14,6 @@ final class SDKMetricsTests: XCTestCase {
         metrics.enableMetrics()
                 
         metrics.pushProgressReport(
-            progress: 0,
             start: Date(timeIntervalSinceReferenceDate: 0.0),
             end: Date(timeIntervalSinceReferenceDate: 1.0),
             batchSize: 10,
@@ -55,7 +54,6 @@ final class SDKMetricsTests: XCTestCase {
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 1.0, avgTime: 1.0),
-            validatedBlocksReport: nil,
             scannedBlocksReport: nil,
             enhancementReport: nil,
             fetchUTXOsReport: nil,
@@ -84,7 +82,6 @@ final class SDKMetricsTests: XCTestCase {
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 1.0, avgTime: 1.0),
-            validatedBlocksReport: nil,
             scannedBlocksReport: nil,
             enhancementReport: nil,
             fetchUTXOsReport: nil,
@@ -105,7 +102,6 @@ final class SDKMetricsTests: XCTestCase {
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 6.0, avgTime: 3.5),
-            validatedBlocksReport: nil,
             scannedBlocksReport: nil,
             enhancementReport: nil,
             fetchUTXOsReport: nil,
@@ -129,7 +125,6 @@ final class SDKMetricsTests: XCTestCase {
 
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 6.0, avgTime: 3.5),
-            validatedBlocksReport: nil,
             scannedBlocksReport: nil,
             enhancementReport: nil,
             fetchUTXOsReport: nil,
@@ -144,14 +139,12 @@ final class SDKMetricsTests: XCTestCase {
 
 extension SDKMetrics.BlockMetricReport {
     static let placeholderA = Self(
-        progress: 0,
         batchSize: 10,
         startTime: Date(timeIntervalSinceReferenceDate: 0.0).timeIntervalSinceReferenceDate,
         endTime: Date(timeIntervalSinceReferenceDate: 1.0).timeIntervalSinceReferenceDate
     )
     
     static let placeholderB = Self(
-        progress: 0,
         batchSize: 10,
         startTime: Date(timeIntervalSinceReferenceDate: 0.0).timeIntervalSinceReferenceDate,
         endTime: Date(timeIntervalSinceReferenceDate: 6.0).timeIntervalSinceReferenceDate

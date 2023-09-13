@@ -87,12 +87,7 @@ class CompactBlockReorgTests: ZcashTestCase {
             return
         }
 
-        rustBackendMockHelper = await RustBackendMockHelper(
-            rustBackend: rustBackend,
-            mockValidateCombinedChainFailAfterAttempts: 3,
-            mockValidateCombinedChainKeepFailing: false,
-            mockValidateCombinedChainFailureError: .rustValidateCombinedChainInvalidChain(Int32(network.constants.saplingActivationHeight + 320))
-        )
+        rustBackendMockHelper = await RustBackendMockHelper(rustBackend: rustBackend)
 
         Dependencies.setup(
             in: mockContainer,

@@ -125,8 +125,6 @@ public enum ZcashErrorCode: String {
     case rustPutUnspentTransparentOutput = "ZRUST0029"
     /// Error unrelated to chain validity from rust layer when calling ZcashRustBackend.validateCombinedChain
     case rustValidateCombinedChainValidationFailed = "ZRUST0030"
-    /// Error from rust layer which means that combined chain isn't valid.
-    case rustValidateCombinedChainInvalidChain = "ZRUST0031"
     /// Error from rust layer when calling ZcashRustBackend.rewindToHeight
     case rustRewindToHeight = "ZRUST0032"
     /// Error from rust layer when calling ZcashRustBackend.rewindCacheToHeight

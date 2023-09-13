@@ -122,7 +122,9 @@ public protocol Synchronizer: AnyObject {
     /// - Parameters:
     ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized
     ///   - walletBirthday: Birthday of wallet.
-    ///   - walletMode: Set `.newWallet` when preparing synchronizer for a brand new generated wallet, `.restoreWallet` when wallet is about to be restored from a seed and  `.existingWallet` for all other scenarios.
+    ///   - for: [walletMode] Set `.newWallet` when preparing synchronizer for a brand new generated wallet,
+    ///   `.restoreWallet` when wallet is about to be restored from a seed
+    ///   and  `.existingWallet` for all other scenarios.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
     ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that

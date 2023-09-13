@@ -430,7 +430,7 @@ public class Initializer {
             
             _ = try await rustBackend.createAccount(
                 seed: seed,
-                treeState: try checkpoint.treeState().serializedData(partial: false).bytes,
+                treeState: checkpoint.treeState(),
                 recoverUntil: chainTip
             )
         }

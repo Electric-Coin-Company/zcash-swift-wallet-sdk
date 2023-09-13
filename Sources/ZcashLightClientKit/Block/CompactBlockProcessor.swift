@@ -568,21 +568,10 @@ extension CompactBlockProcessor {
             await ifTaskIsNotCanceledClearCompactBlockCache()
         }
 
-        if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
-            logger.error("Sync failed because of validation error: \(error)")
-            do {
-                try await validationFailed(at: BlockHeight(height))
-                // Start sync all over again
-                return true
-            } catch {
-                await failure(error)
-                return false
-            }
-        } else {
-            logger.error("Sync failed with error: \(error)")
-            await failure(error)
-            return false
-        }
+        logger.error("Sync failed with error: \(error)")
+        await failure(error)
+
+        return false
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -663,25 +652,6 @@ extension CompactBlockProcessor {
             await setTimer()
             return false
         }
-    }
-
-    private func validationFailed(at height: BlockHeight) async throws {
-        // rewind
-        let rewindHeight = determineLowerBound(
-            errorHeight: height,
-            consecutiveErrors: consecutiveChainValidationErrors,
-            walletBirthday: config.walletBirthday
-        )
-
-        consecutiveChainValidationErrors += 1
-
-        try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
-
-        try await blockDownloaderService.rewind(to: rewindHeight)
-
-        try await rewindDownloadBlockAction(to: rewindHeight)
-
-        await send(event: .handledReorg(height, rewindHeight))
     }
 
     private func failure(_ error: Error) async {

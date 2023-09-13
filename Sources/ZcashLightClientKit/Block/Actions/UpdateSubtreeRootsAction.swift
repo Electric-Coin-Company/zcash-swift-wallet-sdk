@@ -27,7 +27,6 @@ extension UpdateSubtreeRootsAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         var request = GetSubtreeRootsArg()
         request.shieldedProtocol = .sapling
-        request.maxEntries = await configProvider.config.network.networkType == .testnet ? 65536 : 0
         
         logger.info("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
         let stream = service.getSubtreeRoots(request)

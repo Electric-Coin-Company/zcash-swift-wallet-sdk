@@ -57,7 +57,7 @@ class ZcashRustBackendTests: XCTestCase {
         do {
             _ = try await rustBackend.createAccount(
                 seed: Array(seed.utf8),
-                treeState: treeState.serializedData(partial: false).bytes,
+                treeState: treeState,
                 recoverUntil: nil
             )
             XCTFail("createAccount should fail here.")
@@ -109,7 +109,7 @@ class ZcashRustBackendTests: XCTestCase {
 
         let treeState = Checkpoint.birthday(with: 1234567, network: ZcashMainnet()).treeState()
 
-        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState.serializedData(partial: false).bytes, recoverUntil: nil)
+        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState, recoverUntil: nil)
         XCTAssertEqual(usk.account, 0)
 
         let expectedReceivers = try testVector.map {

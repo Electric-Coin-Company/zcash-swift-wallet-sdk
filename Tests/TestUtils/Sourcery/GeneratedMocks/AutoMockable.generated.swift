@@ -2094,17 +2094,17 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var createAccountSeedTreeStateRecoverUntilCalled: Bool {
         return createAccountSeedTreeStateRecoverUntilCallsCount > 0
     }
-    var createAccountSeedTreeStateRecoverUntilReceivedArguments: (seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?)?
+    var createAccountSeedTreeStateRecoverUntilReceivedArguments: (seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?)?
     var createAccountSeedTreeStateRecoverUntilReturnValue: UnifiedSpendingKey!
     func setCreateAccountSeedTreeStateRecoverUntilReturnValue(_ param: UnifiedSpendingKey) async {
         createAccountSeedTreeStateRecoverUntilReturnValue = param
     }
-    var createAccountSeedTreeStateRecoverUntilClosure: (([UInt8], [UInt8], UInt32?) async throws -> UnifiedSpendingKey)?
-    func setCreateAccountSeedTreeStateRecoverUntilClosure(_ param: (([UInt8], [UInt8], UInt32?) async throws -> UnifiedSpendingKey)?) async {
+    var createAccountSeedTreeStateRecoverUntilClosure: (([UInt8], TreeState, UInt32?) async throws -> UnifiedSpendingKey)?
+    func setCreateAccountSeedTreeStateRecoverUntilClosure(_ param: (([UInt8], TreeState, UInt32?) async throws -> UnifiedSpendingKey)?) async {
         createAccountSeedTreeStateRecoverUntilClosure = param
     }
 
-    func createAccount(seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
+    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         if let error = createAccountSeedTreeStateRecoverUntilThrowableError {
             throw error
         }

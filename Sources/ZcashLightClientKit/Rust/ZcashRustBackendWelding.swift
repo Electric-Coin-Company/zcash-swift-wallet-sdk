@@ -35,11 +35,11 @@ protocol ZcashRustBackendWelding {
     /// have been received by the currently-available account (in order to enable
     /// automated account recovery).
     /// - parameter seed: byte array of the zip32 seed
-    /// - parameter treeState: byte array containing the TreeState Protobuf object for the height prior to the account birthday
+    /// - parameter treeState: The TreeState Protobuf object for the height prior to the account birthday
     /// - parameter recoverUntil: the fully-scanned height up to which the account will be treated as "being recovered"
     /// - Returns: The `UnifiedSpendingKey` structs for the number of accounts created
     /// - Throws: `rustCreateAccount`.
-    func createAccount(seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
+    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
 
     /// Creates a transaction to the given address from the given account
     /// - Parameter usk: `UnifiedSpendingKey` for the account that controls the funds to be spent.

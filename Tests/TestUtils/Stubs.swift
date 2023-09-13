@@ -53,17 +53,11 @@ extension LightWalletServiceMockResponse {
 
 class RustBackendMockHelper {
     let rustBackendMock: ZcashRustBackendWeldingMock
-    var mockValidateCombinedChainFailAfterAttempts: Int?
 
     init(
         rustBackend: ZcashRustBackendWelding,
-        consensusBranchID: Int32? = nil,
-        mockValidateCombinedChainSuccessRate: Float? = nil,
-        mockValidateCombinedChainFailAfterAttempts: Int? = nil,
-        mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: ZcashError = .rustValidateCombinedChainValidationFailed("mock fail")
+        consensusBranchID: Int32? = nil
     ) async {
-        self.mockValidateCombinedChainFailAfterAttempts = mockValidateCombinedChainFailAfterAttempts
         self.rustBackendMock = ZcashRustBackendWeldingMock(
             consensusBranchIdForHeightClosure: { height in
                 if let consensusBranchID {
@@ -73,20 +67,10 @@ class RustBackendMockHelper {
                 }
             }
         )
-        await setupDefaultMock(
-            rustBackend: rustBackend,
-            mockValidateCombinedChainSuccessRate: mockValidateCombinedChainSuccessRate,
-            mockValidateCombinedChainKeepFailing: mockValidateCombinedChainKeepFailing,
-            mockValidateCombinedChainFailureError: mockValidateCombinedChainFailureError
-        )
+        await setupDefaultMock(rustBackend: rustBackend)
     }
 
-    private func setupDefaultMock(
-        rustBackend: ZcashRustBackendWelding,
-        mockValidateCombinedChainSuccessRate: Float? = nil,
-        mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: ZcashError
-    ) async {
+    private func setupDefaultMock(rustBackend: ZcashRustBackendWelding) async {
         await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
         await rustBackendMock.setInitBlockMetadataDbClosure() { }
         await rustBackendMock.setWriteBlocksMetadataBlocksClosure() { _ in }

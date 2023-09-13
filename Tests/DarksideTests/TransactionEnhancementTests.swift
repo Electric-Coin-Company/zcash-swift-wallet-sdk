@@ -80,7 +80,7 @@ class TransactionEnhancementTests: ZcashTestCase {
         do {
             _ = try await rustBackend.createAccount(
                 seed: Environment.seedBytes,
-                treeState: birthday.treeState().serializedData(partial: false).bytes,
+                treeState: birthday.treeState(),
                 recoverUntil: nil
             )
         } catch {

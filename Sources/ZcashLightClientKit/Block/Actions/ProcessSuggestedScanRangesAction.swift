@@ -27,24 +27,24 @@ extension ProcessSuggestedScanRangesAction: Action {
         let scanRanges = try await rustBackend.suggestScanRanges()
 
         if let firstRange = scanRanges.first {
-            let lowerBound = firstRange.range.lowerBound - 1
-            let upperBound = firstRange.range.upperBound - 1
+            let rangeStartExclusive = firstRange.range.lowerBound - 1
+            let rangeEndInclusive = firstRange.range.upperBound - 1
             
             let syncControlData = SyncControlData(
-                latestBlockHeight: upperBound,
-                latestScannedHeight: lowerBound,
-                firstUnenhancedHeight: lowerBound + 1
+                latestBlockHeight: rangeEndInclusive,
+                latestScannedHeight: rangeStartExclusive,
+                firstUnenhancedHeight: rangeStartExclusive + 1
             )
             
             logger.debug("""
                 Init numbers:
-                latestBlockHeight [BC]:         \(upperBound)
-                latestScannedHeight [DB]:       \(lowerBound)
-                firstUnenhancedHeight [DB]:     \(lowerBound + 1)
+                latestBlockHeight [BC]:         \(rangeEndInclusive)
+                latestScannedHeight [DB]:       \(rangeStartExclusive)
+                firstUnenhancedHeight [DB]:     \(rangeStartExclusive + 1)
                 """)
 
-            await context.update(lastScannedHeight: lowerBound)
-            await context.update(lastDownloadedHeight: lowerBound)
+            await context.update(lastScannedHeight: rangeStartExclusive)
+            await context.update(lastDownloadedHeight: rangeStartExclusive)
             await context.update(syncControlData: syncControlData)
 
             // the total progress range is computed only for the first time
@@ -65,7 +65,7 @@ extension ProcessSuggestedScanRangesAction: Action {
             // If there is a range of blocks that needs to be verified, it will always
             // be returned as the first element of the vector of suggested ranges.
             if firstRange.priority == .verify {
-                await context.update(requestedRewindHeight: lowerBound + 1)
+                await context.update(requestedRewindHeight: rangeStartExclusive + 1)
                 await context.update(state: .rewind)
             } else {
                 await context.update(state: .download)
