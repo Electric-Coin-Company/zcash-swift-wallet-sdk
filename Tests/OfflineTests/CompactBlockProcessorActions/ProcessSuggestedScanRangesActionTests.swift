@@ -51,89 +51,6 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         }
     }
     
-    func testProcessSuggestedScanRangesAction_VerifyScanRangeSetTotalProgressRange() async throws {
-        let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
-
-        let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
-            ScanRange(range: 0..<10, priority: .verify)
-        ] })
-        
-        let processSuggestedScanRangesActionAction = tupple.action
-
-        do {
-            let context = ActionContextMock.default()
-            context.updateLastScannedHeightClosure = { _ in }
-            context.updateLastDownloadedHeightClosure = { _ in }
-            context.updateSyncControlDataClosure = { _ in }
-            context.underlyingTotalProgressRange = 0...0
-            context.updateTotalProgressRangeClosure = { _ in }
-            context.updateRequestedRewindHeightClosure = { _ in }
-
-            let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
-
-            XCTAssertTrue(
-                loggerMock.debugFileFunctionLineCalled,
-                "logger.debug() is not expected to be called."
-            )
-
-            if let infoArguments = loggerMock.infoFileFunctionLineReceivedArguments {
-                XCTAssertTrue(infoArguments.message.contains("Setting the total range for Spend before Sync to"))
-            } else {
-                XCTFail("`infoArguments` unavailable.")
-            }
-            
-            let acResult = nextContext.checkStateIs(.download)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
-        } catch {
-            XCTFail("testProcessSuggestedScanRangesAction_VerifyScanRangeSetTotalProgressRange is not expected to fail. \(error)")
-        }
-    }
-    
-    func testProcessSuggestedScanRangesAction_VerifyScanRangeTotalProgressRangeSkipped() async throws {
-        let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
-
-        let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
-            ScanRange(range: 0..<10, priority: .verify)
-        ] })
-        
-        let processSuggestedScanRangesActionAction = tupple.action
-
-        do {
-            let context = ActionContextMock.default()
-            context.updateLastScannedHeightClosure = { _ in }
-            context.updateLastDownloadedHeightClosure = { _ in }
-            context.updateSyncControlDataClosure = { _ in }
-            context.underlyingTotalProgressRange = 1...1
-            context.updateRequestedRewindHeightClosure = { _ in }
-
-            let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
-
-            XCTAssertTrue(
-                loggerMock.debugFileFunctionLineCalled,
-                "logger.debug() is not expected to be called."
-            )
-            
-            if let infoArguments = loggerMock.infoFileFunctionLineReceivedArguments {
-                XCTAssertFalse(infoArguments.message.contains("Setting the total range for Spend before Sync to"))
-            } else {
-                XCTFail("`infoArguments` unavailable.")
-            }
-            
-            let acResult = nextContext.checkStateIs(.download)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
-        } catch {
-            XCTFail("testProcessSuggestedScanRangesAction_VerifyScanRangeTotalProgressRangeSkipped is not expected to fail. \(error)")
-        }
-    }
-    
     func testProcessSuggestedScanRangesAction_ChainTipScanRange() async throws {
         let loggerMock = LoggerMock()
         
@@ -152,7 +69,6 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
             context.updateLastScannedHeightClosure = { _ in }
             context.updateLastDownloadedHeightClosure = { _ in }
             context.updateSyncControlDataClosure = { _ in }
-            context.underlyingTotalProgressRange = 1...1
             context.updateRequestedRewindHeightClosure = { _ in }
 
             let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
@@ -221,5 +137,24 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
             serviceMock: serviceMock,
             rustBackendMock: rustBackendMock
         )
+    }
+    
+    func testScanRangePriorities() {
+        // matching priorities
+        XCTAssertEqual(ScanRange.Priority(0), .ignored)
+        XCTAssertEqual(ScanRange.Priority(10), .scanned)
+        XCTAssertEqual(ScanRange.Priority(20), .historic)
+        XCTAssertEqual(ScanRange.Priority(30), .openAdjacent)
+        XCTAssertEqual(ScanRange.Priority(40), .foundNote)
+        XCTAssertEqual(ScanRange.Priority(50), .chainTip)
+        XCTAssertEqual(ScanRange.Priority(60), .verify)
+        
+        // custom priorities
+        XCTAssertEqual(ScanRange.Priority(4), .scanned)
+        XCTAssertEqual(ScanRange.Priority(14), .historic)
+        XCTAssertEqual(ScanRange.Priority(24), .openAdjacent)
+        XCTAssertEqual(ScanRange.Priority(34), .foundNote)
+        XCTAssertEqual(ScanRange.Priority(44), .chainTip)
+        XCTAssertEqual(ScanRange.Priority(54), .verify)
     }
 }

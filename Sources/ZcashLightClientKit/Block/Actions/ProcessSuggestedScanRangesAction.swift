@@ -47,21 +47,6 @@ extension ProcessSuggestedScanRangesAction: Action {
             await context.update(lastDownloadedHeight: rangeStartExclusive)
             await context.update(syncControlData: syncControlData)
 
-            // the total progress range is computed only for the first time
-            // as a sum of all ranges
-            let totalProgressRange = await context.totalProgressRange
-            if totalProgressRange.lowerBound == 0 && totalProgressRange.upperBound == 0 {
-                var minHeight = Int.max
-                var maxHeight = 0
-                scanRanges.forEach { range in
-                    if range.range.lowerBound < minHeight { minHeight = range.range.lowerBound }
-                    if range.range.upperBound > maxHeight { maxHeight = range.range.upperBound }
-                }
-                
-                logger.info("Setting the total range for Spend before Sync to \(minHeight...maxHeight).")
-                await context.update(totalProgressRange: minHeight...maxHeight)
-            }
-
             await context.update(state: .download)
         } else {
             await context.update(state: .finished)

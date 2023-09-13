@@ -29,7 +29,6 @@ class SyncBlocksViewController: UIViewController {
         guard let currentMetric else { return "" }
         switch currentMetric {
         case .downloadBlocks: return "download: "
-        case .validateBlocks: return "validate: "
         case .scanBlocks: return "scan: "
         case .enhancement: return "enhancement: "
         case .fetchUTXOs: return "fetchUTXOs: "
@@ -117,7 +116,6 @@ class SyncBlocksViewController: UIViewController {
         let cumulativeSummary = synchronizer.metrics.cumulativeSummary()
         
         let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? SDKMetrics.ReportSummary.zero
-        let validatedBlocksReport = cumulativeSummary.validatedBlocksReport ?? SDKMetrics.ReportSummary.zero
         let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? SDKMetrics.ReportSummary.zero
         let enhancementReport = cumulativeSummary.enhancementReport ?? SDKMetrics.ReportSummary.zero
         let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? SDKMetrics.ReportSummary.zero
@@ -127,7 +125,6 @@ class SyncBlocksViewController: UIViewController {
             """
             Summary:
                 downloadedBlocks: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlocksReport.avgTime)
-                validatedBlocks: min: \(validatedBlocksReport.minTime) max: \(validatedBlocksReport.maxTime) avg: \(validatedBlocksReport.avgTime)
                 scannedBlocks: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
                 enhancement: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
                 fetchUTXOs: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)

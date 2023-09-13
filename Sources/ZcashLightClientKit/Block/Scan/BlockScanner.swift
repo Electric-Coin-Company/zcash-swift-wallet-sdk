@@ -16,7 +16,6 @@ protocol BlockScanner {
     @discardableResult
     func scanBlocks(
         at range: CompactBlockRange,
-        totalProgressRange: CompactBlockRange,
         didScan: @escaping (BlockHeight, UInt32) async throws -> Void
     ) async throws -> BlockHeight
 }
@@ -33,7 +32,6 @@ extension BlockScannerImpl: BlockScanner {
     @discardableResult
     func scanBlocks(
         at range: CompactBlockRange,
-        totalProgressRange: CompactBlockRange,
         didScan: @escaping (BlockHeight, UInt32) async throws -> Void
     ) async throws -> BlockHeight {
         logger.debug("Going to scan blocks in range: \(range)")

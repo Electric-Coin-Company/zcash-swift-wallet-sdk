@@ -48,18 +48,12 @@ extension ScanAction: Action {
         let batchRange = batchRangeStart...batchRangeEnd
         
         logger.debug("Starting scan blocks with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
-        let totalProgressRange = await context.totalProgressRange
         
         do {
-            try await blockScanner.scanBlocks(at: batchRange, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight, increment in
+            try await blockScanner.scanBlocks(at: batchRange) { [weak self] lastScannedHeight, increment in
                 let processedHeight = await context.processedHeight
                 let incrementedprocessedHeight = processedHeight + BlockHeight(increment)
-                await context.update(
-                    processedHeight:
-                        incrementedprocessedHeight < totalProgressRange.upperBound
-                        ? incrementedprocessedHeight
-                        : totalProgressRange.upperBound
-                )
+                await context.update(processedHeight: incrementedprocessedHeight)
 
                 // report scan progress only if it's available
                 if let scanProgress = try? await self?.rustBackend.getScanProgress() {

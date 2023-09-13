@@ -12,7 +12,6 @@ protocol ActionContext {
     var prevState: CBPState? { get async }
     var syncControlData: SyncControlData { get async }
     var requestedRewindHeight: BlockHeight? { get async }
-    var totalProgressRange: CompactBlockRange { get async }
     var processedHeight: BlockHeight { get async }
     var lastChainTipUpdateTime: TimeInterval { get async }
     var lastScannedHeight: BlockHeight? { get async }
@@ -20,7 +19,6 @@ protocol ActionContext {
     
     func update(state: CBPState) async
     func update(syncControlData: SyncControlData) async
-    func update(totalProgressRange: CompactBlockRange) async
     func update(processedHeight: BlockHeight) async
     func update(lastChainTipUpdateTime: TimeInterval) async
     func update(lastScannedHeight: BlockHeight) async

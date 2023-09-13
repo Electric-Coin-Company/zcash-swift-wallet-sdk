@@ -23,10 +23,6 @@ class ActionContextMock: ActionContext {
     }
     var underlyingSyncControlData: SyncControlData!
     var requestedRewindHeight: BlockHeight?
-    var totalProgressRange: CompactBlockRange {
-        get { return underlyingTotalProgressRange }
-    }
-    var underlyingTotalProgressRange: CompactBlockRange!
     var processedHeight: BlockHeight {
         get { return underlyingProcessedHeight }
     }
@@ -66,21 +62,6 @@ class ActionContextMock: ActionContext {
         updateSyncControlDataCallsCount += 1
         updateSyncControlDataReceivedSyncControlData = syncControlData
         await updateSyncControlDataClosure!(syncControlData)
-    }
-
-    // MARK: - update
-
-    var updateTotalProgressRangeCallsCount = 0
-    var updateTotalProgressRangeCalled: Bool {
-        return updateTotalProgressRangeCallsCount > 0
-    }
-    var updateTotalProgressRangeReceivedTotalProgressRange: CompactBlockRange?
-    var updateTotalProgressRangeClosure: ((CompactBlockRange) async -> Void)?
-
-    func update(totalProgressRange: CompactBlockRange) async {
-        updateTotalProgressRangeCallsCount += 1
-        updateTotalProgressRangeReceivedTotalProgressRange = totalProgressRange
-        await updateTotalProgressRangeClosure!(totalProgressRange)
     }
 
     // MARK: - update
@@ -523,25 +504,25 @@ class BlockScannerMock: BlockScanner {
 
     // MARK: - scanBlocks
 
-    var scanBlocksAtTotalProgressRangeDidScanThrowableError: Error?
-    var scanBlocksAtTotalProgressRangeDidScanCallsCount = 0
-    var scanBlocksAtTotalProgressRangeDidScanCalled: Bool {
-        return scanBlocksAtTotalProgressRangeDidScanCallsCount > 0
+    var scanBlocksAtDidScanThrowableError: Error?
+    var scanBlocksAtDidScanCallsCount = 0
+    var scanBlocksAtDidScanCalled: Bool {
+        return scanBlocksAtDidScanCallsCount > 0
     }
-    var scanBlocksAtTotalProgressRangeDidScanReceivedArguments: (range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: (BlockHeight, UInt32) async throws -> Void)?
-    var scanBlocksAtTotalProgressRangeDidScanReturnValue: BlockHeight!
-    var scanBlocksAtTotalProgressRangeDidScanClosure: ((CompactBlockRange, CompactBlockRange, @escaping (BlockHeight, UInt32) async throws -> Void) async throws -> BlockHeight)?
+    var scanBlocksAtDidScanReceivedArguments: (range: CompactBlockRange, didScan: (BlockHeight, UInt32) async throws -> Void)?
+    var scanBlocksAtDidScanReturnValue: BlockHeight!
+    var scanBlocksAtDidScanClosure: ((CompactBlockRange, @escaping (BlockHeight, UInt32) async throws -> Void) async throws -> BlockHeight)?
 
-    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight, UInt32) async throws -> Void) async throws -> BlockHeight {
-        if let error = scanBlocksAtTotalProgressRangeDidScanThrowableError {
+    func scanBlocks(at range: CompactBlockRange, didScan: @escaping (BlockHeight, UInt32) async throws -> Void) async throws -> BlockHeight {
+        if let error = scanBlocksAtDidScanThrowableError {
             throw error
         }
-        scanBlocksAtTotalProgressRangeDidScanCallsCount += 1
-        scanBlocksAtTotalProgressRangeDidScanReceivedArguments = (range: range, totalProgressRange: totalProgressRange, didScan: didScan)
-        if let closure = scanBlocksAtTotalProgressRangeDidScanClosure {
-            return try await closure(range, totalProgressRange, didScan)
+        scanBlocksAtDidScanCallsCount += 1
+        scanBlocksAtDidScanReceivedArguments = (range: range, didScan: didScan)
+        if let closure = scanBlocksAtDidScanClosure {
+            return try await closure(range, didScan)
         } else {
-            return scanBlocksAtTotalProgressRangeDidScanReturnValue
+            return scanBlocksAtDidScanReturnValue
         }
     }
 
