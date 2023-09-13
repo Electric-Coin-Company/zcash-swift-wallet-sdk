@@ -484,7 +484,7 @@ extension CompactBlockProcessor {
                 // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
                 await stopAllActions()
                 // Update state to the first state in state machine that can be handled by action.
-                await context.update(state: .clearCache)
+                await context.update(state: .migrateLegacyCacheDB)
                 await syncStarted()
 
                 if backoffTimer == nil {

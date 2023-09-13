@@ -23,7 +23,7 @@ final class ClearCacheActionTests: ZcashTestCase {
             
             XCTAssertTrue(compactBlockRepositoryMock.clearCalled, "storage.clear() is expected to be called.")
             
-            let acResult = nextContext.checkStateIs(.migrateLegacyCacheDB)
+            let acResult = nextContext.checkStateIs(.processSuggestedScanRanges)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testClearCacheAction_MigrationLegacyCacheDB is not expected to fail. \(error)")

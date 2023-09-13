@@ -2,7 +2,7 @@
 hide empty description
 
 note as Lines
-    Green lines are happy paths. 
+    Green lines are happy paths.
     Red lines are error paths.
     Blue lines are stop paths.
 
@@ -13,12 +13,7 @@ end note
 
 [*] -> idle
 
-idle -[#green,bold]-> clearCacheA
-
-clearCacheA : ClearCacheAction
-clearCacheA --> migrateLegacyCacheDB
-clearCacheA -[#red]-> failed : Error occured.
-clearCacheA -[#blue]-> stopped : Sync was stopped.
+idle -[#green,bold]-> migrateLegacyCacheDB
 
 migrateLegacyCacheDB : MigrateLegacyCacheDBAction
 migrateLegacyCacheDB -[#green,bold]-> validateServer
@@ -26,14 +21,9 @@ migrateLegacyCacheDB -[#red]-> failed : Error occured.
 migrateLegacyCacheDB -[#blue]-> stopped : Sync was stopped.
 
 validateServer : ValidateServerAction
-validateServer -[#green,bold]-> computeSyncRanges
+validateServer -[#green,bold]-> fetchUTXO
 validateServer -[#red]-> failed : Error occured.
 validateServer -[#blue]-> stopped : Sync was stopped.
-
-computeSyncRanges : ComputeSyncRangesAction
-computeSyncRanges -[#green,bold]-> fetchUTXO
-computeSyncRanges -[#red]-> failed : Error occured.
-computeSyncRanges -[#blue]-> stopped : Sync was stopped.
 
 fetchUTXO : FetchUTXOAction
 fetchUTXO -[#green,bold]-> handleSaplingParams
@@ -41,9 +31,26 @@ fetchUTXO -[#red]-> failed : Error occured.
 fetchUTXO -[#blue]-> stopped : Sync was stopped.
 
 handleSaplingParams : SaplingParamsAction
-handleSaplingParams -[#green,bold]-> download
+handleSaplingParams -[#green,bold]-> updateSubtreeRoots
 handleSaplingParams -[#red]-> failed : Error occured.
 handleSaplingParams -[#blue]-> stopped : Sync was stopped.
+
+updateSubtreeRoots : UpdateSubtreeRootsAction
+updateSubtreeRoots -[#green,bold]-> updateChainTip
+updateSubtreeRoots -[#red]-> failed : Error occured.
+updateSubtreeRoots -[#blue]-> stopped : Sync was stopped.
+
+updateChainTip : UpdateChainTipAction
+updateChainTip -[#green,bold]-> clearCache : Every 10mins or after updateSubtreeRoots
+updateChainTip -[#green,bold]-> download : Processing of scan range continues
+updateChainTip -[#red]-> failed : Error occured.
+updateChainTip -[#blue]-> stopped : Sync was stopped.
+
+processSuggestedScanRanges : ProcessSuggestedScanRangesAction
+processSuggestedScanRanges -[#green,bold]-> download : Scan range available to process
+processSuggestedScanRanges -[#green,bold]-> finished : Scan ranges processed
+processSuggestedScanRanges -[#red]-> failed : Error occured.
+processSuggestedScanRanges -[#blue]-> stopped : Sync was stopped.
 
 download : DownloadAction
 download -[#green,bold]-> validate
@@ -66,19 +73,19 @@ clearAlreadyScannedBlocks -[#red]-> failed : Error occured.
 clearAlreadyScannedBlocks -[#blue]-> stopped : Sync was stopped.
 
 enhance : EnhanceAction
-enhance -[#green,bold]-> download : Not all blocks in the\nsync range are downloaded\nand scanned yet.
-enhance -[#green,bold]-> clearCache : All the blocks in\nthe sync range are downloaded\nand scanned.
+enhance -[#green,bold]-> updateChainTip : Not all blocks in the\nsync range are downloaded\nand scanned yet.
+enhance -[#green,bold]-> clearCache : Clear cache and check the scan ranges
 enhance -[#red]-> failed : Error occured.
 enhance -[#blue]-> stopped : Sync was stopped.
 
 note right of enhance
-    Enhance transactions in batches of 1000 
-    blocks. Dont't do it for each scan batch 
+    Enhance transactions in batches of 1000
+    blocks. Dont't do it for each scan batch
     which is usualy 100 blocks.
 end note
 
 clearCache : ClearCacheAction
-clearCache --> finished
+clearCache -[#green,bold]-> processSuggestedScanRanges
 clearCache -[#red]-> failed : Error occured.
 clearCache -[#blue]-> stopped : Sync was stopped.
 
@@ -87,4 +94,3 @@ failed --> [*]
 stopped --> [*]
 
 @enduml
-
