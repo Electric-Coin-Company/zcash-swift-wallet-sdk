@@ -21,7 +21,7 @@ final class RewindAction {
     }
     
     private func update(context: ActionContext) async -> ActionContext {
-        await context.update(state: .download)
+        await context.update(state: .processSuggestedScanRanges)
         return context
     }
 }

@@ -39,7 +39,7 @@ final class RewindActionTests: ZcashTestCase {
                 "downloader.rewind(latestDownloadedBlockHeight:) is not expected to be called."
             )
 
-            let acResult = nextContext.checkStateIs(.download)
+            let acResult = nextContext.checkStateIs(.processSuggestedScanRanges)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testRewindAction_requestedRewindHeightNil is not expected to fail. \(error)")
@@ -80,7 +80,7 @@ final class RewindActionTests: ZcashTestCase {
                 "downloaderService.rewind(to:) is expected to be called."
             )
 
-            let acResult = nextContext.checkStateIs(.download)
+            let acResult = nextContext.checkStateIs(.processSuggestedScanRanges)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testRewindAction_FullPass is not expected to fail. \(error)")
