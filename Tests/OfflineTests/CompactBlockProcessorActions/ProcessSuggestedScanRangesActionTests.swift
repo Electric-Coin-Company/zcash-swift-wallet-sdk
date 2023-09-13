@@ -140,7 +140,6 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     }
     
     func testScanRangePriorities() {
-        // matching priorities
         XCTAssertEqual(ScanRange.Priority(0), .ignored)
         XCTAssertEqual(ScanRange.Priority(10), .scanned)
         XCTAssertEqual(ScanRange.Priority(20), .historic)
@@ -148,13 +147,5 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         XCTAssertEqual(ScanRange.Priority(40), .foundNote)
         XCTAssertEqual(ScanRange.Priority(50), .chainTip)
         XCTAssertEqual(ScanRange.Priority(60), .verify)
-        
-        // custom priorities
-        XCTAssertEqual(ScanRange.Priority(4), .scanned)
-        XCTAssertEqual(ScanRange.Priority(14), .historic)
-        XCTAssertEqual(ScanRange.Priority(24), .openAdjacent)
-        XCTAssertEqual(ScanRange.Priority(34), .foundNote)
-        XCTAssertEqual(ScanRange.Priority(44), .chainTip)
-        XCTAssertEqual(ScanRange.Priority(54), .verify)
     }
 }

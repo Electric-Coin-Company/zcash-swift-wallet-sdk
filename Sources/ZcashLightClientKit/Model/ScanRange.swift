@@ -18,18 +18,10 @@ struct ScanRange {
         case verify = 60
         
         init(_ value: UInt8) {
-            // the given priority matches the values
             if let priority = Priority(rawValue: value) {
                 self = priority
             } else {
-                // no match found, getting the one above the value
-                let valueNeeded = (value / 10) * 10 + 10
-                
-                if let priority = Priority(rawValue: valueNeeded) {
-                    self = priority
-                } else {
-                    fatalError("The value \(value) is out of the range of priorities.")
-                }
+                fatalError("The value \(value) is out of the range of priorities.")
             }
         }
     }
