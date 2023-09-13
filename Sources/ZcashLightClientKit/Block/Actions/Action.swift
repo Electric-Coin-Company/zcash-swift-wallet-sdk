@@ -32,8 +32,6 @@ actor ActionContextImpl: ActionContext {
     var prevState: CBPState?
     var syncControlData: SyncControlData
     var requestedRewindHeight: BlockHeight?
-    /// Represents the overall range of blocks that will be synced, `SyncAlgorithm` doesn't matter.
-    var totalProgressRange: CompactBlockRange = 0...0
     /// Amount of blocks that have been processed so far
     var processedHeight: BlockHeight = 0
     /// Update chain tip must be called repeatadly, this value stores the previous update and help to decide when to call it again
@@ -52,10 +50,6 @@ actor ActionContextImpl: ActionContext {
         self.state = state
     }
     func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
-    func update(totalProgressRange: CompactBlockRange) async {
-        self.processedHeight = totalProgressRange.lowerBound
-        self.totalProgressRange = totalProgressRange
-    }
     func update(processedHeight: BlockHeight) async { self.processedHeight = processedHeight }
     func update(lastChainTipUpdateTime: TimeInterval) async { self.lastChainTipUpdateTime = lastChainTipUpdateTime }
     func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
