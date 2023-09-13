@@ -24,7 +24,7 @@ public class SDKSynchronizer: Synchronizer {
 
     public let metrics: SDKMetrics
     public let logger: Logger
-    
+
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
     var status: InternalSyncStatus {
@@ -127,7 +127,8 @@ public class SDKSynchronizer: Synchronizer {
 
     public func prepare(
         with seed: [UInt8]?,
-        walletBirthday: BlockHeight
+        walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
 
@@ -137,10 +138,10 @@ public class SDKSynchronizer: Synchronizer {
 
         try await utxoRepository.initialise()
 
-        if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday) {
+        if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday, for: walletMode) {
             return .seedRequired
         }
-
+        
         await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
         await latestBlocksDataProvider.updateScannedData()
         
@@ -215,7 +216,7 @@ public class SDKSynchronizer: Synchronizer {
             case let .progressUpdated(progress):
                 await self?.progressUpdated(progress: progress)
 
-            case .progressPartialUpdate:
+            case .syncProgress:
                 break
                 
             case let .storedUTXOs(utxos):
@@ -310,8 +311,8 @@ public class SDKSynchronizer: Synchronizer {
         let accountIndex = Int(spendingKey.account)
         let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
-        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
-        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
+        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.maxScannedHeight) else {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
@@ -362,12 +363,6 @@ public class SDKSynchronizer: Synchronizer {
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
-    }
-
-    public func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
-        let latestScannedHeight = self.latestState.latestScannedHeight
-        
-        return try await transactionRepository.findPendingTransactions(latestHeight: latestScannedHeight, offset: 0, limit: .max)
     }
 
     public func allTransactions() async throws -> [ZcashTransaction.Overview] {
@@ -541,7 +536,7 @@ public class SDKSynchronizer: Synchronizer {
 
         return subject.eraseToAnyPublisher()
     }
-
+    
     // MARK: notify state
 
     private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
@@ -553,9 +548,7 @@ public class SDKSynchronizer: Synchronizer {
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             internalSyncStatus: status,
-            latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
-            latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
-            latestScannedTime: latestBlocksDataProvider.latestScannedTime
+            latestBlockHeight: latestBlocksDataProvider.latestBlockHeight
         )
     }
 
@@ -617,12 +610,6 @@ extension SDKSynchronizer {
     public var receivedTransactions: [ZcashTransaction.Overview] {
         get async {
             (try? await allReceivedTransactions()) ?? []
-        }
-    }
-
-    public var pendingTransactions: [ZcashTransaction.Overview] {
-        get async {
-            (try? await allPendingTransactions()) ?? []
         }
     }
 }

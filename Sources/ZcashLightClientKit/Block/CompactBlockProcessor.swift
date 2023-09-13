@@ -175,7 +175,11 @@ actor CompactBlockProcessor {
         )
     }
 
-    init(container: DIContainer, config: Configuration, accountRepository: AccountRepository) {
+    init(
+        container: DIContainer,
+        config: Configuration,
+        accountRepository: AccountRepository
+    ) {
         Dependencies.setupCompactBlockProcessor(
             in: container,
             config: config,
@@ -183,7 +187,7 @@ actor CompactBlockProcessor {
         )
 
         let configProvider = ConfigProvider(config: config)
-        context = ActionContext(state: .idle)
+        context = ActionContextImpl(state: .idle)
         actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
@@ -214,8 +218,14 @@ actor CompactBlockProcessor {
                 action = MigrateLegacyCacheDBAction(container: container, configProvider: configProvider)
             case .validateServer:
                 action = ValidateServerAction(container: container, configProvider: configProvider)
-            case .computeSyncControlData:
-                action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
+            case .updateSubtreeRoots:
+                action = UpdateSubtreeRootsAction(container: container, configProvider: configProvider)
+            case .updateChainTip:
+                action = UpdateChainTipAction(container: container)
+            case .processSuggestedScanRanges:
+                action = ProcessSuggestedScanRangesAction(container: container)
+            case .rewind:
+                action = RewindAction(container: container)
             case .download:
                 action = DownloadAction(container: container, configProvider: configProvider)
             case .scan:
@@ -307,7 +317,7 @@ extension CompactBlockProcessor {
 
     private func doRewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Executing rewind.")
-        let lastDownloaded = await latestBlocksDataProvider.latestScannedHeight
+        let lastDownloaded = await latestBlocksDataProvider.maxScannedHeight
         let height = Int32(context.height ?? lastDownloaded)
 
         let nearestHeight: Int32
@@ -421,7 +431,7 @@ extension CompactBlockProcessor {
         case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
 
         /// Event sent when progress of some specific action happened.
-        case progressPartialUpdate(CompactBlockProgressUpdate)
+        case syncProgress(Float)
 
         /// Event sent when progress of the sync process changes.
         case progressUpdated(Float)
@@ -474,7 +484,7 @@ extension CompactBlockProcessor {
                 // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
                 await stopAllActions()
                 // Update state to the first state in state machine that can be handled by action.
-                await context.update(state: .clearCache)
+                await context.update(state: .migrateLegacyCacheDB)
                 await syncStarted()
 
                 if backoffTimer == nil {
@@ -503,7 +513,7 @@ extension CompactBlockProcessor {
                 // Execute action.
                 context = try await action.run(with: context) { [weak self] event in
                     await self?.send(event: event)
-                    if let progressChanged = await self?.compactBlockProgress.event(event), progressChanged {
+                    if let progressChanged = await self?.compactBlockProgress.hasProgressUpdated(event), progressChanged {
                         if let progress = await self?.compactBlockProgress.progress {
                             await self?.send(event: .progressUpdated(progress))
                         }
@@ -558,21 +568,10 @@ extension CompactBlockProcessor {
             await ifTaskIsNotCanceledClearCompactBlockCache()
         }
 
-        if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
-            logger.error("Sync failed because of validation error: \(error)")
-            do {
-                try await validationFailed(at: BlockHeight(height))
-                // Start sync all over again
-                return true
-            } catch {
-                await failure(error)
-                return false
-            }
-        } else {
-            logger.error("Sync failed with error: \(error)")
-            await failure(error)
-            return false
-        }
+        logger.error("Sync failed with error: \(error)")
+        await failure(error)
+
+        return false
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -585,7 +584,13 @@ extension CompactBlockProcessor {
             break
         case .validateServer:
             break
-        case .computeSyncControlData:
+        case .updateSubtreeRoots:
+            break
+        case .updateChainTip:
+            break
+        case .processSuggestedScanRanges:
+            break
+        case .rewind:
             break
         case .download:
             break
@@ -612,9 +617,8 @@ extension CompactBlockProcessor {
 
     private func resetContext() async {
         let lastEnhancedheight = await context.lastEnhancedHeight
-        context = ActionContext(state: .idle)
+        context = ActionContextImpl(state: .idle)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
-        await compactBlockProgress.reset()
     }
 
     private func syncStarted() async {
@@ -634,7 +638,7 @@ extension CompactBlockProcessor {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
 
-        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
+        let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
         // Some actions may not run. For example there are no transactions to enhance and therefore there is no enhance progress. And in
         // cases like this computation of final progress won't work properly. So let's fake 100% progress at the end of the sync process.
         await send(event: .progressUpdated(1))
@@ -648,25 +652,6 @@ extension CompactBlockProcessor {
             await setTimer()
             return false
         }
-    }
-
-    private func validationFailed(at height: BlockHeight) async throws {
-        // rewind
-        let rewindHeight = determineLowerBound(
-            errorHeight: height,
-            consecutiveErrors: consecutiveChainValidationErrors,
-            walletBirthday: config.walletBirthday
-        )
-
-        consecutiveChainValidationErrors += 1
-
-        try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
-
-        try await blockDownloaderService.rewind(to: rewindHeight)
-
-        try await rewindDownloadBlockAction(to: rewindHeight)
-
-        await send(event: .handledReorg(height, rewindHeight))
     }
 
     private func failure(_ error: Error) async {
@@ -720,7 +705,6 @@ extension CompactBlockProcessor {
                                 """
                                 Timer triggered: Starting compact Block processor!.
                                 Processor State: \(await self.context.state)
-                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
                                 attempts: \(await self.retryAttempts)
                                 """
                             )

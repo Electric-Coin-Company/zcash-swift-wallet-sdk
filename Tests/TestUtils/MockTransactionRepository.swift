@@ -95,10 +95,6 @@ extension MockTransactionRepository: TransactionRepository {
         unminedCount
     }
 
-    func blockForHeight(_ height: BlockHeight) throws -> Block? {
-        nil
-    }
-
     func findBy(id: Int) throws -> ZcashTransaction.Overview? {
         transactions.first(where: { $0.id == id })
     }
@@ -109,10 +105,6 @@ extension MockTransactionRepository: TransactionRepository {
 
     func lastScannedHeight() throws -> BlockHeight {
         scannedHeight
-    }
-
-    func lastScannedBlock() throws -> Block? {
-        nil
     }
 
     func firstUnenhancedHeight() throws -> ZcashLightClientKit.BlockHeight? {

@@ -87,20 +87,7 @@ class CompactBlockReorgTests: ZcashTestCase {
             return
         }
 
-        rustBackendMockHelper = await RustBackendMockHelper(
-            rustBackend: rustBackend,
-            mockValidateCombinedChainFailAfterAttempts: 3,
-            mockValidateCombinedChainKeepFailing: false,
-            mockValidateCombinedChainFailureError: .rustValidateCombinedChainInvalidChain(Int32(network.constants.saplingActivationHeight + 320))
-        )
-
-        let transactionRepository = MockTransactionRepository(
-            unminedCount: 0,
-            receivedCount: 0,
-            sentCount: 0,
-            scannedHeight: 0,
-            network: network
-        )
+        rustBackendMockHelper = await RustBackendMockHelper(rustBackend: rustBackend)
 
         Dependencies.setup(
             in: mockContainer,
@@ -117,8 +104,11 @@ class CompactBlockReorgTests: ZcashTestCase {
             loggingPolicy: .default(.debug)
         )
         
-        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
-            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        await self.rustBackendMockHelper.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure { _, _ in }
+        await self.rustBackendMockHelper.rustBackendMock.setUpdateChainTipHeightClosure { _ in }
+
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in
+            LatestBlocksDataProviderImpl(service: service, rustBackend: self.rustBackend)
         }
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackendMockHelper.rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }

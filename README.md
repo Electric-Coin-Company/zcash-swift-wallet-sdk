@@ -87,6 +87,12 @@ For more details look the Sample App's `AppDelegate` code.
 
 We don't like reinventing the wheel, so we gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.
   
+# Unstable features
+
+## `Spend before Sync` synchronization algorithm
+
+The CompactBlockProcessor is responsible for downloading and processing blocks from the lightwalletd. Since the inception of the SDK the blocks were processed in a linear order up to the chain tip. Latests SDK has introduced brand new algorithm for syncing of the blocks. It's called `Spend before Sync` and processes blocks in non-linear order so the spendable funds are discovered as soon as possible - allowing users to create a transaction while still syncing.
+  
 # Versioning
 
 This project follows [semantic versioning](https://semver.org/) with pre-release versions. An example of a valid version number is `1.0.4-alpha11` denoting the `11th` iteration of the `alpha` pre-release of version `1.0.4`. Stable releases, such as `1.0.4` will not contain any pre-release identifiers. Pre-releases include the following, in order of stability: `alpha`, `beta`, `rc`. Version codes offer a numeric representation of the build name that always increases. The first six significant digits represent the major, minor and patch number (two digits each) and the last 3 significant digits represent the pre-release identifier. The first digit of the identifier signals the build type. Lastly, each new build has a higher version code than all previous builds. The following table breaks this down:

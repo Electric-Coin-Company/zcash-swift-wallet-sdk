@@ -45,7 +45,8 @@ class SendViewController: UIViewController {
 
         closureSynchronizer.prepare(
             with: DemoAppConfig.defaultSeed,
-            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+            walletBirthday: DemoAppConfig.defaultBirthdayHeight,
+            for: .existingWallet
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }
@@ -79,8 +80,7 @@ class SendViewController: UIViewController {
     
     func setUp() {
         Task { @MainActor in
-            balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
-            verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
+            await updateBalance()
             await toggleSendButton()
         }
         memoField.text = ""
@@ -93,10 +93,18 @@ class SendViewController: UIViewController {
             .throttle(for: .seconds(0.2), scheduler: DispatchQueue.main, latest: true)
             .sink(
                 receiveValue: { [weak self] state in
+                    Task { @MainActor in
+                        await self?.updateBalance()
+                    }
                     self?.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: state.syncStatus)
                 }
             )
             .store(in: &cancellables)
+    }
+    
+    func updateBalance() async {
+        balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
+        verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {
@@ -300,7 +308,7 @@ extension SDKSynchronizer {
     static func textFor(state: SyncStatus) -> String {
         switch state {
         case .syncing(let progress):
-            return "Syncing \(progress)"
+            return "Syncing \(progress * 100.0)%"
 
         case .upToDate:
             return "Up to Date 😎"

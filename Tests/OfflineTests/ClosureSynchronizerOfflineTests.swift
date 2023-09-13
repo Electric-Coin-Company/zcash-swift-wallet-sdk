@@ -101,7 +101,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareSucceed() throws {
-        synchronizerMock.prepareWithWalletBirthdayClosure = { receivedSeed, receivedWalletBirthday in
+        synchronizerMock.prepareWithWalletBirthdayForClosure = { receivedSeed, receivedWalletBirthday, _ in
             XCTAssertEqual(receivedSeed, self.data.seed)
             XCTAssertEqual(receivedWalletBirthday, self.data.birthday)
             return .success
@@ -109,7 +109,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday) { result in
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet) { result in
             switch result {
             case let .success(status):
                 XCTAssertEqual(status, .success)
@@ -123,13 +123,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareThrowsError() throws {
-        synchronizerMock.prepareWithWalletBirthdayClosure = { _, _ in
+        synchronizerMock.prepareWithWalletBirthdayForClosure = { _, _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday) { result in
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -403,20 +403,6 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             case .failure:
                 expectation.fulfill()
             }
-        }
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPendingTransactionsSucceed() {
-        synchronizerMock.underlyingPendingTransactions = [data.pendingTransactionEntity]
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.pendingTransactions() { transactions in
-            XCTAssertEqual(transactions.count, 1)
-            XCTAssertEqual(transactions[0].id, self.data.pendingTransactionEntity.id)
-            expectation.fulfill()
         }
 
         wait(for: [expectation], timeout: 0.5)

@@ -42,13 +42,8 @@ public struct SynchronizerState: Equatable {
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
-    /// height of the latest scanned block known to this synchronizer.
-    public var latestScannedHeight: BlockHeight
     /// height of the latest block on the blockchain known to this synchronizer.
     public var latestBlockHeight: BlockHeight
-    /// timestamp of the latest scanned block on the blockchain known to this synchronizer.
-    /// The anchor point is timeIntervalSince1970
-    public var latestScannedTime: TimeInterval
 
     /// Represents a synchronizer that has made zero progress hasn't done a sync attempt
     public static var zero: SynchronizerState {
@@ -57,9 +52,7 @@ public struct SynchronizerState: Equatable {
             shieldedBalance: .zero,
             transparentBalance: .zero,
             internalSyncStatus: .unprepared,
-            latestScannedHeight: .zero,
-            latestBlockHeight: .zero,
-            latestScannedTime: 0
+            latestBlockHeight: .zero
         )
     }
     
@@ -68,17 +61,13 @@ public struct SynchronizerState: Equatable {
         shieldedBalance: WalletBalance,
         transparentBalance: WalletBalance,
         internalSyncStatus: InternalSyncStatus,
-        latestScannedHeight: BlockHeight,
-        latestBlockHeight: BlockHeight,
-        latestScannedTime: TimeInterval
+        latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
         self.shieldedBalance = shieldedBalance
         self.transparentBalance = transparentBalance
         self.internalSyncStatus = internalSyncStatus
-        self.latestScannedHeight = latestScannedHeight
         self.latestBlockHeight = latestBlockHeight
-        self.latestScannedTime = latestScannedTime
         self.syncStatus = internalSyncStatus.mapToSyncStatus()
     }
 }
@@ -119,7 +108,7 @@ public protocol Synchronizer: AnyObject {
 
     /// An object that when enabled collects mertrics from the synchronizer
     var metrics: SDKMetrics { get }
-    
+
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -133,6 +122,9 @@ public protocol Synchronizer: AnyObject {
     /// - Parameters:
     ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized
     ///   - walletBirthday: Birthday of wallet.
+    ///   - for: [walletMode] Set `.newWallet` when preparing synchronizer for a brand new generated wallet,
+    ///   `.restoreWallet` when wallet is about to be restored from a seed
+    ///   and  `.existingWallet` for all other scenarios.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
     ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
@@ -141,7 +133,8 @@ public protocol Synchronizer: AnyObject {
     ///     - Some other `ZcashError` thrown by lower layer of the SDK.
     func prepare(
         with seed: [UInt8]?,
-        walletBirthday: BlockHeight
+        walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode
     ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
@@ -197,9 +190,6 @@ public protocol Synchronizer: AnyObject {
         shieldingThreshold: Zatoshi
     ) async throws -> ZcashTransaction.Overview
 
-    /// all outbound pending transactions that have been sent but are awaiting confirmations
-    var pendingTransactions: [ZcashTransaction.Overview] { get async }
-
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }
 
@@ -239,10 +229,6 @@ public protocol Synchronizer: AnyObject {
     ///     - limit: the maximum amount of items this should return if available
     /// - Returns: an array with the given Transactions or an empty array
     func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
-
-    /// Fetch all pending transactions
-    /// - Returns: an array of transactions which are considered pending confirmation. can be empty
-    func allPendingTransactions() async throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight() async throws -> BlockHeight
@@ -423,6 +409,16 @@ enum InternalSyncStatus: Equatable {
         case .error: return "error"
         }
     }
+}
+
+/// Mode of the Synchronizer's initialization for the wallet.
+public enum WalletInitMode: Equatable {
+    /// For brand new wallet - typically when users creates a new wallet.
+    case newWallet
+    /// For a wallet that is about to be restored. Typically when a user wants to restore a wallet from a seed.
+    case restoreWallet
+    /// All other cases - typically when clients just start the process e.g. every regular app start for mobile apps.
+    case existingWallet
 }
 
 /// Kind of transactions handled by a Synchronizer

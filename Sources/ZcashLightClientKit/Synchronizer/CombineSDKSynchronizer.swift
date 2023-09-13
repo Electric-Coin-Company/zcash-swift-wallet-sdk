@@ -33,10 +33,11 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
 
     public func prepare(
         with seed: [UInt8]?,
-        walletBirthday: BlockHeight
+        walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode
     ) -> SinglePublisher<Initializer.InitializationResult, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday)
+            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday, for: walletMode)
         }
     }
 
@@ -89,12 +90,6 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public var pendingTransactions: AnyPublisher<[ZcashTransaction.Overview], Never> {
-        AsyncToCombineGateway.executeAction() {
-            await self.synchronizer.pendingTransactions
-        }
-    }
-
     public var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.transactions
@@ -124,12 +119,6 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
     public func getRecipients(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[TransactionRecipient], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.getRecipients(for: transaction)
-        }
-    }
-
-    public func allPendingTransactions() -> AnyPublisher<[ZcashTransaction.Overview], Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.allPendingTransactions()
         }
     }
 

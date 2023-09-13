@@ -100,7 +100,6 @@ class BlockStreamingTest: ZcashTestCase {
         }
 
         let transactionRepositoryMock = TransactionRepositoryMock()
-        transactionRepositoryMock.lastScannedHeightReturnValue = startHeight
         mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
 
         let blockDownloader = BlockDownloaderImpl(
@@ -135,13 +134,9 @@ class BlockStreamingTest: ZcashTestCase {
 
         let action = DownloadAction(container: mockContainer, configProvider: CompactBlockProcessor.ConfigProvider(config: processorConfig))
         let blockDownloader = mockContainer.resolve(BlockDownloader.self)
-        let syncControlData = SyncControlData(
-            latestBlockHeight: latestBlockHeight,
-            latestScannedHeight: startHeight,
-            firstUnenhancedHeight: nil
-        )
-        let context = ActionContext(state: .download)
-        await context.update(syncControlData: syncControlData)
+
+        let context = ActionContextMock()
+        context.updateStateClosure = { _ in }
 
         let expectation = XCTestExpectation()
 
@@ -175,8 +170,10 @@ class BlockStreamingTest: ZcashTestCase {
             latestScannedHeight: startHeight,
             firstUnenhancedHeight: nil
         )
-        let context = ActionContext(state: .download)
-        await context.update(syncControlData: syncControlData)
+        let context = ActionContextMock()
+        context.updateStateClosure = { _ in }
+        context.underlyingSyncControlData = syncControlData
+        context.lastScannedHeight = startHeight
 
         let date = Date()
 

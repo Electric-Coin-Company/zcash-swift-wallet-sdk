@@ -304,7 +304,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         let synchronizer = SDKSynchronizer(initializer: initializer)
 
         do {
-            _ = try await synchronizer.prepare(with: Environment.seedBytes, walletBirthday: 123000)
+            _ = try await synchronizer.prepare(with: Environment.seedBytes, walletBirthday: 123000, for: .newWallet)
             XCTFail("Failure of prepare is expected.")
         } catch {
             if let error = error as? ZcashError, case let .initializerCantUpdateURLWithAlias(failedURL) = error {
@@ -468,16 +468,14 @@ class SynchronizerOfflineTests: ZcashTestCase {
             XCTFail("Syncing is expected to be 100% (1.0) but received \(data).")
         }
     }
-
+    
     func synchronizerState(for internalSyncStatus: InternalSyncStatus) -> SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
             shieldedBalance: .zero,
             transparentBalance: .zero,
             internalSyncStatus: internalSyncStatus,
-            latestScannedHeight: .zero,
-            latestBlockHeight: .zero,
-            latestScannedTime: 0
+            latestBlockHeight: .zero
         )
     }
 }

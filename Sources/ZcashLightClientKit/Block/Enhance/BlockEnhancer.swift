@@ -135,11 +135,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
             }
             
             metrics.pushProgressReport(
-                progress: BlockProgress(
-                    startHeight: range.lowerBound,
-                    targetHeight: range.upperBound,
-                    progressHeight: range.upperBound
-                ),
                 start: startTime,
                 end: Date(),
                 batchSize: range.count,

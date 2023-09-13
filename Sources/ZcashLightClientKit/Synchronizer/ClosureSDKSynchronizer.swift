@@ -34,10 +34,11 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     public func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday)
+            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday, for: walletMode)
         }
     }
 
@@ -89,12 +90,6 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
-        }
-    }
-
-    public func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
-        AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.pendingTransactions
         }
     }
 

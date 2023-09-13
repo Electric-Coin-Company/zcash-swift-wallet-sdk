@@ -24,15 +24,12 @@ final class FetchUTXOsActionTests: ZcashTestCase {
 
         let fetchUTXOsAction = FetchUTXOsAction(container: mockContainer)
         
-        let syncContext: ActionContext = .init(state: .fetchUTXO)
-        
-        let syncControlData = SyncControlData(
+        let syncContext = ActionContextMock.default()
+        syncContext.underlyingSyncControlData = SyncControlData(
             latestBlockHeight: 0,
             latestScannedHeight: 0,
             firstUnenhancedHeight: nil
         )
-        
-        await syncContext.update(syncControlData: syncControlData)
         
         do {
             let nextContext = try await fetchUTXOsAction.run(with: syncContext) { event in
@@ -45,11 +42,9 @@ final class FetchUTXOsActionTests: ZcashTestCase {
             }
             XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
             XCTAssertTrue(uTXOFetcherMock.fetchDidFetchCalled, "utxoFetcher.fetch() is expected to be called.")
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .handleSaplingParams,
-                "nextContext after .fetchUTXO is expected to be .handleSaplingParams but received \(nextState)"
-            )
+            
+            let acResult = nextContext.checkStateIs(.handleSaplingParams)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testFetchUTXOsAction_NextAction is not expected to fail. \(error)")
         }

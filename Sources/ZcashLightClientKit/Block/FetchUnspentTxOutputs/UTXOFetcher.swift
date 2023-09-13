@@ -86,11 +86,6 @@ extension UTXOFetcherImpl: UTXOFetcher {
         }
 
         metrics.pushProgressReport(
-            progress: BlockProgress(
-                startHeight: 0,
-                targetHeight: 1,
-                progressHeight: 1
-            ),
             start: startTime,
             end: Date(),
             batchSize: 1,

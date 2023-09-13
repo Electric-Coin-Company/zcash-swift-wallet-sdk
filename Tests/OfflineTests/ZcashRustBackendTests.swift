@@ -44,7 +44,8 @@ class ZcashRustBackendTests: XCTestCase {
     func testInitWithShortSeedAndFail() async throws {
         let seed = "testreferencealice"
         var treeState = TreeState()
-        treeState.height = 663193 // TODO: rest
+        // TODO: [#1250] rest, https://github.com/zcash/ZcashLightClientKit/issues/1250
+        treeState.height = 663193
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)
 
@@ -54,7 +55,11 @@ class ZcashRustBackendTests: XCTestCase {
         }
 
         do {
-            _ = try await rustBackend.createAccount(seed: Array(seed.utf8), treeState: treeState.serializedData(partial: false).bytes, recoverUntil: nil)
+            _ = try await rustBackend.createAccount(
+                seed: Array(seed.utf8),
+                treeState: treeState,
+                recoverUntil: nil
+            )
             XCTFail("createAccount should fail here.")
         } catch { }
     }
@@ -104,7 +109,7 @@ class ZcashRustBackendTests: XCTestCase {
 
         let treeState = Checkpoint.birthday(with: 1234567, network: ZcashMainnet()).treeState()
 
-        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState.serializedData(partial: false).bytes, recoverUntil: nil)
+        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState, recoverUntil: nil)
         XCTAssertEqual(usk.account, 0)
 
         let expectedReceivers = try testVector.map {

@@ -66,14 +66,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
         
-        let transactionRepository = MockTransactionRepository(
-            unminedCount: 0,
-            receivedCount: 0,
-            sentCount: 0,
-            scannedHeight: 0,
-            network: network
-        )
-        
         Dependencies.setup(
             in: mockContainer,
             urls: Initializer.URLs(
@@ -89,8 +81,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
             loggingPolicy: .default(.debug)
         )
         
-        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
-            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in
+            LatestBlocksDataProviderImpl(service: service, rustBackend: self.rustBackend)
         }
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }

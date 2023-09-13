@@ -11,7 +11,7 @@ import XCTest
 
 final class ActionContextStateTests: XCTestCase {
     func testPreviousState() async throws {
-        let syncContext: ActionContext = .init(state: .idle)
+        let syncContext = ActionContextImpl(state: .idle)
         
         await syncContext.update(state: .clearCache)
         

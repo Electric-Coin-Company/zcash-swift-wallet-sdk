@@ -101,8 +101,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareSucceed() throws {
-        let mockedViewingKey = self.data.viewingKey
-        synchronizerMock.prepareWithWalletBirthdayClosure = { receivedSeed, receivedWalletBirthday in
+        synchronizerMock.prepareWithWalletBirthdayForClosure = { receivedSeed, receivedWalletBirthday, _ in
             XCTAssertEqual(receivedSeed, self.data.seed)
             XCTAssertEqual(receivedWalletBirthday, self.data.birthday)
             return .success
@@ -110,7 +109,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -130,14 +129,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareThrowsError() throws {
-        let mockedViewingKey = self.data.viewingKey
-        synchronizerMock.prepareWithWalletBirthdayClosure = { _, _ in
+        synchronizerMock.prepareWithWalletBirthdayForClosure = { _, _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -423,30 +421,6 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                 },
                 receiveValue: { _ in
                     XCTFail("No value is expected")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPendingTransactionsSucceed() {
-        synchronizerMock.underlyingPendingTransactions = [data.pendingTransactionEntity]
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.pendingTransactions
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.pendingTransactionEntity.id])
                 }
             )
             .store(in: &cancellables)

@@ -35,16 +35,6 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(count, 0)
     }
 
-    func testBlockForHeight() async throws {
-        let block = try await self.transactionRepository.blockForHeight(663150)
-        XCTAssertEqual(block?.height, 663150)
-    }
-
-    func testLastScannedHeight() async throws {
-        let height = try await self.transactionRepository.lastScannedHeight()
-        XCTAssertEqual(height, 665000)
-    }
-
     func testFindInRange() async throws {
         let transactions = try await self.transactionRepository.find(in: 663218...663974, limit: 3, kind: .received)
         XCTAssertEqual(transactions.count, 3)

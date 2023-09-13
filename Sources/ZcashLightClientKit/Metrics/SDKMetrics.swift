@@ -32,9 +32,6 @@ import Foundation
 /// We encourage you to check`SDKMetricsTests` and other tests in the Test/PerformanceTests/ folder.
 public class SDKMetrics {
     public struct BlockMetricReport: Equatable {
-        public let startHeight: BlockHeight
-        public let progressHeight: BlockHeight
-        public let targetHeight: BlockHeight
         public let batchSize: Int
         public let startTime: TimeInterval
         public let endTime: TimeInterval
@@ -43,7 +40,6 @@ public class SDKMetrics {
     
     public enum Operation {
         case downloadBlocks
-        case validateBlocks
         case scanBlocks
         case enhancement
         case fetchUTXOs
@@ -75,7 +71,6 @@ public class SDKMetrics {
     /// `SDKMetrics` focuses deeply on sync process and metrics related to it. By default there are reports around
     /// block operations like download, validate, etc. This method pushes data on a stack for the specific operation.
     func pushProgressReport(
-        progress: BlockProgress,
         start: Date,
         end: Date,
         batchSize: Int,
@@ -84,9 +79,6 @@ public class SDKMetrics {
         guard isEnabled else { return }
         
         let blockMetricReport = BlockMetricReport(
-            startHeight: progress.startHeight,
-            progressHeight: progress.progressHeight,
-            targetHeight: progress.targetHeight,
             batchSize: batchSize,
             startTime: start.timeIntervalSinceReferenceDate,
             endTime: end.timeIntervalSinceReferenceDate
@@ -158,7 +150,6 @@ public class SDKMetrics {
 extension SDKMetrics {
     public struct CumulativeSummary: Equatable {
         public let downloadedBlocksReport: ReportSummary?
-        public let validatedBlocksReport: ReportSummary?
         public let scannedBlocksReport: ReportSummary?
         public let enhancementReport: ReportSummary?
         public let fetchUTXOsReport: ReportSummary?
@@ -177,7 +168,6 @@ extension SDKMetrics {
     /// independently. A `ReportSummary` is the result per `operation`, providing min, max and avg times.
     public func cumulativeSummary() -> CumulativeSummary {
         let downloadReport = summaryFor(reports: reports[.downloadBlocks])
-        let validateReport = summaryFor(reports: reports[.validateBlocks])
         let scanReport = summaryFor(reports: reports[.scanBlocks])
         let enhancementReport = summaryFor(reports: reports[.enhancement])
         let fetchUTXOsReport = summaryFor(reports: reports[.fetchUTXOs])
@@ -189,7 +179,6 @@ extension SDKMetrics {
         
         return CumulativeSummary(
             downloadedBlocksReport: downloadReport,
-            validatedBlocksReport: validateReport,
             scannedBlocksReport: scanReport,
             enhancementReport: enhancementReport,
             fetchUTXOsReport: fetchUTXOsReport,
@@ -217,7 +206,6 @@ extension SDKMetrics {
         cumulativeSummaries.forEach { summary in
             finalSummary = CumulativeSummary(
                 downloadedBlocksReport: accumulate(left: finalSummary?.downloadedBlocksReport, right: summary.downloadedBlocksReport),
-                validatedBlocksReport: accumulate(left: finalSummary?.validatedBlocksReport, right: summary.validatedBlocksReport),
                 scannedBlocksReport: accumulate(left: finalSummary?.scannedBlocksReport, right: summary.scannedBlocksReport),
                 enhancementReport: accumulate(left: finalSummary?.enhancementReport, right: summary.enhancementReport),
                 fetchUTXOsReport: accumulate(left: finalSummary?.fetchUTXOsReport, right: summary.fetchUTXOsReport),

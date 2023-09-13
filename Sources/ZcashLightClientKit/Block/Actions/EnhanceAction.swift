@@ -11,13 +11,11 @@ final class EnhanceAction {
     let blockEnhancer: BlockEnhancer
     let configProvider: CompactBlockProcessor.ConfigProvider
     let logger: Logger
-    let transactionRepository: TransactionRepository
     
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         blockEnhancer = container.resolve(BlockEnhancer.self)
         self.configProvider = configProvider
         logger = container.resolve(Logger.self)
-        transactionRepository = container.resolve(TransactionRepository.self)
     }
 
     func decideWhatToDoNext(context: ActionContext, lastScannedHeight: BlockHeight) async -> ActionContext {
@@ -30,7 +28,7 @@ final class EnhanceAction {
         if lastScannedHeight >= latestBlockHeight {
             await context.update(state: .clearCache)
         } else {
-            await context.update(state: .download)
+            await context.update(state: .updateChainTip)
         }
 
         return context
@@ -49,7 +47,9 @@ extension EnhanceAction: Action {
         // download and scan.
 
         let config = await configProvider.config
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        guard let lastScannedHeight = await context.lastScannedHeight else {
+            throw ZcashError.compactBlockProcessorLastScannedHeight
+        }
 
         guard let firstUnenhancedHeight = await context.syncControlData.firstUnenhancedHeight else {
             return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)
@@ -79,7 +79,6 @@ extension EnhanceAction: Action {
                 didEnhance: { progress in
                     if let foundTx = progress.lastFoundTransaction, progress.newlyMined {
                         await didUpdate(.minedTransaction(foundTx))
-                        await didUpdate(.progressPartialUpdate(.enhance(progress)))
                     }
                 }
             )

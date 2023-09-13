@@ -29,7 +29,6 @@ class SyncBlocksViewController: UIViewController {
         guard let currentMetric else { return "" }
         switch currentMetric {
         case .downloadBlocks: return "download: "
-        case .validateBlocks: return "validate: "
         case .scanBlocks: return "scan: "
         case .enhancement: return "enhancement: "
         case .fetchUTXOs: return "fetchUTXOs: "
@@ -84,10 +83,7 @@ class SyncBlocksViewController: UIViewController {
 
             progressBar.progress = progress
             progressLabel.text = "\(floor(progress * 1000) / 10)%"
-            let syncedDate = dateFormatter.string(from: Date(timeIntervalSince1970: state.latestScannedTime))
             let progressText = """
-            synced date         \(syncedDate)
-            synced block        \(state.latestScannedHeight)
             latest block height \(state.latestBlockHeight)
             """
             progressDataLabel.text = progressText
@@ -120,7 +116,6 @@ class SyncBlocksViewController: UIViewController {
         let cumulativeSummary = synchronizer.metrics.cumulativeSummary()
         
         let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? SDKMetrics.ReportSummary.zero
-        let validatedBlocksReport = cumulativeSummary.validatedBlocksReport ?? SDKMetrics.ReportSummary.zero
         let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? SDKMetrics.ReportSummary.zero
         let enhancementReport = cumulativeSummary.enhancementReport ?? SDKMetrics.ReportSummary.zero
         let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? SDKMetrics.ReportSummary.zero
@@ -130,7 +125,6 @@ class SyncBlocksViewController: UIViewController {
             """
             Summary:
                 downloadedBlocks: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlocksReport.avgTime)
-                validatedBlocks: min: \(validatedBlocksReport.minTime) max: \(validatedBlocksReport.maxTime) avg: \(validatedBlocksReport.avgTime)
                 scannedBlocks: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
                 enhancement: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
                 fetchUTXOs: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
@@ -153,7 +147,8 @@ class SyncBlocksViewController: UIViewController {
                     do {
                         _ = try await synchronizer.prepare(
                             with: DemoAppConfig.defaultSeed,
-                            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+                            walletBirthday: DemoAppConfig.defaultBirthdayHeight,
+                            for: .existingWallet
                         )
                     } catch {
                         loggerProxy.error(error.toZcashError().message)
@@ -258,18 +253,10 @@ struct ProcessorMetrics {
 
     static func accumulate(_ prev: ProcessorMetrics, current: SDKMetrics.BlockMetricReport) -> Self {
         .init(
-            minHeight: min(prev.minHeight, current.startHeight),
-            maxHeight: max(prev.maxHeight, current.progressHeight),
-            maxDuration: compareDuration(
-                prev.maxDuration,
-                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
-                max
-            ),
-            minDuration: compareDuration(
-                prev.minDuration,
-                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
-                min
-            ),
+            minHeight: prev.minHeight,
+            maxHeight: prev.maxHeight,
+            maxDuration: prev.maxDuration,
+            minDuration: prev.minDuration,
             cumulativeDuration: prev.cumulativeDuration + current.duration,
             measuredCount: prev.measuredCount + 1
         )
@@ -315,8 +302,6 @@ extension SDKMetrics.BlockMetricReport: CustomDebugStringConvertible {
     public var debugDescription: String {
         """
         BlockMetric:
-            startHeight: \(self.progressHeight - self.batchSize)
-            endHeight: \(self.progressHeight)
             batchSize: \(self.batchSize)
             duration: \(self.duration)
         """

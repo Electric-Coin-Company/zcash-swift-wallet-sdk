@@ -77,14 +77,10 @@ class TransactionEnhancementTests: ZcashTestCase {
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)
 
-        let derivationTool = DerivationTool(networkType: network.networkType)
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
-        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
-
         do {
             _ = try await rustBackend.createAccount(
                 seed: Environment.seedBytes,
-                treeState: birthday.treeState().serializedData(partial: false).bytes,
+                treeState: birthday.treeState(),
                 recoverUntil: nil
             )
         } catch {
@@ -113,14 +109,6 @@ class TransactionEnhancementTests: ZcashTestCase {
         )
         try! await storage.create()
         
-        let transactionRepository = MockTransactionRepository(
-            unminedCount: 0,
-            receivedCount: 0,
-            sentCount: 0,
-            scannedHeight: 0,
-            network: network
-        )
-        
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         
         Dependencies.setup(
@@ -138,8 +126,8 @@ class TransactionEnhancementTests: ZcashTestCase {
             loggingPolicy: .default(.debug)
         )
         
-        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
-            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in
+            LatestBlocksDataProviderImpl(service: service, rustBackend: self.rustBackend)
         }
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
         

@@ -12,6 +12,7 @@
 
 @testable import ZcashLightClientKit
 
+extension ActionContext { }
 extension BlockDownloader { }
 extension BlockDownloaderService { }
 extension BlockEnhancer { }

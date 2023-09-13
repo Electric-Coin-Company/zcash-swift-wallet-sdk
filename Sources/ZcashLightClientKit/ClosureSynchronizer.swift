@@ -25,6 +25,7 @@ public protocol ClosureSynchronizer {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     )
 
@@ -50,7 +51,6 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     )
 
-    func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)

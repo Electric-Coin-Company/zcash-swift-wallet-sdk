@@ -16,8 +16,7 @@ protocol BlockScanner {
     @discardableResult
     func scanBlocks(
         at range: CompactBlockRange,
-        totalProgressRange: CompactBlockRange,
-        didScan: @escaping (BlockHeight) async -> Void
+        didScan: @escaping (BlockHeight, UInt32) async throws -> Void
     ) async throws -> BlockHeight
 }
 
@@ -27,20 +26,18 @@ struct BlockScannerImpl {
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
-    let latestBlocksDataProvider: LatestBlocksDataProvider
 }
 
 extension BlockScannerImpl: BlockScanner {
     @discardableResult
     func scanBlocks(
         at range: CompactBlockRange,
-        totalProgressRange: CompactBlockRange,
-        didScan: @escaping (BlockHeight) async -> Void
+        didScan: @escaping (BlockHeight, UInt32) async throws -> Void
     ) async throws -> BlockHeight {
         logger.debug("Going to scan blocks in range: \(range)")
         try Task.checkCancellation()
 
-        let scanStartHeight = try await transactionRepository.lastScannedHeight()
+        let scanStartHeight = range.lowerBound
         let targetScanHeight = range.upperBound
 
         var scannedNewBlocks = false
@@ -65,24 +62,15 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanFinishTime = Date()
 
-            if let lastScannedBlock = try await transactionRepository.lastScannedBlock() {
-                lastScannedHeight = lastScannedBlock.height
-                await latestBlocksDataProvider.updateLatestScannedHeight(lastScannedHeight)
-                await latestBlocksDataProvider.updateLatestScannedTime(TimeInterval(lastScannedBlock.time))
-            }
+            // TODO: [#1259] potential bug when rustBackend.scanBlocks scan less blocks than batchSize,
+            // https://github.com/zcash/ZcashLightClientKit/issues/1259
+            lastScannedHeight = startHeight + Int(batchSize) - 1
             
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {
-                await didScan(lastScannedHeight)
-
-                let progress = BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: lastScannedHeight
-                )
+                try await didScan(lastScannedHeight, batchSize)
 
                 metrics.pushProgressReport(
-                    progress: progress,
                     start: scanStartTime,
                     end: scanFinishTime,
                     batchSize: Int(batchSize),

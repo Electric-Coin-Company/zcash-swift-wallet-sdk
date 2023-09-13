@@ -1,23 +1,60 @@
-# Unreleased
+# Changelog
+All notable changes to this library will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+# 2.0.0-rc.1 - 2023-09-08
+
+## Notable Changes
+
+This release updates `ZcashLightClientKit` to implement the Spend-Before-Sync fast
+synchronization algorithm.
+
+## Changed
+
+Updated to `zcash-light-client-ffi 0.4.0-rc.1`
+
+`CompactBlockProcessor` now processes compact blocks from the lightwalletd server with Spend-before-Sync algorithm (i.e. non-linear order). This feature shortens the time after which a wallet's spendable balance can be used.
 
 ### [#1196] Check logging level priorities
 The levels for logging have been updated according to Log Levels in Swift. (https://www.swift.org/server/guides/libraries/log-levels.html).
-There's one naming difference, instead of `notice` we use `event`. So the order is debug, info, event, warning, error.  
+There's one naming difference, instead of `notice` we use `event`. So the order is debug, info, event, warning, error.
 
 ### [#1111] Change how the sync progress is stored inside the SDK
 
-`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory 
-where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must 
+`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory
+where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must
 be able to write to this location after it creates this directory. It is suggested that this directory is
 a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
 system itself won't remove these data.
+
+Synchronizer's prepare(...) public API changed: `viewingKeys:
+[UnifiedFullViewingKey]` has been removed and `for walletMode: WalletInitMode`
+added. `WalletInitMode` is an enum with 3 cases: .newWallet, .restoreWallet and
+.existingWallet. Use `.newWallet` when preparing the SDKSynchronizer for a
+brand new wallet that has been generated. Use `.restoreWallet` when wallet is
+about to be restored from a seed and `.existingWallet` for all other scenarios.
+
+## Removed
+
+### [#1181] Correct computation of progress for Spend before Sync
+`latestScannedHeight` and `latestScannedTime` have been removed from `SynchronizerState`. With multiple algorithms
+of syncing the amount of data provided is reduced so it's consistent. Spend before Sync is done in non-linear order
+so both Height and Time don't make sense anymore.
+
+### [#1230] Remove linear sync from the SDK
+
+- `latestScannedHeight` and `latestScannedTime` have been removed from the
+  SynchronizerState. 
+- The concept of pending transaction has changed: `func allPendingTransactions()` 
+  is no longer available. Use `public func allTransactions()` instead.
 
 # 0.22.0-beta
 
 ## Checkpoints
 
 Mainnet
-
 
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2057500.json
@@ -45,105 +82,107 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2330000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2340000.json
 ````
 
+## Fixed
 
-## Fixes
-- [#1037] Empty string memo throws `ZcashError.memoTextInputEndsWithNullBytes` 
+- [#1037] Empty string memo throws `ZcashError.memoTextInputEndsWithNullBytes`
 - [#1016] Rebuild download stream periodically while downloading
 This fixes a memory consumption issue coming from GRPC-Swift.
 - [#1019] Memo has trailing garbled text
- 
+
 ### [#1111] Change how the sync progress is stored inside the SDK
 
-`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory 
-where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must 
+`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory
+where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must
 be able to write to this location after it creates this directory. It is suggested that this directory is
 a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
 system itself won't remove these data.
 
 ### [#1019] Memo has trailing garbled text
-    
+
 Changes the way unpadded bytes are turned into a UTF-8 Swift String
 without using cString assuming APIs that would overflow memory and
 add garbled trailing bytes.
 
-- [#781] This fixes test `testMaxAmountMinusOneSend` 
-by creating two separate 
-tests: 
-- testMaxAmountMinusOneSendFails 
-- testMaxAmountSend 
+- [#781] This fixes test `testMaxAmountMinusOneSend` by creating two separate tests:
+  - testMaxAmountMinusOneSendFails
+  - testMaxAmountSend
 
-Also includes new functionality that tracks sent transactions so 
-that users can be notified specifically when they are mined and uses "idea B" of 
-issue #1033. 
+Also includes new functionality that tracks sent transactions so
+that users can be notified specifically when they are mined and uses "idea B" of
+issue #1033.
 
-closes #1033 
-closes #781 
+closes #1033
+closes #781
 
+### [#1001] Remove PendingDb in favor of `v_transactions` and `v_tx_output` Views
 
-## [#1001] Remove PendingDb in favor of `v_transactions` and `v_tx_output` Views
-### Changed
+## Changed
+
 - `WalletTransactionEncoder` now uses a `LightWalletService` to submit the
 encoded transactions.
 
 - Functions returning or receiving `ZcashTransaction.Sent` or `ZcashTransaction.Received` now
-will be simplified by returning `ZcashTransaction.Overview` or be replaced by their Overview 
+will be simplified by returning `ZcashTransaction.Overview` or be replaced by their Overview
 counterparts
 
-### Added
+## Added
 
 - `ZcashTransaction.Overview` can be checked for "pending-ness" by calling`.isPending(latestHeight:)` latest height must be provided so that minedHeight
-can be compared with the lastest and the `defaultStaleTolerance` constant.
+  can be compared with the lastest and the `defaultStaleTolerance` constant.
 
-`TransactionRecipient` is now a public type.
+- `TransactionRecipient` is now a public type.
 
-- `ZcashTransaction.Output` can be queried to know the inner details of a 
-`ZcashTransaction.Overview`. It will return an array with all the tracked
-outputs for that transaction so that they can be shown to users who request them
+- `ZcashTransaction.Output` can be queried to know the inner details of a
+  `ZcashTransaction.Overview`. It will return an array with all the tracked
+  outputs for that transaction so that they can be shown to users who request them
 
-- `ZcashTransaction.Overview.State` is introduced to represent `confirmed`, 
-`pending` or `expired` states. This State is relative to the current height
-of the chain that is passed to the function `getState(for currentHeight: BlockHeight)`.
+- `ZcashTransaction.Overview.State` is introduced to represent `confirmed`,
+  `pending` or `expired` states. This State is relative to the current height
+  of the chain that is passed to the function `getState(for currentHeight: BlockHeight)`.
 
 State should be a transient value and it's not adviced to store it unless
 transactions have stale values such as `confirmed` or `expired`.
 
-#### Synchronizer
+### Synchronizer Changes
 
 - `public func getTransactionOutputs(transaction) async -> [ZcashTransaction.Output]` is added to
-get the outputs related to the given transaction. You can use this to know every detail of the 
+get the outputs related to the given transaction. You can use this to know every detail of the
 transaction Overview and show it in a more fine-grained UI.
 
-- `TransactionRecipient` is returned on `getRecipients(for:)`. 
-### Renamed
+- `TransactionRecipient` is returned on `getRecipients(for:)`.
+
+## Renamed
+
 - `AccountEntity` called `Account` is now `DbAccount`
 
-### Removed
+## Removed
+
 - `ZcashTransaction.Received` and `ZcashTransaction.Sent` are removed
-and replaced by `Overview` since the notion of Sent and received is 
-not entirely applicable to Zcash transactions where value can be 
-sent and received at the same time. Transactions with negative value
-will be considered as "sent" but that won't be enforced with a type
-anymore
+  and replaced by `Overview` since the notion of Sent and received is
+  not entirely applicable to Zcash transactions where value can be
+  sent and received at the same time. Transactions with negative value
+  will be considered as "sent" but that won't be enforced with a type
+  anymore
 - `cancelSpend()`: support for cancel spend was removed since its
-completion was not guaranteed
+  completion was not guaranteed
 - `PendingTransactionEntity` and all of its related components.
-Pending items are still tracked and visualized by the existing APIs
-but they are retrieved from the `TransactionRepository` instead by
-returning `ZcashTransaction.Overview` instead.
+  Pending items are still tracked and visualized by the existing APIs
+  but they are retrieved from the `TransactionRepository` instead by
+  returning `ZcashTransaction.Overview` instead.
 - `pendingDbURL` is removed from every place it was required. Its
-deletion is responsibility of wallet developers.
-- `ClearedTransactions` are now just `transactions`.`MigrationManager` 
-is deleted. Now all migrations are in charge of the rust welding layer.
+  deletion is responsibility of wallet developers.
+- `ClearedTransactions` are now just `transactions`.`MigrationManager`
+  is deleted. Now all migrations are in charge of the rust welding layer.
 - `PendingTransactionDao.swift` is removed.
 - `PendingTransactionRepository` protocol is removed.
 - `TransactionManagerError`
 - `PersistentTransactionManager`
 - `OutboundTransactionManager` is deleted and replaced by `TransactionEncoder`
-which now incorporates `submit(encoded:)` functionality
+  which now incorporates `submit(encoded:)` functionality
 - `DatabaseMigrationManager` is remove since it's no longer needed all Database
-migrations shall be hanlded by the rust layer.
-- `ZcashSDK.defaultPendingDbName` along with any sibling members 
-- `TransactionRepository` 
+  migrations shall be hanlded by the rust layer.
+- `ZcashSDK.defaultPendingDbName` along with any sibling members
+- `TransactionRepository`
     - `findMemos(for receivedTransaction: ZcashTransaction.Received)`
     - `findMemos(for sentTransaction: ZcashTransaction.Sent)`
 
@@ -151,7 +190,7 @@ migrations shall be hanlded by the rust layer.
 
 Now the SDK allows for more fine-tuning of its logging behavior. The `LoggingPolicy` enum
 provides for three options: `.default(OSLogger.LogLevel)` wherein the SDK will use its own logger, with the option
-to customize the log level by passing an `OSLogger.LogLevel` to the enum case. 
+to customize the log level by passing an `OSLogger.LogLevel` to the enum case.
 `custom` allows one to pass a custom `Logger` implementation for completely customized logging.
 Lastly, `noLogging` disables logging entirely.
 
@@ -161,13 +200,13 @@ will utilize an internal `Logger` implementation with an `OSLogger.LogLevel` of 
 ### [#442] Implement parallel downloading and scanning
 
 The SDK now parallelizes the download and scanning of blocks. If the network connection of the client device is fast enough then the scanning
-process doesn't have to wait for blocks to be downloaded. This makes the whole sync process faster. 
+process doesn't have to wait for blocks to be downloaded. This makes the whole sync process faster.
 
 `Synchronizer.stop()` method is not async anymore.
 
 ### [#361] Redesign errors inside the SDK
 
-Now the SDK uses only one error type - `ZcashError`. Each method that throws now throws only `ZcashError`. 
+Now the SDK uses only one error type - `ZcashError`. Each method that throws now throws only `ZcashError`.
 Each publisher (or stream) that can emit error now emitts only `ZcashError`.
 
 Each symbol in `ZcashError` enum represents one error. Each error is used only in one place
@@ -175,7 +214,7 @@ inside the SDK. Each error has assigned unique error code (`ZcashErrorCode`) whi
 
 # 0.21.0-beta
 
-New checkpoints
+## Checkpoints
 
 Mainnet:
 
@@ -196,25 +235,37 @@ Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2290000.json
 ````
+
 ### [#969] Clear cache on error to avoid discontinuities when verifying
 This change drops the file-system cache whenever an error occurs when storing blocks
-so that there is not a discontinuity in the cached block range that could cause a 
+so that there is not a discontinuity in the cached block range that could cause a
 discontinuity error on libzcashlc when calling `scan_blocks`. This will have a setback of
 at most 100 blocks that would have to be re-downloaded when resuming sync.
 
-### [#959] and [#914] Value of outbound transactions does not match user intended tx input 
+### [#959] and [#914] Value of outbound transactions does not match user intended tx input
 
-This change switches to a new (future) version of the rust crates that will get rid of the sent and received transactions Views in favor of a v_transaction view that will do better accounting of outgoing and incoming funds. Additionally it will support an outputs view for seeing the inner details of transactions enabling the SDKs tell the users the precise movement of value that a tx causes in its multiple possible ways according to the protocol.
+This change switches to a new (future) version of the rust crates that will get
+rid of the sent and received transactions Views in favor of a v_transaction
+view that will do better accounting of outgoing and incoming funds.
+Additionally it will support an outputs view for seeing the inner details of
+transactions enabling the SDKs tell the users the precise movement of value
+that a tx causes in its multiple possible ways according to the protocol.
 
 the v_tx_outputs view is not yet implemented.
 
-Sent and Received transaction sub-types are kept for compatibility purposes but they are generated from Overviews instead of queried from a specific view.
+Sent and Received transaction sub-types are kept for compatibility purposes but
+they are generated from Overviews instead of queried from a specific view.
 
-In the transaction Overview the value represents the whole value transfer for the transaction from the point of view of a given account including fees. This means that the value for a single transaction Overview struct represents the addition or subtraction of ZEC value to the account's balance.
+In the transaction Overview the value represents the whole value transfer for
+the transaction from the point of view of a given account including fees. This
+means that the value for a single transaction Overview struct represents the
+addition or subtraction of ZEC value to the account's balance.
 
-Future updates will give clients the possibility to drill into the inner workings of those value changes in a per-output basis for each transaction.
+Future updates will give clients the possibility to drill into the inner
+workings of those value changes in a per-output basis for each transaction.
 
-Also, the field pending_unmined field was added to v_transactions so that wallets can query DataDb for pending but yet unmined txs
+Also, the field pending_unmined field was added to v_transactions so that
+wallets can query DataDb for pending but yet unmined txs
 
 This will prepare the field for removing the notion of a "PendingDb" and its nuances.
 
@@ -224,7 +275,7 @@ This is mostly internal change. But it also touches the public API.
 
 `KeyDeriving` protocol is changed. And therefore `DerivationTool` is changed. `deriveUnifiedSpendingKey(seed:accountIndex:)` and
 `deriveUnifiedFullViewingKey(from:)` methods are now async. `DerivationTool` offers alternatives for these methods. Alternatives are using either
-closures or Combine. 
+closures or Combine.
 
 ### [#469] ZcashRustBackendWelding to Async
 
@@ -244,7 +295,7 @@ These methods are now async:
 
 # 0.20.0-beta
 
-### New Checkpoints:
+## Checkpoints:
 
 Mainnet:
 
@@ -267,44 +318,47 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2270000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2280000.json
 ````
 
-### Deprecations made effective:
-Synchronizer
+## Deprecations made effective:
+
+Synchronizer:
 - `func getShieldedBalance(accountIndex: Int) -> Int64`
 - `func getShieldedVerifiedBalance(accountIndex: Int) -> Int64`
-use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
-Int64 value.
+  use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+  Int64 value.
 
 Initializer:
 - `func getBalance(account index: Int = 0) -> Int64`
-use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
-Int64 value.
+  use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+  Int64 value.
 - `func getVerifiedBalance(account index: Int = 0) -> Int64`
-use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
-Int64 value.
+  use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+  Int64 value.
 
 ZcashSDK.NetworkConstants:
 - `func defaultFee(for height: BlockHeight) -> Int64`
-use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
-Int64 value.
+  use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+  Int64 value.
 
 ZcashRustBackendWelding:
 - `func getReceivedMemoAsUTF8(dbData:idNote:networkType:) -> String?`
- Use `getReceivedMemo(dbData:idNote:networkType)` instead
+  Use `getReceivedMemo(dbData:idNote:networkType)` instead
 - `func getSentMemoAsUTF8(dbData:idNote:networkType:) -> String?`
- Use `getSentMemo(dbData:idNote:networkType)` instead
+  Use `getSentMemo(dbData:idNote:networkType)` instead
+
+## Changed
 
 ### [#209] Support Initializer Aliases
 
 Added `ZcashSynchronizerAlias` enum which is used to identify an instance of the `SDKSynchronizer`. All the paths
-to all resources (databases, filesystem block storage...) are updated automatically inside the SDK according to the 
-alias. So it's safe to create multiple instances of the `SDKSynchronizer`. Each instance must have unique Alias. If 
+to all resources (databases, filesystem block storage...) are updated automatically inside the SDK according to the
+alias. So it's safe to create multiple instances of the `SDKSynchronizer`. Each instance must have unique Alias. If
 the `default` alias is used then the SDK works the same as before this change was introduced.
 
-The SDK now also checks which aliases are used and it prevents situations when two instances of the `SDKSynchronizer` 
+The SDK now also checks which aliases are used and it prevents situations when two instances of the `SDKSynchronizer`
 has the same alias. Methods `prepare()` and `wipe()` do checks for used alias. And those methods fail
 with `InitializerError.aliasAlreadyInUse` if the alias is already used.
 
-If the alias check fails in the `prepare()` method then the status of the `SDKSynchronizer` isn't switched from `unprepared`. 
+If the alias check fails in the `prepare()` method then the status of the `SDKSynchronizer` isn't switched from `unprepared`.
 These methods newly throw `SynchronizerError.notPrepared` error when the status is `unprepared`:
 - `sendToAddress(spendingKey:zatoshi:toAddress:memo:) async throws -> PendingTransactionEntity`
 - `shieldFundsspendingKey:memo:shieldingThreshold:) async throws -> PendingTransactionEntity`
@@ -312,15 +366,15 @@ These methods newly throw `SynchronizerError.notPrepared` error when the status 
 - `refreshUTXOs(address:from:) async throws -> RefreshedUTXOs`
 - `rewind(policy:) -> AnyPublisher<Void, Error>`
 
-Provided file URLs to resources (databases, filesystem block storage...) are now parsed inside the SDK and updated 
-according to the alias. If some error during this happens then `SDKSynchronzer.prepare()` method throws 
+Provided file URLs to resources (databases, filesystem block storage...) are now parsed inside the SDK and updated
+according to the alias. If some error during this happens then `SDKSynchronzer.prepare()` method throws
 `InitializerError.cantUpdateURLWithAlias` error.
 
 ### [#831] Add support for alternative APIs
 
-There are two new protocols (`ClosureSynchronizer` and `CombineSynchronizer`). And there are two new 
+There are two new protocols (`ClosureSynchronizer` and `CombineSynchronizer`). And there are two new
 objects which conform to respective protocols (`ClosureSDKSynchronizer` and `CombineSDKSynchronizer`). These
-new objects offer alternative API for the `SDKSynchronizer`. Now the client app can choose which technology 
+new objects offer alternative API for the `SDKSynchronizer`. Now the client app can choose which technology
 it wants to use to communicate with Zcash SDK and it isn't forced to use async.
 
 These methods in the `SDKSynchronizer` are now async:
@@ -347,17 +401,18 @@ Notifications are replaced with `Combine` publishers. Check the migrating docume
 documentation in the code to get more information.
 
 ### [#826] Change how the SDK is initialized
-    
-- `viewingKeys` and `walletBirthday` are removed from `Initializer` constuctor. These parameters moved to 
-`SDKSynchronizer.prepare` function.
+
+- `viewingKeys` and `walletBirthday` are removed from `Initializer` constuctor. These parameters moved to
+  `SDKSynchronizer.prepare` function.
 - Constructor of the `SDKSynchronizer` no longer throws exception.
 - Any value emitted from `lastState` stream before `SDKSynchronizer.prepare` is called has `latestScannedHeight` set to 0.
-- `Initializer.initialize` function isn't public anymore. To initialize SDK call `SDKSynchronizer.prepare` 
-instead. 
+- `Initializer.initialize` function isn't public anymore. To initialize SDK call `SDKSynchronizer.prepare` instead.
 
 
 # 0.19.1-beta
-### Checkpoints added
+
+## Checkpoints added
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2002500.json
@@ -370,49 +425,53 @@ Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2250000.json
 ````
+
 ## Fixed
+
 ### [#821] `failedToWriteMetadata` at sync startup
-contains no public API changes.
+
+No public API changes.
+
 Adds `func shouldClearBlockCacheAndUpdateInternalState() -> BlockHeight?` to `SyncRanges`
 so that the compact block processor can advert internal states that are not consistent and
-recover from such state. 
+recover from such state.
 
 For concrete examples check out the tests in:
 `Tests/NetworkTests/CompactBlockProcessorTests.swift`
-
 
 ## Deleted
 Removed linter binary from repository
 
 # 0.19.0-beta
+
 ### [#816] Improve how rewind call can be used
 
 `SDKSynchronizer.rewind(policy:)` function can be now called anytime. It returns `AnyPublisher` which
-completes or fails when the rewind is done. For more details read the documentation for this method 
+completes or fails when the rewind is done. For more details read the documentation for this method
 in the code.
 
 ### [#801] Improve how wipe call can be used
 
 `SDKSynchronizer.wipe()` function can be now called anytime. It returns `AnyPublisher` which
-completes or fails when the wipe is done. For more details read the documentation for this method 
+completes or fails when the wipe is done. For more details read the documentation for this method
 in the code.
 
 ### [#793] Send synchronizerStopped notification only when sync process stops
-    
+
 `synchronizerStopped` notification is now sent after the sync process stops. It's
 not sent right when `stop()` method is called.
 
 ### [#795] Include sapling-spend file into bundle for tests
-    
+
 This is only an internal change and doesn't change the behavior of the SDK. `Initializer`'s
-constructor has a new parameter `saplingParamsSourceURL`. Use `SaplingParamsSourceURL.default` 
+constructor has a new parameter `saplingParamsSourceURL`. Use `SaplingParamsSourceURL.default`
 value for this parameter.
 
 ### [#764] Refactor communication between components inside th SDK
 
 This is mostly an internal change. A consequence of this change is that all the notifications
 delivered via `NotificationCenter` with the prefix `blockProcessor` are now gone. If affected
-notifications were used in your code use notifications with the prefix `synchronizer` now. 
+notifications were used in your code use notifications with the prefix `synchronizer` now.
 These notifications are defined in `SDKSynchronizer.swift`.
 
 ### [#759] Remove Jazz-generated HTML docs
@@ -427,8 +486,7 @@ is used in your code replace it by using `SDKSynchronizer` API.
 ### [#770] Update GRPC swift library
 This updates to GRPC-Swift 1.14.0.
 
-
-### Checkpoints added:
+## Checkpoints added:
 
 Mainnet:
 ````
@@ -459,32 +517,32 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2240000.json
 ## File system backed block cache
 
 File system based block cache. Compact blocks will now be stored
-on the file system. Caller must provide a `URL` pointing to the 
+on the file system. Caller must provide a `URL` pointing to the
 filesystem root directory where the fsBlock cache is. this directory
 is expected to contain a `/blocks` sub-directory with the blocks stored
 in the convened filename format `{height}-{hash}-compactblock`. This directory
 must be granted both read and write permissions.
 
 the file system cache will have a "bookkeeping" database that the rust
-welding layer will use to know the state of the cache and locate the 
+welding layer will use to know the state of the cache and locate the
 cached compact blocks. This directory can be deleted provided that the
-Compactblock processor or Synchronizer are not running. Upon deletion 
-caller is responsible for initializing these objects for the cache to 
-be created. 
+Compactblock processor or Synchronizer are not running. Upon deletion
+caller is responsible for initializing these objects for the cache to
+be created.
 
-Implementation notes: Users of the SDK will know the path they will 
-provide but must assume no behavior whatsoever or rely on the cached 
-information in any way, since it is an internal state of the SDK. 
+Implementation notes: Users of the SDK will know the path they will
+provide but must assume no behavior whatsoever or rely on the cached
+information in any way, since it is an internal state of the SDK.
 Maintainers might provide no support for problems related to speculative
 use of the file system cache. If you consider your application needs any
-other information than the one available through public APIs, please 
+other information than the one available through public APIs, please
 file the corresponding feature request.
 
 ### Added
 
 - `Synchronizer.shieldFunds(spendingKey:memo:shieldingThreshold)` shieldingThreshold
 was added allowing wallets to manage their own shielding policies.
-    
+
 ### Removed
 - `InitializerError.cacheDbMigrationFailed`
 
@@ -492,10 +550,10 @@ was added allowing wallets to manage their own shielding policies.
 CacheDb references that were deprecated instead of **deleted** are pointing out
 that they should be useful for you to migrate from using cacheDb.
 
-- `ResourceProvider.cacheDbURL` deprecated but left for one release cycle for clients 
+- `ResourceProvider.cacheDbURL` deprecated but left for one release cycle for clients
 to move away from cacheDb.
 
-- `NetworkConstants.defaultCacheDbName` deprecated but left for one release cycle for clients 
+- `NetworkConstants.defaultCacheDbName` deprecated but left for one release cycle for clients
 to move away from cacheDb.
 
 ## Other Issues Fixed by this PR:
@@ -512,7 +570,7 @@ to move away from cacheDb.
 
 # 0.18.1-beta
 ### [#767] implement getRecipients() for Synchronizer.
-    
+
 This implements `getRecipients()` function which retrieves the possible
 recipients from a sent transaction. These can either be addresses or
 internal accounts depending on the transaction being a shielding tx
@@ -530,14 +588,13 @@ Other changes:
 It wouldn't have been possible to release an SDK without you, pal.
 
 We are moving away from Cocoapods since our main dependencies, SwiftGRPC
-and SWIFT-NIO are. We don't have much of a choice. 
+and SWIFT-NIO are. We don't have much of a choice.
 
 We've been communicating this for a long time. Although, if you really need Cocoapods,
 please let us know by opening an issue in our repo and we'll talk about it.
 
 
-### New Checkpoints 
-Checkpoints 
+### Checkpoints added
 
 Mainnet
 ````
@@ -568,27 +625,28 @@ This fixes an issue where the default reorg was 20 blocks rewind instead of 10. 
 reorg count was incremented before calling the rewind height computing function.
 
 ## Use Librustzcash database views to query and represent transactions
- 
+
 ### [#556] Change data structures which represent transactions.
 
-These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
-`ConfirmedTransactionEntity`. And these data types were added: `ZcashTransaction.Overview`, 
-`ZcashTransaction.Received`, `ZcashTransaction.Sent`. 
+These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`,
+`ConfirmedTransactionEntity`. And these data types were added: `ZcashTransaction.Overview`,
+`ZcashTransaction.Received`, `ZcashTransaction.Sent`.
 
 New data structures are very similar to the old ones. Although there many breaking changes.
-The APIs of the `SDKSynchronizer` remain unchanged in their behavior. They return different 
-data types. **When adopting this change, you should check which data types are used by methods 
+The APIs of the `SDKSynchronizer` remain unchanged in their behavior. They return different
+data types. **When adopting this change, you should check which data types are used by methods
 of the `SDKSynchronizer` in your code and change them accordingly.**
 
-New transaction structures no longer have a `memo` property. This responds to the fact that 
-Zcash transactions can have either none or multiple memos. To get memos for the transaction 
+New transaction structures no longer have a `memo` property. This responds to the fact that
+Zcash transactions can have either none or multiple memos. To get memos for the transaction
 the `SDKSynchronizer` has now new methods to fetch those:
-- `func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]`, 
+- `func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]`,
 - `func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]`
 - `func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]`
-    
+
 ## CompactBlockProcessor is now internal
 ### [#671] Make CompactBlockProcessor Internal.
+
 
 The CompactBlockProcessor is no longer a public class/API. Any direct access will
 end up as a compiler error. Recommended way how to handle things is via `SDKSynchronizer`
@@ -596,39 +654,43 @@ from now on. The Demo app has been updated accordingly as well.
 
 ## We've changed how we download and scan blocks. Status reporting has changed.
 
-### [#657] Change how blocks are downloaded and scanned. 
+### [#657] Change how blocks are downloaded and scanned.
 
 In previous versions, the SDK first downloaded all the blocks and then it
-scanned all the blocks. This approach requires a lot of disk space. The SDK now 
+scanned all the blocks. This approach requires a lot of disk space. The SDK now
 behaves differently. It downloads a batch of blocks (100 by default), scans those, and
 removes those blocks from the disk. And repeats this until all the blocks are processed.
 
 `SyncStatus` was changed. `.downloading`, `.validating`, and `.scanning` symbols
-were removed. And the `.scanning` symbol was added. The removed phases of the sync 
-process are now reported as one phase. 
+were removed. And the `.scanning` symbol was added. The removed phases of the sync
+process are now reported as one phase.
 
 Notifications were also changed similarly. These notifications were
 removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
 And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
 the removed notifications.
-        
-## New Wipe Method to delete wallet information. Use with care. 
-### [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
+
+## New Wipe Method to delete wallet information. Use with care.
+
+### [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`.
 
 ## Benchmarking APIs: A primer
-### [#663] Foundations for the benchmarking/performance testing in the SDK. 
+
+### [#663] Foundations for the benchmarking/performance testing in the SDK.
 
 This change presents 2 building blocks for the future automated tests, consisting
-of a new SDKMetrics interface to control flow of the data in the SDK and 
-new performance (unit) test measuring synchronization of 100 mainnet blocks. 
+of a new SDKMetrics interface to control flow of the data in the SDK and
+new performance (unit) test measuring synchronization of 100 mainnet blocks.
 
 # 0.17.6-beta
+
 ### [#756] 0.17.5-beta updates to libzcashlc 0.2.0 when it shouldn't
 
 Updated checkpoints to the ones present in 0.18.0-beta
+
 # 0.17.5-beta
 
-Update checkpoints 
+Update checkpoints
 
 Mainnet
 
@@ -653,23 +715,26 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2170000.json
 ````
 
 # 0.17.4-beta
+
 ### [#665] Fix testShieldFunds() `get_transparent_balance` error
-updates `libzcashlc` to `0.1.1` to fix an error where getting a 
+updates `libzcashlc` to `0.1.1` to fix an error where getting a
 transparent balance on an empty database would fail.
 
 # 0.17.3-beta
+
 ### [#646] SDK sync process resumes to previously saved block height
-This change adds an internal storage test on UserDefaults that tells the 
+This change adds an internal storage test on UserDefaults that tells the
 SDK where sync was left off when cancelled whatever the reason for it
 to restart on a later attempt. This fixes some issues around syncing
 long block ranges in several attempts not enhancing the right transactions
 because the enhancing phase would only consider the last range scanned.
-This only fixes the situation where rewinding the SDK would cause the 
-whole database to be cleared instead and syncing to be restarted from 
+This only fixes the situation where rewinding the SDK would cause the
+whole database to be cleared instead and syncing to be restarted from
 scratch (issue [#660]).
 
 - commit `3b7202c` Fix `testShieldFunds()` dataset loading issue. (#659)
-New Checkpoints
+
+## Checkpoints added
 
 Mainnet
 ````
@@ -686,32 +751,32 @@ Testnet
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2140000.json
 ````
 
-
 New Checkpoint for `testShieldFunds()`
 ```
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1631000.json
 ```
 
 # 0.17.2-beta
-### [#660] Fix the situation when any rewind causes full rescan
+
+- [#660] Fix the situation when any rewind causes full rescan
 
 # 0.17.1-beta
-### [#651] Change the rewind behavior. Now if the rewind is used while the sync process is in progress then an exception is thrown.
-### [#616] Download Stream generates too many updates on the main thread
-> **WARNING**: Notifications from SDK are no longer delivered on main thread.
 
-### [#585] Fix RewindRescanTests (#656)
-### Cleanup warnings (#655)
-### [#637] Make sapling parameter download part of processing blocks (#650)
-### [#631] Verify SHA1 correctness of Sapling files after downloading (#643)
-### Add benchmarking info to SyncBlocksViewController (#649)
-### [#639] Provide an API to estimate TextMemo length limit correctly (#640)
-### [#597] Bump up SQLite Swift to 0.14.1 (#638)
-### [#488] Delete cache db when sync ends
+- [#651] Change the rewind behavior. Now if the rewind is used while the sync process is in progress then an exception is thrown.
+- [#616] Download Stream generates too many updates on the main thread
+  **WARNING**: Notifications from SDK are no longer delivered on main thread.
+- [#585] Fix RewindRescanTests (#656)
+- Cleanup warnings (#655)
+- [#637] Make sapling parameter download part of processing blocks (#650)
+- [#631] Verify SHA1 correctness of Sapling files after downloading (#643)
+- Add benchmarking info to SyncBlocksViewController (#649)
+- [#639] Provide an API to estimate TextMemo length limit correctly (#640)
+- [#597] Bump up SQLite Swift to 0.14.1 (#638)
+- [#488] Delete cache db when sync ends
 
-### Added Checkpoints
+## Checkpoints added
 
-Mainnet 
+Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1882500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1885000.json
@@ -727,48 +792,48 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2120000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2130000.json
 ````
 
-# Summary of 0.17.0-beta
+# 0.17.0-beta
 
-### [#321] Validate UA
-### [#384] Adopt Type Safe Memos in the FFI and SDK
-### [#355] Update lib.rs to lastest librustzcash master
-### [#373] Demo App shows ZEC balances in scientific notation
-### [#380] One of the initAccountsTable() is dead code (except for tests) 
-### [#374] XCTest don't load Resources from the module's bundle
-### [#375] User can't go twice in a row to SendFundsViewController
-### [#490] Rebase long dated PRs on top of the feature branches
-### [#510] Change references of Shielded address to Sapling Address
-### [#511] Derivation functions should only return a single resul
-### [#512] Remove derivation of t-address from pubkey
-### [#520] Use UA Test Vector for Recipient Test
-### [#544] Change Demo App to use USK and new rolling addresses
-### [#602] Improve error logging for InitializerError and RustWeldingError
-### [#579] Fix database lock
-### [#595] Update Travis to use Xcode 14
-### [#592] Fix various tests and deleted some that are not useful anymore
-### [#523] Make a CompactBlockProcessor an Actor
-### [#593] Fix testSmallDownloadAsync test
-### [#577] Fix: reduce batch size when reaching increased load part of the chain
-### [#575] make Memo and MemoBytes parameters nullable so they can be omitted  when sending to transparent receivers.
-### commit `1979e41` Fix pre populated Db to have transactions from darksidewalletd seed
-### commit `a483537` Ensure that the persisted test database has had migrations applied.
-### commit `1273d30` Clarify & make regular how migrations are applied.
-### commit `78856c6` Fix: successive launches of the application fail because the closed range of the migrations to apply would be invalid (lower range > that upper range)
-### commit `7847a71` Fix incorrect encoding of optional strings in PendingTransaction.
-### commit `789cf01` Add Fee field to Transaction, ConfirmedTransaction, ReceivedTransactions and Pen dingTransactions. Update Notes DAOs with new fields
-### commit `849083f` Fix UInt32 conversions to SQL in PendingTransactionDao
-### commit `fae15ce` Fix sent_notes.to_address column reference.
-### commit `23f1f5d` Merge pull request #562 from zcash/fix_UnifiedTypecodesTests
-### commit `30a9c06` Replace `db.run` with `db.execute` to fix migration issues
-### commit `0fbf90d` Add migration to re-create pending_transactions table with nullable columns.
-### commit `36932a2` Use PendingTransactionEntity.internalAccount for shielding.
-### commit `f5d7aa0` Modify PendingTransactionEntity to be able to represent internal shielding tx.
-### [#561] Fix unified typecodes tests
-### [#530] Implement ability to extract available typecodes from UA
+- [#321] Validate UA
+- [#384] Adopt Type Safe Memos in the FFI and SDK
+- [#355] Update lib.rs to lastest librustzcash master
+- [#373] Demo App shows ZEC balances in scientific notation
+- [#380] One of the initAccountsTable() is dead code (except for tests)
+- [#374] XCTest don't load Resources from the module's bundle
+- [#375] User can't go twice in a row to SendFundsViewController
+- [#490] Rebase long dated PRs on top of the feature branches
+- [#510] Change references of Shielded address to Sapling Address
+- [#511] Derivation functions should only return a single resul
+- [#512] Remove derivation of t-address from pubkey
+- [#520] Use UA Test Vector for Recipient Test
+- [#544] Change Demo App to use USK and new rolling addresses
+- [#602] Improve error logging for InitializerError and RustWeldingError
+- [#579] Fix database lock
+- [#595] Update Travis to use Xcode 14
+- [#592] Fix various tests and deleted some that are not useful anymore
+- [#523] Make a CompactBlockProcessor an Actor
+- [#593] Fix testSmallDownloadAsync test
+- [#577] Fix: reduce batch size when reaching increased load part of the chain
+- [#575] make Memo and MemoBytes parameters nullable so they can be omitted  when sending to transparent receivers.
+- commit `1979e41` Fix pre populated Db to have transactions from darksidewalletd seed
+- commit `a483537` Ensure that the persisted test database has had migrations applied.
+- commit `1273d30` Clarify & make regular how migrations are applied.
+- commit `78856c6` Fix: successive launches of the application fail because the closed range of the migrations to apply would be invalid (lower range > that upper range)
+- commit `7847a71` Fix incorrect encoding of optional strings in PendingTransaction.
+- commit `789cf01` Add Fee field to Transaction, ConfirmedTransaction, ReceivedTransactions and Pen dingTransactions. Update Notes DAOs with new fields
+- commit `849083f` Fix UInt32 conversions to SQL in PendingTransactionDao
+- commit `fae15ce` Fix sent_notes.to_address column reference.
+- commit `23f1f5d` Merge pull request #562 from zcash/fix_UnifiedTypecodesTests
+- commit `30a9c06` Replace `db.run` with `db.execute` to fix migration issues
+- commit `0fbf90d` Add migration to re-create pending_transactions table with nullable columns.
+- commit `36932a2` Use PendingTransactionEntity.internalAccount for shielding.
+- commit `f5d7aa0` Modify PendingTransactionEntity to be able to represent internal shielding tx.
+- [#561] Fix unified typecodes tests
+- [#530] Implement ability to extract available typecodes from UA
 
-### Added Checkpoints
+## Checkpoints added
 
-Mainnet 
+Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1872500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1875000.json
@@ -782,7 +847,8 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2110000.json
 ````
 
 # 0.17.0-beta.rc1
-### Added Checkpoints
+
+## Checkpoints added
 
 Mainnet
 ````
@@ -795,6 +861,7 @@ Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1865000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1867500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1870000.json
 ````
+
 Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2020000.json
@@ -809,25 +876,35 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2100000.json
 ````
 
 # 0.17.0-alpha.5
-### point to libzcashlc 0.1.0-beta.3. This fixes an issue spending change notes 
+
+- update to libzcashlc 0.1.0-beta.3. This fixes an issue spending change notes
+
 # 0.17.0-alpha.4
-### point to libzcashlc 0.1.0-beta.2
+
+- update to libzcashlc 0.1.0-beta.2
 
 # 0.17.0-alpha.3
-### [#602] Improve error logging for InitializerError and RustWeldingError
+
+- [#602] Improve error logging for InitializerError and RustWeldingError
 
 # 0.17.0-alpha.2
-### [#579] Fix database lock
-### [#592] Fix various tests and deleted some that are not useful anymore
-### [#581] getTransparentBalanceForAccount error not handled
+
+- [#579] Fix database lock
+- [#592] Fix various tests and deleted some that are not useful anymore
+- [#581] getTransparentBalanceForAccount error not handled
 
 # 0.17.0-alpha.1
+
 See MIGRATING.md
 
 # 0.16-13-beta
-### [#597] SDK does not build with SQLite 0.14
+
+- [#597] SDK does not build with SQLite 0.14
+
 # 0.16.12-beta
-### Checkpoints added:
+
+## Checkpoints added:
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1832500.json
@@ -838,9 +915,12 @@ Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1842500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1845000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1847500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1850000.json
-````        
+````
+
 # 0.16.11-beta
-### Checkpoints added:
+
+## Checkpoints added:
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1812500.json
@@ -852,23 +932,27 @@ Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1825000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1827500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1830000.json
 ````
+
 # 0.16.10-beta
-### [#532] [0.16.x-beta] Download does not stop correctly
 
-Issue Reported:
+- [#532] [0.16.x-beta] Download does not stop correctly
 
-When the synchronizer is stopped, the processor does not cancel
-the download correctly. Then when attempting to resume sync, the
-synchronizer is not on `.stopped` and can't be resumed
+  Issue Reported:
 
-this doesn't appear to happen in `master` branch that uses
-structured concurrency for operations.
+  When the synchronizer is stopped, the processor does not cancel
+  the download correctly. Then when attempting to resume sync, the
+  synchronizer is not on `.stopped` and can't be resumed
 
-Fix:
-This commit makes sure that the download streamer checks cancelation
-before processing any block, or getting called back to report progress
+  this doesn't appear to happen in `master` branch that uses
+  structured concurrency for operations.
 
-Checkpoints added:
+  Fix:
+
+  This commit makes sure that the download streamer checks cancelation
+  before processing any block, or getting called back to report progress
+
+## Checkpoints added
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1807500.json
@@ -876,7 +960,9 @@ Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1810000.json
 ````
 
 # 0.16.9-beta
-### Checkpoints added:
+
+## Checkpoints added
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1787500.json
@@ -888,8 +974,11 @@ Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1800000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1802500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1805000.json
 ````
+
 # 0.16.8-beta
-### Checkpoints added:
+
+## Checkpoints added
+
 Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1775000.json
@@ -906,11 +995,12 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2010000.json
 ````
 
 # 0.16.7-beta
-### [#455] revert queue priority downgrade changes from [#435] (#456)
-    
-This reverts queue priority changes from commit `a5d0e447748257d2af5c9101391dd05a5ce929a2` since we detected it might prevent downloads to be scheduled in a timely fashion
 
-Checkpoints added:
+- [#455] revert queue priority downgrade changes from [#435] (#456)
+  This reverts queue priority changes from commit `a5d0e447748257d2af5c9101391dd05a5ce929a2` since we detected it might prevent downloads to be scheduled in a timely fashion
+
+## Checkpoints added
+
 Mainnet
 ```
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1757500.json
@@ -929,46 +1019,59 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/1990000.json
 ```
 
 # 0.16.6-beta
-- There's a problem with 0.16.5-beta hash. Re-releasing 
-# 0.16.5-beta
-- [#449] Use CompactBlock Streamer download instead of batch downloads (#451)
-This increases the speed of downloads significantly while reducing the memory footprint.
-- [#435] thread sanitizer issues (#448)
-Issues related to Thread Sanitizer warnings
 
-Also new Checkpoint for 1755000 on mainnet
+- There's a problem with 0.16.5-beta hash. Re-releasing
+
+# 0.16.5-beta
+
+- [#449] Use CompactBlock Streamer download instead of batch downloads (#451)
+  This increases the speed of downloads significantly while reducing the memory footprint.
+
+- [#435] thread sanitizer issues (#448)
+  Issues related to Thread Sanitizer warnings
+
+- Adds new Checkpoint for 1755000 on mainnet
+
 # 0.16.4-beta
+
 - [#444] Syncing Restarts to zero when the wallet is wiped and synced from zero in one go. (#445)
 - [#440] Split constants for Download Batches and Scanning Batches (#441)
-This change was done to aleviate memory load when downloading large blocks.
-Default download batch constant is deprecated in favor of `DefaultDownloadBatch` and 
-`DefaultScanningBatch`
+  This change was done to aleviate memory load when downloading large blocks.
+  Default download batch constant is deprecated in favor of `DefaultDownloadBatch` and
+  `DefaultScanningBatch`
+
 # 0.16.3-beta
- - [#436] Add checkpoint with a lower interval on mainnet (#437)
- This adds checkpoint at a 2500 block interval to help reduce scan times
- on new wallets
+
+- [#436] Add checkpoint with a lower interval on mainnet (#437)
+  This adds checkpoint at a 2500 block interval to help reduce scan times
+  on new wallets
+
 # 0.16.2-beta
+
 - [#418] "Swift.EncodingError.InvalidValue Encoding an Int64 is not supported" (#430)
-This fixes Cocoapods clients pointing to SQLite 0.12.2 instead of using 0.13
-the former does not support custom encoding of Int64 and makes Zatoshi break
+  This fixes Cocoapods clients pointing to SQLite 0.12.2 instead of using 0.13
+  the former does not support custom encoding of Int64 and makes Zatoshi break
 
 - [#428] make some helpers publicly accessible (#429)
+
 # 0.16.1-beta
+
 - [#422] Make Zatoshi extensions of `NSDecimalNumber` public (#423)
 - [#419] Fix Unavailable Transport 14 when attempting to sync (#426)
- this changes timeout settings and Keepalive changes. 
- Recommended settings for lightwalletd.com are 60000ms singleCallTimeout
- on `LightWalletEndpoint`
- 
-- [#416] Update GRPC to 1.8.2 (#421)
-# 0.16.0-beta
-This version changes the way wallet birthdays are handled.
-`WalletBirthday' struct is not longer public and has been renamed
-to `Checkpoint`. 
+  this changes timeout settings and Keepalive changes.
+  Recommended settings for lightwalletd.com are 60000ms singleCallTimeout
+  on `LightWalletEndpoint`
 
-`SynchronizerError` has a default `LocalizedError` compliance to 
+- [#416] Update GRPC to 1.8.2 (#421)
+
+# 0.16.0-beta
+
+This version changes the way wallet birthdays are handled. `WalletBirthday`
+struct is not longer public and has been renamed to `Checkpoint`.
+
+`SynchronizerError` has a default `LocalizedError` compliance to
 help debug errors and display them to the user. This is a workaround
-to get rid of cryptic errors that are being reported to maintainers and 
+to get rid of cryptic errors that are being reported to maintainers and
 are subject to change in future versions.
 
 - [#392] Synchronizer error 8. when syncing. (#413)
@@ -976,266 +1079,331 @@ are subject to change in future versions.
 - [#411] add Fresh checkpoints for release 0.16.0-beta (#412)
 - [#406] some BirthdayTests fail for MacOS target (#410)
 - [#404] Configure GRPC KeepAlive according to docs (#409)
-# 0.15.1-beta (hotfix)
-- [#432] create 0.15.1-beta with SQLite 0.13 
-this build is a hotfix for cocoapods. which has the wront SQLite dependency
-It moves it from 0.12.2 to 0.13
 
+# 0.15.1-beta (hotfix)
+
+- [#432] create 0.15.1-beta with SQLite 0.13
+  this build is a hotfix for cocoapods. which has the wront SQLite dependency
+  It moves it from 0.12.2 to 0.13
 
 # 0.15.0-beta
+
 ** IMPORTANT ** This version no longer supports iOS 12
 We've made a decision to make iOS 13 the minimum deployment target
 in order to adopt and support Structured Concurrency and other important features
-of the Swift language like Combine. 
+of the Swift language like Combine.
 
 - [#363] bump iOS minimum deployment target to iOS 13.0 (#407)
 - [#381] Move Zatoshi and Amount Types to the SDK (#396)
-This deprecates many methods on `SDKSynchronizer` using Zatoshi for amounts
-instead of `Int64`. This exposes number formatters that conveniently provide
-decimal conversion from `Zatoshi` to "human-readable" ZEC decimal numbers.
+  This deprecates many methods on `SDKSynchronizer` using Zatoshi for amounts
+  instead of `Int64`. This exposes number formatters that conveniently provide
+  decimal conversion from `Zatoshi` to "human-readable" ZEC decimal numbers.
 
 - [#397] Checkpoint format that supports NU5 TreeStates (#399)
-`WalletBirthday` now have both `saplingTree` and `orchardTree` values. The
-latter being Optional for checkpoints prior to Orchard activation height.
+  `WalletBirthday` now have both `saplingTree` and `orchardTree` values. The
+  latter being Optional for checkpoints prior to Orchard activation height.
 
 - [#401] DecodingError when refreshing pending transactions (#402)
 - [#394] Update swift-grpc to 1.8.0 (#395)
 
-other changes: renamed changelog.md to CHANGELOG.md
 # 0.14.0-beta
+
 - [#388] Integrate libzcashlc 0.0.3 to support v5 transaction parsing on NU5 activation
+
 # 0.13.1-beta
+
 - [#326] Load Checkpoint files from bundle.
-This is great news! now checkpoints are loaded from files on the bundle instead of
-hardcoding them on source files. This will make updates easier, less error prone,
-and mostly automatable. 
+  This is great news! now checkpoints are loaded from files on the bundle instead of
+  hardcoding them on source files. This will make updates easier, less error prone,
+  and mostly automatable.
 
 - PR #356 Adds a caveat to SPM / Xcode integration in Readme
-- [#367] Darksidewalletd for testing `shield_funds` 
+- [#367] Darksidewalletd for testing `shield_funds`
 - [#351] Write a Commit message Section for CONTRIBUTING.md
+
 # 0.13.0-beta.2
-- [Enhancement] Fix: make BlockProgress `.nullProgress` static property public for ECC Reference Wallet CombineSynchonizer 
+
+- [Enhancement] Fix: make BlockProgress `.nullProgress` static property public for ECC Reference Wallet CombineSynchonizer
+
 # 0.13.0-beta.1
+
 - [Enhancement] PR #338. Rust-less build. Check for new documentation on how to benefit from this huge change
 - [Enhancement] Swift Package Manager Support!
 
 # 0.12.0-beta.6
+
 - [Enhancement] Fresh checkpoints
 
 # 0.12.0-beta.5
+
 - FIX fixes to Apple Silicon M1 builds
 
 # 0.12.0-beta.4
+
 - Fix: add parameter to ensure 10 confs when shielding.
 
 # 0.12.0-beta.2
+
 - [Fix] Issue #293 MaxAttemptsReached error surfaces when it's actually dismissable and the wallet is working fine
 - [Enhancement] Add test to verify that a checksum invalid t-address fails to validate.
 
 # 0.12.0-alpha.11
-* [Enhancement] Network Agnostic build
+
+- [Enhancement] Network Agnostic build
 
 #  0.12.0-alpha.10
-* Fix: UNIQUE Constraint bug when coming from background. fixed and logged warning to keep investigating
-* [New] latestScannedHeight added to SDKSynchronizer
 
-# 0.12.0-alpha.9 
-* CompactBlockProcessor states don't propagate correctly
+- Fix: UNIQUE Constraint bug when coming from background. fixed and logged warning to keep investigating
+- [New] latestScannedHeight added to SDKSynchronizer
+
+# 0.12.0-alpha.9
+
+- CompactBlockProcessor states don't propagate correctly
 
 # 0.12.0-alpha.8
-* target height reporting enhancements
+
+- target height reporting enhancements
 
 # 0.12.0-alpha.7
-* improve status publishing for SDKSynchronizer
-* [FIX] missingStartHeight error when scanning from sapling activation
+
+- improve status publishing for SDKSynchronizer
+- [FIX] missingStartHeight error when scanning from sapling activation
 
 # 0.12.0-alpha.6
-* Make sapling parameters default url public
+
+- Make sapling parameters default url public
 
 # 0.12.0-alpha.5
-* add output files to build phase to avoid CI failures
-* fix lint warnings
+
+- add output files to build phase to avoid CI failures
+- fix lint warnings
 
 # 0.12.0-alpha.4
-* Tests
-* [Fix] Issue #289 main thread lock when validating the server
-* [Fix] info single call times out all the time
-* make sure operations cancel in a timely manner
-* FigureNextBatchOperation.swift tests
-* make range function static
+
+- Tests
+- [Fix] Issue #289 main thread lock when validating the server
+- [Fix] info single call times out all the time
+- make sure operations cancel in a timely manner
+- FigureNextBatchOperation.swift tests
+- make range function static
 
 # tag: 0.12.0-alpha.3
-* getInfo service times out too soon
-# 0.12.0-alpha.2
-* FIX: processor stalls on reconnection
-* Fix warnings
-# 0.12.0-alpha.1
-* Replace Status for SyncStatus
-* fix tests
-* Fix Demo App
-* fetch operation does not cancel when the previous operations do
-* Fix: operations start when they have been canceled already
-* fix progress being > 1
-* Synchronizing by phases, preview
-* Add fetch UTXO operation to compact block processor
-* CompactBlock batch download and stream download operation tests pass.
 
-# 0.11.2 
-* [FIX] Fix build for Apple Silicon (M1) #285 by @ealymbaev 
+- getInfo service times out too soon
+
+# 0.12.0-alpha.2
+
+- FIX: processor stalls on reconnection
+- Fix warnings
+
+# 0.12.0-alpha.1
+
+- Replace Status for SyncStatus
+- fix tests
+- Fix Demo App
+- fetch operation does not cancel when the previous operations do
+- Fix: operations start when they have been canceled already
+- fix progress being > 1
+- Synchronizing by phases, preview
+- Add fetch UTXO operation to compact block processor
+- CompactBlock batch download and stream download operation tests pass.
+
+# 0.11.2
+
+- [FIX] Fix build for Apple Silicon (M1) #285 by @ealymbaev
 
 # 0.11.1
-* [Enhancement] Rewind API has a `.quick` option
+
+- [Enhancement] Rewind API has a `.quick` option
+
 # 0.11.0
-* [New] Shield Funds Feature
-* [New] Get Transparent Balance for account
-* [New] Z -> T Restore: transactions to transparent addresses are now restored when the user restores from seed or re-scans the wallet
-* [New] [Preview] Unified Viewing Key Structure
-* [New] Abstractions over Transparent Address and ShieldedAddress
-* [FIX] `CompactBlockProcessor` validates LightdInfo from Lightwalletd
-* [Enhancement] Add BlockTime to SDKSynchronizer updates
-* [New] Db Migration for UVKs
-* [FIX] Rewind API breaks on quick re-scan
-* [Update] 37f2232: Update to gRPC-Swift 1.0.0
+
+- [New] Shield Funds Feature
+- [New] Get Transparent Balance for account
+- [New] Z -> T Restore: transactions to transparent addresses are now restored when the user restores from seed or re-scans the wallet
+- [New] [Preview] Unified Viewing Key Structure
+- [New] Abstractions over Transparent Address and ShieldedAddress
+- [FIX] `CompactBlockProcessor` validates LightdInfo from Lightwalletd
+- [Enhancement] Add BlockTime to SDKSynchronizer updates
+- [New] Db Migration for UVKs
+- [FIX] Rewind API breaks on quick re-scan
+- [Update] 37f2232: Update to gRPC-Swift 1.0.0
 
 # 0.10.2
-* Mainnet and Testnet Checkpoints 
-# 0.10.1
-* Mainnet Checkpoints
-# 0.10.0
-* [critical] Fix #255 #261 outgoing no-change transactions not reported as mined
-* [NEW] Rewind API. Allow Wallet developers to rewind synchronizer and (eventually) rescan
-* [NEW] Rust Welding 0.0.6 - using rust crates 0.5 and Data Access API
-* [NEW] updated Logger API to use StaticString on line and function as many logging libraries do
-* [FIX] Mac OS BIG SUR build fixed
 
+- Adds Mainnet and Testnet Checkpoints
+
+# 0.10.1
+
+- Adds Mainnet Checkpoints
+
+# 0.10.0
+
+- [critical] Fix #255 #261 outgoing no-change transactions not reported as mined
+- [NEW] Rewind API. Allow Wallet developers to rewind synchronizer and (eventually) rescan
+- [NEW] Rust Welding 0.0.6 - using rust crates 0.5 and Data Access API
+- [NEW] updated Logger API to use StaticString on line and function as many logging libraries do
+- [FIX] Mac OS BIG SUR build fixed
 
 # 0.9.4
-* New: added viewing key derivation to Derivation Tool 
-* Issue #252 - blockheight progress is latest height instead of upperbound of last scanned range
+
+- New: added viewing key derivation to Derivation Tool
+- Issue #252 - blockheight progress is latest height instead of upperbound of last scanned range
+
 # 0.9.3
-* added new checkpoints for mainnet
+
+- added new checkpoints for mainnet
+
 # 0.9.2
-* Fix: memo string handling
+
+- Fix: memo string handling
+
 # 0.9.1
-* Fix: issue #240 reorg not catched because of ARC dealloc
+
+- Fix: issue #240 reorg not catched because of ARC dealloc
 
 # 0.9.0
-* implement ZIP-313 reducing fees to 1000 zatoshi
+
+- implement ZIP-313 reducing fees to 1000 zatoshi
 
 # 0.8.0
-* [IMPORTANT] Issue #237 Untie SDKSynchronizer from UIApplication Events
-* Fix #236 fix CI problem
-* Issue #176 operation gets cancelled when backgrounding
-* Issue #136 on https://github.com/zcash/zcash-ios-wallet
-* Issue #123 on https://github.com/zcash/zcash-ios-wallet
-* PR from @ant013: Forcibly change the state to stopped when the handle cancels any task in OperationQueue
+
+- [IMPORTANT] Issue #237 Untie SDKSynchronizer from UIApplication Events
+- Fix #236 fix CI problem
+- Issue #176 operation gets cancelled when backgrounding
+- Issue #136 on https://github.com/zcash/zcash-ios-wallet
+- Issue #123 on https://github.com/zcash/zcash-ios-wallet
+- PR from @ant013: Forcibly change the state to stopped when the handle cancels any task in OperationQueue
+
 # 0.7.2
-* Checkpoint for Mainnet 
+
+- Checkpoint for Mainnet
 
 # 0.7.1
-* Issue 208 - Improve API method to request transaction history
-* Added Found transaction notification to SDK Synchronizer
-* Add darksidewalletd tests for foundTransactions notifications
-* [CRITICAL] Fix sqlite crate canopy issue. Add a new checkpoint to aid testing
-* FIX - UNIQUE constraint violation when an operation failed
+
+- Issue 208 - Improve API method to request transaction history
+- Added Found transaction notification to SDK Synchronizer
+- Add darksidewalletd tests for foundTransactions notifications
+- [CRITICAL] Fix sqlite crate canopy issue. Add a new checkpoint to aid testing
+- FIX - UNIQUE constraint violation when an operation failed
 
 # 0.7.0
-Improvements: 
-* #22 Sapling parameter downloader
-* #201 Throw exception when seed can't be provided
-* #204 Add DerivationTool to Initializer
-* #205 Add IVK initialization capabilities to Initializer
-* #206 [community request @esengulov] add extension function to identify inbound v. outbound txs on a client side
-* #207 [community request @esengulov] Add extension function for timestamps on transactions  
+
+## Improvements
+
+- #22 Sapling parameter downloader
+- #201 Throw exception when seed can't be provided
+- #204 Add DerivationTool to Initializer
+- #205 Add IVK initialization capabilities to Initializer
+- #206 [community request @esengulov] add extension function to identify inbound v. outbound txs on a client side
+- #207 [community request @esengulov] Add extension function for timestamps on transactions
 
 # 0.6.4
-* FIX: transaction details listing duplicate transactions on certain transactions with several outputs and inputs
-* added checkpoints
+
+- FIX: transaction details listing duplicate transactions on certain transactions with several outputs and inputs
+- added checkpoints
 
 # 0.6.3
-* updated to gRPC-Swift 1.0.0-alpha19
-* readme warning on issues with rustc 1.46.0
-* improvement on build system to help switch network environment faster
+
+- updated to gRPC-Swift 1.0.0-alpha19
+- readme warning on issues with rustc 1.46.0
+- improvement on build system to help switch network environment faster
+
 # 0.6.2
-* added new checkpoints for testnet and mainnet
+
+- added new checkpoints for testnet and mainnet
+
 # 0.6.1
-* Updated librustzcash to support Canopy on testnet
+
+- Updated librustzcash to support Canopy on testnet
 
 # 0.6.0
-* Error handling improvements (breaks API)
+
+- Error handling improvements (breaks API)
+
 # 0.5.3
-* Fixes #158 #132 #134 #135 #133
+
+- Fixes #158 #132 #134 #135 #133
 
 # 0.5.2
-* update Librustzcash to point to master repo!
-* enhance pending transaction handling (#160)
-* Added memo demo! 
-* automation!
+
+- update Librustzcash to point to master repo!
+- enhance pending transaction handling (#160)
+- Added memo demo!
+- automation!
 
 # 0.5.1
-* remove MnemonicKit dependency from tests
+
+- remove MnemonicKit dependency from tests
+
 # 0.5.0
-* Enable heartwood. (#138)
-* Update LICENSE
-* Switch to MnemonicSwift (#142)
-* Issue 136 Null bytes in strings effectively truncate the string from … (#140)
-* Fixes issue 136 - expiry height -1 on pending transactions (#139)
-* Advanced Re Org tests + Balance tests (#137)
-* CI doc mods (#116)
-* Update issue templates
-* Replace the threat model with the one on readthedocs (#131)
-* Add bug report and feature request issue templates
-* remove commit lock from podfile
-* Canonical empty memo test (#112)
-* Memo tests (#111)
-* Decrypt transactions. Full wallet restore (#110)
+
+- Enable heartwood. (#138)
+- Update LICENSE
+- Switch to MnemonicSwift (#142)
+- Issue 136 Null bytes in strings effectively truncate the string from … (#140)
+- Fixes issue 136 - expiry height -1 on pending transactions (#139)
+- Advanced Re Org tests + Balance tests (#137)
+- CI doc mods (#116)
+- Update issue templates
+- Replace the threat model with the one on readthedocs (#131)
+- Add bug report and feature request issue templates
+- remove commit lock from podfile
+- Canonical empty memo test (#112)
+- Memo tests (#111)
+- Decrypt transactions. Full wallet restore (#110)
 
 # 0.4.0
-* Updated GRPC dependency to Swift GRPC NIO. this change does not break any public interfaces
+
+- Updated GRPC dependency to Swift GRPC NIO. this change does not break any public interfaces
 
 # 0.3.2
 
-*  reorg testing (#104)
-*  Docs - Fix typos and cleanup (#103)
-*  ZcashRustBackend.decryptAndStoreTransaction() 
-*  Enhance logging on compact block processor
-*  parameterize helper method with constant
+-  reorg testing (#104)
+-  Docs - Fix typos and cleanup (#103)
+-  ZcashRustBackend.decryptAndStoreTransaction()
+-  Enhance logging on compact block processor
+-  parameterize helper method with constant
 
 # 0.3.1
-* Reverted  -> update librustzcash to commit 52d8b436300724bc4b83aa4a0c659ab34c3dbce7
+
+- Reverted  -> update librustzcash to commit 52d8b436300724bc4b83aa4a0c659ab34c3dbce7
+
 # 0.3.0
 
-* testing: fix test crash
-* fix: updated sample code where interface changed
-* ENHANCEMENT: Retry support + error management
-* FIX: processor crashes when lightwalletd has not caught up with latest height
-* Better error handing when scanning fails
-* [IMPORTANT] update librustzcash to commit 52d8b436300724bc4b83aa4a0c659ab34c3dbce7
-* improved docs Move read.me up a directory
-* NEW: Integrate logging capabilities
-* FIX: account initialization error
-* ENHANCEMENT: Mainnet checkpoints (#88)
+- testing: fix test crash
+- fix: updated sample code where interface changed
+- ENHANCEMENT: Retry support + error management
+- FIX: processor crashes when lightwalletd has not caught up with latest height
+- Better error handing when scanning fails
+- [IMPORTANT] update librustzcash to commit 52d8b436300724bc4b83aa4a0c659ab34c3dbce7
+- improved docs Move read.me up a directory
+- NEW: Integrate logging capabilities
+- FIX: account initialization error
+- ENHANCEMENT: Mainnet checkpoints (#88)
 
 # 0.2.1
+
 **IMPORTANT: this version contains a critical fix, upgrade to it as soon as possible**
 
-* [CRITICAL] Fixed a hardcoded COIN_TYPE on lib.rs
-* added mainnet checkpoints 
+- [CRITICAL] Fixed a hardcoded COIN_TYPE on lib.rs
+- added mainnet checkpoints
 
+# 0.2.0
 
-# 0.2.0 
-_Warning: This changes might break interfaces on your project_
+**Warning: These changes might break interfaces in your project.**
 
-* upgraded to note-spending-v7
-* fixed memory leak and blockrange error
-* fixed memory cycles and leaks
-* Fixed capture blocks retaining references
-* fixed bug where compact block processor wouldn't reschedule
-* add address validation functionality to Initializer
-* Fixes to initializer, added v7 methods, documented API. Fixed compact block processor not initializing correctly upon new wallets.
-* use "zip32 compliant" seed on demo app
+- upgraded to note-spending-v7
+- fixed memory leak and blockrange error
+- fixed memory cycles and leaks
+- Fixed capture blocks retaining references
+- fixed bug where compact block processor wouldn't reschedule
+- add address validation functionality to Initializer
+- Fixes to initializer, added v7 methods, documented API. Fixed compact block processor not initializing correctly upon new wallets.
+- use "zip32 compliant" seed on demo app
 
 # 0.1.3
+
 Changes to createToAddress function to fix issues with paths that have spaces
 
 Synchronizer:
@@ -1243,5 +1411,3 @@ Synchronizer:
 change from computed variables to functions to allow throwing errors to clients
 
 https://github.com/zcash/ZcashLightClientKit/pull/84
-
-

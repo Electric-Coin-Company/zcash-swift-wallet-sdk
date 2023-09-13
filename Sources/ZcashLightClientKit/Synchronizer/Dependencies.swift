@@ -80,9 +80,9 @@ enum Dependencies {
 
         container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
-            let transactionRepository = di.resolve(TransactionRepository.self)
+            let rustBackend = di.resolve(ZcashRustBackendWelding.self)
 
-            return LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend)
         }
 
         container.register(type: SyncSessionIDGenerator.self, isSingleton: false) { _ in
@@ -120,7 +120,6 @@ enum Dependencies {
             let transactionRepository = di.resolve(TransactionRepository.self)
             let metrics = di.resolve(SDKMetrics.self)
             let logger = di.resolve(Logger.self)
-            let latestBlocksDataProvider = di.resolve(LatestBlocksDataProvider.self)
 
             let blockScannerConfig = BlockScannerConfig(
                 networkType: config.network.networkType,
@@ -132,8 +131,7 @@ enum Dependencies {
                 rustBackend: rustBackend,
                 transactionRepository: transactionRepository,
                 metrics: metrics,
-                logger: logger,
-                latestBlocksDataProvider: latestBlocksDataProvider
+                logger: logger
             )
         }
         

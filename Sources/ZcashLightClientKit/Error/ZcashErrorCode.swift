@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.0.3 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -39,6 +39,8 @@ public enum ZcashErrorCode: String {
     case serviceFetchUTXOsFailed = "ZSRVC0008"
     /// LightWalletService.blockStream failed.
     case serviceBlockStreamFailed = "ZSRVC0000"
+    /// LightWalletService.getSubtreeRoots failed.
+    case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.
@@ -123,8 +125,6 @@ public enum ZcashErrorCode: String {
     case rustPutUnspentTransparentOutput = "ZRUST0029"
     /// Error unrelated to chain validity from rust layer when calling ZcashRustBackend.validateCombinedChain
     case rustValidateCombinedChainValidationFailed = "ZRUST0030"
-    /// Error from rust layer which means that combined chain isn't valid.
-    case rustValidateCombinedChainInvalidChain = "ZRUST0031"
     /// Error from rust layer when calling ZcashRustBackend.rewindToHeight
     case rustRewindToHeight = "ZRUST0032"
     /// Error from rust layer when calling ZcashRustBackend.rewindCacheToHeight
@@ -161,7 +161,7 @@ public enum ZcashErrorCode: String {
     case rustUpdateChainTip = "ZRUST0048"
     /// Error from rust layer when calling ZcashRustBackend.suggestScanRanges
     case rustSuggestScanRanges = "ZRUST0049"
-    /// Invalid transaction ID length when calling ZcashRustBackend.getMemo
+    /// Invalid transaction ID length when calling ZcashRustBackend.getMemo. txId must be 32 bytes.
     case rustGetMemoInvalidTxIdLength = "ZRUST0050"
     /// Error from rust layer when calling ZcashRustBackend.getScanProgress
     case rustGetScanProgress = "ZRUST0051"
@@ -171,6 +171,8 @@ public enum ZcashErrorCode: String {
     case rustMaxScannedHeight = "ZRUST0053"
     /// Error from rust layer when calling ZcashRustBackend.latestCachedBlockHeight
     case rustLatestCachedBlockHeight = "ZRUST0054"
+    /// Rust layer's call ZcashRustBackend.getScanProgress returned values that after computation are outside of allowed range 0-100%.
+    case rustScanProgressOutOfRange = "ZRUST0055"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
@@ -321,6 +323,12 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorConsensusBranchID = "ZCBPEO0017"
     /// Rewind of DownloadBlockAction failed as no action is possible to unwrapp.
     case compactBlockProcessorDownloadBlockActionRewind = "ZCBPEO0018"
+    /// Put sapling subtree roots to the DB failed.
+    case compactBlockProcessorPutSaplingSubtreeRoots = "ZCBPEO0019"
+    /// Getting the `lastScannedHeight` failed but it's supposed to always provide some value.
+    case compactBlockProcessorLastScannedHeight = "ZCBPEO0020"
+    /// Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value.
+    case compactBlockProcessorSupportedSyncAlgorithm = "ZCBPEO0021"
     /// The synchronizer is unprepared.
     case synchronizerNotPrepared = "ZSYNCO0001"
     /// Memos can't be sent to transparent addresses.

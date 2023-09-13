@@ -110,7 +110,7 @@ class TestCoordinator {
     }
 
     func prepare(seed: [UInt8]) async throws -> Initializer.InitializationResult {
-        return try await synchronizer.prepare(with: seed, walletBirthday: self.birthday)
+        return try await synchronizer.prepare(with: seed, walletBirthday: self.birthday, for: .newWallet)
     }
     
     func stop() async throws {
@@ -229,7 +229,13 @@ extension TestCoordinator {
 
         await self.synchronizer.blockProcessor.update(config: newConfig)
 
-        try service.reset(saplingActivation: saplingActivation, startSaplingTreeSize: startSaplingTreeSize, startOrchardTreeSize: startOrchardTreeSize, branchID: branchID, chainName: chainName)
+        try service.reset(
+            saplingActivation: saplingActivation,
+            startSaplingTreeSize: startSaplingTreeSize,
+            startOrchardTreeSize: startOrchardTreeSize,
+            branchID: branchID,
+            chainName: chainName
+        )
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {

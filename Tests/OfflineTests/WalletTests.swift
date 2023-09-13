@@ -32,11 +32,15 @@ class WalletTests: ZcashTestCase {
     }
     
     func testWalletInitialization() async throws {
-        let derivationTool = TestsData(networkType: network.networkType).derivationTools
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
-        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let mockContainer = DIContainer()
+        mockContainer.isTestEnvironment = true
 
+        let serviceMock = LightWalletServiceMock()
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
+        serviceMock.latestBlockHeightReturnValue = 1
+        
         let wallet = Initializer(
+            container: mockContainer,
             cacheDbURL: nil,
             fsBlockDbRoot: testTempDirectory,
             generalStorageURL: testGeneralStorageDirectory,
@@ -50,7 +54,7 @@ class WalletTests: ZcashTestCase {
         
         let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try await synchronizer.prepare(with: seedData.bytes, walletBirthday: 663194) else {
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes, walletBirthday: 663194, for: .newWallet) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }

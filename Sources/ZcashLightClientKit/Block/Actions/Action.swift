@@ -7,11 +7,36 @@
 
 import Foundation
 
-actor ActionContext {
+protocol ActionContext {
+    var state: CBPState { get async }
+    var prevState: CBPState? { get async }
+    var syncControlData: SyncControlData { get async }
+    var requestedRewindHeight: BlockHeight? { get async }
+    var processedHeight: BlockHeight { get async }
+    var lastChainTipUpdateTime: TimeInterval { get async }
+    var lastScannedHeight: BlockHeight? { get async }
+    var lastEnhancedHeight: BlockHeight? { get async }
+    
+    func update(state: CBPState) async
+    func update(syncControlData: SyncControlData) async
+    func update(processedHeight: BlockHeight) async
+    func update(lastChainTipUpdateTime: TimeInterval) async
+    func update(lastScannedHeight: BlockHeight) async
+    func update(lastDownloadedHeight: BlockHeight) async
+    func update(lastEnhancedHeight: BlockHeight?) async
+    func update(requestedRewindHeight: BlockHeight) async
+}
+
+actor ActionContextImpl: ActionContext {
     var state: CBPState
     var prevState: CBPState?
     var syncControlData: SyncControlData
-    var totalProgressRange: CompactBlockRange = 0...0
+    var requestedRewindHeight: BlockHeight?
+    /// Amount of blocks that have been processed so far
+    var processedHeight: BlockHeight = 0
+    /// Update chain tip must be called repeatadly, this value stores the previous update and help to decide when to call it again
+    var lastChainTipUpdateTime: TimeInterval = 0.0
+    var lastScannedHeight: BlockHeight?
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
 
@@ -25,16 +50,22 @@ actor ActionContext {
         self.state = state
     }
     func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
-    func update(totalProgressRange: CompactBlockRange) async { self.totalProgressRange = totalProgressRange }
+    func update(processedHeight: BlockHeight) async { self.processedHeight = processedHeight }
+    func update(lastChainTipUpdateTime: TimeInterval) async { self.lastChainTipUpdateTime = lastChainTipUpdateTime }
+    func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
+    func update(requestedRewindHeight: BlockHeight) async { self.requestedRewindHeight = requestedRewindHeight }
 }
 
 enum CBPState: CaseIterable {
     case idle
     case migrateLegacyCacheDB
     case validateServer
-    case computeSyncControlData
+    case updateSubtreeRoots
+    case updateChainTip
+    case processSuggestedScanRanges
+    case rewind
     case download
     case scan
     case clearAlreadyScannedBlocks

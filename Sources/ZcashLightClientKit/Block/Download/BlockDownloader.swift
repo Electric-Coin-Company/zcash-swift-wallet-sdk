@@ -55,7 +55,7 @@ protocol BlockDownloader {
     
     /// Updates the internal in memory value of latest downloaded block height. This way the `BlockDownloader` works with the current latest height and can
     /// continue on parallel downloading of next batch.
-    func update(latestDownloadedBlockHeight: BlockHeight) async
+    func update(latestDownloadedBlockHeight: BlockHeight, force: Bool) async
     /// Provides the value of latest downloaded height.
     func latestDownloadedBlockHeight() async -> BlockHeight
     /// In case rewind is needed, the latestDownloadedBlockHeight is rewritten forcefully.
@@ -199,13 +199,8 @@ actor BlockDownloaderImpl {
         var counter = 0
         var lastDownloadedBlockHeight = -1
 
-        let pushMetrics: (BlockHeight, Date, Date) -> Void = { [metrics] lastDownloadedBlockHeight, startTime, finishTime in
+        let pushMetrics: (BlockHeight, Date, Date) -> Void = { [metrics] _, startTime, finishTime in
             metrics.pushProgressReport(
-                progress: BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: Int(lastDownloadedBlockHeight)
-                ),
                 start: startTime,
                 end: finishTime,
                 batchSize: maxBlockBufferSize,
@@ -253,8 +248,8 @@ extension BlockDownloaderImpl: BlockDownloader {
         self.latestDownloadedBlockHeight = latestDownloadedBlockHeight ?? -1
     }
     
-    func update(latestDownloadedBlockHeight: BlockHeight) async {
-        if latestDownloadedBlockHeight >= self.latestDownloadedBlockHeight {
+    func update(latestDownloadedBlockHeight: BlockHeight, force: Bool = false) async {
+        if latestDownloadedBlockHeight >= self.latestDownloadedBlockHeight || force {
             self.latestDownloadedBlockHeight = latestDownloadedBlockHeight
         }
     }

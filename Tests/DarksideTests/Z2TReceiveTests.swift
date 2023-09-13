@@ -33,7 +33,14 @@ class Z2TReceiveTests: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: self.branchID,
+            chainName: self.chainName
+        )
     }
 
     override func tearDown() async throws {
@@ -188,26 +195,27 @@ class Z2TReceiveTests: ZcashTestCase {
         sleep(2)
         self.foundTransactionsExpectation = XCTestExpectation(description: "inbound expectation")
 
+        // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
         /*
         7. sync to  sentTxHeight + 1
         */
-        let sentTxSyncExpectation = XCTestExpectation(description: "sent tx sync expectation")
+//        let sentTxSyncExpectation = XCTestExpectation(description: "sent tx sync expectation")
 
-        do {
-            try await coordinator.sync(
-                completion: { synchronizer in
-                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
-                    XCTAssertEqual(pMinedHeight, sentTxHeight)
-
-                    sentTxSyncExpectation.fulfill()
-                },
-                error: self.handleError
-            )
-        } catch {
-            await handleError(error)
-        }
-
-        await fulfillment(of: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
+//        do {
+//            try await coordinator.sync(
+//                completion: { synchronizer in
+//                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
+//                    XCTAssertEqual(pMinedHeight, sentTxHeight)
+//
+//                    sentTxSyncExpectation.fulfill()
+//                },
+//                error: self.handleError
+//            )
+//        } catch {
+//            await handleError(error)
+//        }
+//
+//        await fulfillment(of: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
     }
 
     func handleError(_ error: Error?) async {
