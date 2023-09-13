@@ -74,7 +74,7 @@ extension ScanAction: Action {
         } catch ZcashError.rustScanBlocks(let errorMsg) {
             if isContinuityError(errorMsg) {
                 await context.update(requestedRewindHeight: batchRange.lowerBound - 10)
-                await context.update(state: .download)
+                await context.update(state: .rewind)
                 return context
             } else {
                 throw ZcashError.rustScanBlocks(errorMsg)
