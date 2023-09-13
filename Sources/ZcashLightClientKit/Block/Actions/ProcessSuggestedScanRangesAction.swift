@@ -62,14 +62,7 @@ extension ProcessSuggestedScanRangesAction: Action {
                 await context.update(totalProgressRange: minHeight...maxHeight)
             }
 
-            // If there is a range of blocks that needs to be verified, it will always
-            // be returned as the first element of the vector of suggested ranges.
-            if firstRange.priority == .verify {
-                await context.update(requestedRewindHeight: rangeStartExclusive + 1)
-                await context.update(state: .rewind)
-            } else {
-                await context.update(state: .download)
-            }
+            await context.update(state: .download)
         } else {
             await context.update(state: .finished)
         }

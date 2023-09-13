@@ -80,27 +80,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 "logger.debug() is not expected to be called."
             )
 
-            if let nextContextMock = nextContext as? ActionContextMock {
-                XCTAssertTrue(
-                    nextContextMock.updateRequestedRewindHeightCallsCount == 1,
-                    "context.update(requestedRewindHeight:) is expected to be called exactly once."
-                )
-            } else {
-                XCTFail("`nextContext` is not the ActionContextMock")
-            }
-
-            XCTAssertTrue(
-                loggerMock.debugFileFunctionLineCalled,
-                "logger.debug() is not expected to be called."
-            )
-
             if let infoArguments = loggerMock.infoFileFunctionLineReceivedArguments {
                 XCTAssertTrue(infoArguments.message.contains("Setting the total range for Spend before Sync to"))
             } else {
                 XCTFail("`infoArguments` unavailable.")
             }
             
-            let acResult = nextContext.checkStateIs(.rewind)
+            let acResult = nextContext.checkStateIs(.download)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testProcessSuggestedScanRangesAction_VerifyScanRangeSetTotalProgressRange is not expected to fail. \(error)")
@@ -135,22 +121,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 "logger.debug() is not expected to be called."
             )
             
-            if let nextContextMock = nextContext as? ActionContextMock {
-                XCTAssertTrue(
-                    nextContextMock.updateRequestedRewindHeightCallsCount == 1,
-                    "context.update(requestedRewindHeight:) is expected to be called exactly once."
-                )
-            } else {
-                XCTFail("`nextContext` is not the ActionContextMock")
-            }
-
             if let infoArguments = loggerMock.infoFileFunctionLineReceivedArguments {
                 XCTAssertFalse(infoArguments.message.contains("Setting the total range for Spend before Sync to"))
             } else {
                 XCTFail("`infoArguments` unavailable.")
             }
             
-            let acResult = nextContext.checkStateIs(.rewind)
+            let acResult = nextContext.checkStateIs(.download)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testProcessSuggestedScanRangesAction_VerifyScanRangeTotalProgressRangeSkipped is not expected to fail. \(error)")
