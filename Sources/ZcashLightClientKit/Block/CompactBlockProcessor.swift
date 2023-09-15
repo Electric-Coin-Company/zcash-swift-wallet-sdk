@@ -22,7 +22,7 @@ actor CompactBlockProcessor {
     private var syncTask: Task<Void, Error>?
 
     private let actions: [CBPState: Action]
-    private var context: ActionContext
+    public var context: ActionContext
 
     private(set) var config: Configuration
     private let configProvider: ConfigProvider
@@ -33,7 +33,7 @@ actor CompactBlockProcessor {
     private let latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
     private let metrics: SDKMetrics
-    private let rustBackend: ZcashRustBackendWelding
+    public let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService
     let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
@@ -187,7 +187,7 @@ actor CompactBlockProcessor {
         )
 
         let configProvider = ConfigProvider(config: config)
-        context = ActionContextImpl(state: .idle)
+        context = ActionContextImpl(state: .idle, updateClosure: nil)
         actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
@@ -254,6 +254,10 @@ actor CompactBlockProcessor {
     func update(config: Configuration) async {
         self.config = config
         await configProvider.update(config: config)
+    }
+    
+    func contextUpdate(_ state: CBPState) async {
+        await send(event: .contextUpdate(state))
     }
 }
 
@@ -431,10 +435,10 @@ extension CompactBlockProcessor {
         case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
 
         /// Event sent when progress of some specific action happened.
-        case syncProgress(Float)
+        case syncProgress(ScanProgress)
 
         /// Event sent when progress of the sync process changes.
-        case progressUpdated(Float)
+        case progressUpdated(ScanProgress)
 
         /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
         case storedUTXOs((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
@@ -450,6 +454,8 @@ extension CompactBlockProcessor {
 
         /// Event sent when the CompactBlockProcessor stops syncing.
         case stopped
+        
+        case contextUpdate(CBPState)
     }
 
     func updateEventClosure(identifier: String, closure: @escaping (Event) async -> Void) async {
@@ -617,7 +623,7 @@ extension CompactBlockProcessor {
 
     private func resetContext() async {
         let lastEnhancedheight = await context.lastEnhancedHeight
-        context = ActionContextImpl(state: .idle)
+        context = ActionContextImpl(state: .idle, updateClosure: contextUpdate)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
     }
 
@@ -641,7 +647,7 @@ extension CompactBlockProcessor {
         let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
         // Some actions may not run. For example there are no transactions to enhance and therefore there is no enhance progress. And in
         // cases like this computation of final progress won't work properly. So let's fake 100% progress at the end of the sync process.
-        await send(event: .progressUpdated(1))
+        await send(event: .progressUpdated(.init(numerator: 1, denominator: 1)))
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 

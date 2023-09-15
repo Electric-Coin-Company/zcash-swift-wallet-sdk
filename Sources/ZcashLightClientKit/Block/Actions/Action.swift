@@ -16,6 +16,9 @@ protocol ActionContext {
     var lastChainTipUpdateTime: TimeInterval { get async }
     var lastScannedHeight: BlockHeight? { get async }
     var lastEnhancedHeight: BlockHeight? { get async }
+    var cachedScanRanges: [ScanRange] { get async }
+
+    var updateClosure: ((CBPState) async -> Void)? { get async }
     
     func update(state: CBPState) async
     func update(syncControlData: SyncControlData) async
@@ -25,6 +28,8 @@ protocol ActionContext {
     func update(lastDownloadedHeight: BlockHeight) async
     func update(lastEnhancedHeight: BlockHeight?) async
     func update(requestedRewindHeight: BlockHeight) async
+
+    func update(cachedScanRanges: [ScanRange]) async
 }
 
 actor ActionContextImpl: ActionContext {
@@ -40,14 +45,20 @@ actor ActionContextImpl: ActionContext {
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
 
-    init(state: CBPState) {
+    var cachedScanRanges: [ScanRange] = []
+
+    var updateClosure: ((CBPState) async -> Void)?
+    
+    init(state: CBPState, updateClosure: ((CBPState) async -> Void)?) {
         self.state = state
+        self.updateClosure = updateClosure
         syncControlData = SyncControlData.empty
     }
 
     func update(state: CBPState) async {
         prevState = self.state
         self.state = state
+        await updateClosure?(state)
     }
     func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
     func update(processedHeight: BlockHeight) async { self.processedHeight = processedHeight }
@@ -56,9 +67,10 @@ actor ActionContextImpl: ActionContext {
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
     func update(requestedRewindHeight: BlockHeight) async { self.requestedRewindHeight = requestedRewindHeight }
+    func update(cachedScanRanges: [ScanRange]) async { self.cachedScanRanges = cachedScanRanges }
 }
 
-enum CBPState: CaseIterable {
+public enum CBPState: CaseIterable {
     case idle
     case migrateLegacyCacheDB
     case validateServer

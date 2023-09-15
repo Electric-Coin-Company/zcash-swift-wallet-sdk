@@ -171,7 +171,7 @@ extension SyncStatus {
     var text: String {
         switch self {
         case let .syncing(progress):
-            return "Syncing 🤖 \(floor(progress * 1000) / 10)%"
+            return "Syncing 🤖 \(floor(try! progress.progress() * 1000) / 10)%"
         case .upToDate:
             return "Up to Date 😎"
         case .unprepared:

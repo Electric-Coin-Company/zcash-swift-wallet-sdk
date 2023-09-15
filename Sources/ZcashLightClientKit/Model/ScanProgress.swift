@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct ScanProgress: Equatable {
-    let numerator: UInt64
-    let denominator: UInt64
+public struct ScanProgress: Equatable {
+    public let numerator: UInt64
+    public let denominator: UInt64
     
-    func progress() throws -> Float {
+    public func progress() throws -> Float {
         guard denominator != 0 else {
             // this shouldn't happen but if it does, we need to get notified by clients and work on a fix
             throw ZcashError.rustScanProgressOutOfRange("\(numerator)/\(denominator)")

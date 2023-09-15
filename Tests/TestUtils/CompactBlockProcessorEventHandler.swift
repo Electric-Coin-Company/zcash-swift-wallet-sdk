@@ -24,6 +24,7 @@ class CompactBlockProcessorEventHandler {
         case startedFetching
         case startedSyncing
         case stopped
+        case contextUpdate
     }
 
     private let queue = DispatchQueue(label: "CompactBlockProcessorEventHandler")
@@ -66,6 +67,8 @@ extension CompactBlockProcessor.Event {
             return .minedTransaction
         case .syncProgress:
             return .syncProgress
+        case .contextUpdate:
+            return .contextUpdate
         }
     }
 }

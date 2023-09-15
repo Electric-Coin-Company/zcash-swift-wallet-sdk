@@ -62,11 +62,12 @@ extension ScanAction: Action {
                 if let scanProgress = try? await self?.rustBackend.getScanProgress() {
                     let progress = try scanProgress.progress()
                     self?.logger.debug("progress: \(progress)")
-                    await didUpdate(.syncProgress(progress))
+                    await didUpdate(.syncProgress(scanProgress))
                 }
                 
                 // ScanAction is controlled locally so it must report back the updated scanned height
                 await context.update(lastScannedHeight: lastScannedHeight)
+                await self?.latestBlocksDataProvider.updateScannedData()
             }
         } catch ZcashError.rustScanBlocks(let errorMsg) {
             if isContinuityError(errorMsg) {

@@ -33,6 +33,11 @@ class ActionContextMock: ActionContext {
     var underlyingLastChainTipUpdateTime: TimeInterval!
     var lastScannedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
+    var cachedScanRanges: [ScanRange] {
+        get async { return underlyingCachedScanRanges }
+    }
+    var underlyingCachedScanRanges: [ScanRange] = []
+    var updateClosure: ((CBPState) async -> Void)?
 
     // MARK: - update
 
@@ -152,6 +157,21 @@ class ActionContextMock: ActionContext {
         updateRequestedRewindHeightCallsCount += 1
         updateRequestedRewindHeightReceivedRequestedRewindHeight = requestedRewindHeight
         await updateRequestedRewindHeightClosure!(requestedRewindHeight)
+    }
+
+    // MARK: - update
+
+    var updateCachedScanRangesCallsCount = 0
+    var updateCachedScanRangesCalled: Bool {
+        return updateCachedScanRangesCallsCount > 0
+    }
+    var updateCachedScanRangesReceivedCachedScanRanges: [ScanRange]?
+    var updateCachedScanRangesClosure: (([ScanRange]) async -> Void)?
+
+    func update(cachedScanRanges: [ScanRange]) async {
+        updateCachedScanRangesCallsCount += 1
+        updateCachedScanRangesReceivedCachedScanRanges = cachedScanRanges
+        await updateCachedScanRangesClosure!(cachedScanRanges)
     }
 
 }
@@ -1178,6 +1198,23 @@ class SynchronizerMock: Synchronizer {
         get async { return underlyingReceivedTransactions }
     }
     var underlyingReceivedTransactions: [ZcashTransaction.Overview] = []
+
+    // MARK: - printPrivateWalletOutput
+
+    var printPrivateWalletOutputThrowableError: Error?
+    var printPrivateWalletOutputCallsCount = 0
+    var printPrivateWalletOutputCalled: Bool {
+        return printPrivateWalletOutputCallsCount > 0
+    }
+    var printPrivateWalletOutputClosure: (() async throws -> Void)?
+
+    func printPrivateWalletOutput() async throws {
+        if let error = printPrivateWalletOutputThrowableError {
+            throw error
+        }
+        printPrivateWalletOutputCallsCount += 1
+        try await printPrivateWalletOutputClosure!()
+    }
 
     // MARK: - prepare
 

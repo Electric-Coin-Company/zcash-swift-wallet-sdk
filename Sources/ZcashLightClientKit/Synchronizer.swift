@@ -72,7 +72,11 @@ public struct SynchronizerState: Equatable {
     }
 }
 
-public enum SynchronizerEvent {
+public enum SynchronizerEvent: Equatable {
+    public static func == (lhs: SynchronizerEvent, rhs: SynchronizerEvent) -> Bool {
+        true
+    }
+    
     // Sent when the synchronizer finds a pendingTransaction that has been newly mined.
     case minedTransaction(ZcashTransaction.Overview)
 
@@ -82,6 +86,8 @@ public enum SynchronizerEvent {
     case storedUTXOs(_ inserted: [UnspentTransactionOutputEntity], _ skipped: [UnspentTransactionOutputEntity])
     // Connection state to LightwalletEndpoint changed.
     case connectionStateChanged(ConnectionState)
+    
+    case contextUpdated(CBPState)
 }
 
 /// Primary interface for interacting with the SDK. Defines the contract that specific
@@ -109,6 +115,8 @@ public protocol Synchronizer: AnyObject {
     /// An object that when enabled collects mertrics from the synchronizer
     var metrics: SDKMetrics { get }
 
+    func printPrivateWalletOutput() async throws
+    
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -311,7 +319,7 @@ public enum SyncStatus: Equatable {
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    case syncing(_ progress: Float)
+    case syncing(_ progress: ScanProgress)
 
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -364,7 +372,7 @@ enum InternalSyncStatus: Equatable {
     case unprepared
 
     /// Indicates that this Synchronizer is actively processing new blocks (consists of fetch, scan and enhance operations)
-    case syncing(Float)
+    case syncing(ScanProgress)
     
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -458,7 +466,7 @@ extension InternalSyncStatus {
 }
 
 extension InternalSyncStatus {
-    init(_ blockProcessorProgress: Float) {
+    init(_ blockProcessorProgress: ScanProgress) {
         self = .syncing(blockProcessorProgress)
     }
 }

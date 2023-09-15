@@ -308,7 +308,7 @@ extension SDKSynchronizer {
     static func textFor(state: SyncStatus) -> String {
         switch state {
         case .syncing(let progress):
-            return "Syncing \(progress * 100.0)%"
+            return "Syncing \(try! progress.progress() * 100.0)%"
 
         case .upToDate:
             return "Up to Date 😎"

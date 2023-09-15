@@ -1208,7 +1208,7 @@ class SDKSynchonizerListener {
                     case let .foundTransactions(transactions, _):
                         self?.txFound(transactions)
 
-                    case .storedUTXOs, .connectionStateChanged:
+                    case .storedUTXOs, .connectionStateChanged, .contextUpdated:
                         break
                     }
                 }

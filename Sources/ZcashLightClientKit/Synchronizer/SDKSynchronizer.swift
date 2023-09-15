@@ -47,6 +47,8 @@ public class SDKSynchronizer: Synchronizer {
     private var syncStartDate: Date?
     let latestBlocksDataProvider: LatestBlocksDataProvider
 
+    private var privateWalletOutputCounter = 0
+    
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
@@ -125,6 +127,31 @@ public class SDKSynchronizer: Synchronizer {
         return nil
     }
 
+    func contextUpdate(_ newState: CBPState) {
+        streamsUpdateQueue.async { [weak self] in
+            self?.eventSubject.send(.contextUpdated(newState))
+        }
+    }
+
+    public func printPrivateWalletOutput() async throws {
+        privateWalletOutputCounter += 1
+        
+        logger.debug(
+            """
+            BEGIN PRIVATE WALLET DEBUG OUTPUT [\(privateWalletOutputCounter)]
+                walletBirthday \(initializer.walletBirthday)
+                latestCachedBlockHeight \(await latestBlocksDataProvider.latestBlockHeight)
+                fullyScannedHeight \(await latestBlocksDataProvider.fullyScannedHeight)
+                maxScannedHeight \(await latestBlocksDataProvider.maxScannedHeight)
+                scanProgress \(String(describing: try await blockProcessor.rustBackend.getScanProgress()))
+                cachedScanRanges \(await blockProcessor.context.cachedScanRanges)
+                scanRanges \(String(describing: try await blockProcessor.rustBackend.suggestScanRanges()))
+                context state \(await blockProcessor.context.state)
+            END PRIVATE WALLET DEBUG OUTPUT [\(privateWalletOutputCounter)]
+            """
+        )
+    }
+
     public func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
@@ -164,7 +191,7 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            await updateStatus(.syncing(0))
+            await updateStatus(.syncing(.init(numerator: 1, denominator: 1)))
             syncStartDate = Date()
             await blockProcessor.start(retry: retry)
         }
@@ -230,6 +257,9 @@ public class SDKSynchronizer: Synchronizer {
 
             case .minedTransaction(let transaction):
                 self?.notifyMinedTransaction(transaction)
+                
+            case .contextUpdate(let newState):
+                self?.contextUpdate(newState)
             }
         }
 
@@ -259,7 +289,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    private func progressUpdated(progress: Float) async {
+    private func progressUpdated(progress: ScanProgress) async {
         let newStatus = InternalSyncStatus(progress)
         await updateStatus(newStatus)
     }

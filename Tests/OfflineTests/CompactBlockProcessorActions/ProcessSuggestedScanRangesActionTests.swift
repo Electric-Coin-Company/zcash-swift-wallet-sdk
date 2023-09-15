@@ -36,6 +36,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
+            context.updateCachedScanRangesClosure = { _ in }
 
             let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
 
@@ -70,6 +71,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
             context.updateLastDownloadedHeightClosure = { _ in }
             context.updateSyncControlDataClosure = { _ in }
             context.updateRequestedRewindHeightClosure = { _ in }
+            context.updateCachedScanRangesClosure = { _ in }
 
             let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
 

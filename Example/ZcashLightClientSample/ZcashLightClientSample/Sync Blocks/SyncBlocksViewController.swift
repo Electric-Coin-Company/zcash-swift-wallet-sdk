@@ -81,8 +81,10 @@ class SyncBlocksViewController: UIViewController {
         case let .syncing(progress):
             enhancingStarted = false
 
-            progressBar.progress = progress
-            progressLabel.text = "\(floor(progress * 1000) / 10)%"
+            let progressValue = try! progress.progress()
+            
+            progressBar.progress = progressValue
+            progressLabel.text = "\(floor(progressValue * 1000) / 10)%"
             let progressText = """
             latest block height \(state.latestBlockHeight)
             """

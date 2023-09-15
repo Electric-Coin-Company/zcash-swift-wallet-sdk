@@ -23,13 +23,11 @@ public class OSLogger: Logger {
     
     var level: LogLevel
     
-    public init(logLevel: LogLevel, category: String = "logs", alias: ZcashSynchronizerAlias? = nil) {
+    public init(logLevel: LogLevel, category: String = "sdkLogs", alias: ZcashSynchronizerAlias? = nil) {
         self.alias = alias
         self.level = logLevel
         if let bundleName = Bundle.main.bundleIdentifier {
-            var postfix = ""
-            if let alias { postfix = "_\(alias.description)" }
-            self.oslog = OSLog(subsystem: bundleName, category: "\(category)\(postfix)")
+            self.oslog = OSLog(subsystem: bundleName, category: "\(category)")
         } else {
             oslog = nil
         }

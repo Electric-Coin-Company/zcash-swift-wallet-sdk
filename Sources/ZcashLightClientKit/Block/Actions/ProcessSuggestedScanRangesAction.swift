@@ -26,6 +26,8 @@ extension ProcessSuggestedScanRangesAction: Action {
         logger.info("Getting the suggested scan ranges from the wallet database.")
         let scanRanges = try await rustBackend.suggestScanRanges()
 
+        await context.update(cachedScanRanges: scanRanges)
+        
         if let firstRange = scanRanges.first {
             let rangeStartExclusive = firstRange.range.lowerBound - 1
             let rangeEndInclusive = firstRange.range.upperBound - 1
