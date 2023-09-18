@@ -474,7 +474,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
         let rootsPtr = UnsafeMutablePointer<FfiSubtreeRoots>.allocate(capacity: 1)
 
-        defer { ffiSubtreeRootsVec.deallocateElements() }
+        defer {
+            ffiSubtreeRootsVec.deallocateElements()
+            rootsPtr.deallocate()
+        }
 
         try contiguousFfiRoots.withContiguousMutableStorageIfAvailable { ptr in
             var roots = FfiSubtreeRoots()
