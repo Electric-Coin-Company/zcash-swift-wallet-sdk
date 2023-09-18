@@ -11,12 +11,14 @@ final class UpdateChainTipAction {
     let rustBackend: ZcashRustBackendWelding
     let downloader: BlockDownloader
     let service: LightWalletService
+    let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
     
     init(container: DIContainer) {
         service = container.resolve(LightWalletService.self)
         downloader = container.resolve(BlockDownloader.self)
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         logger = container.resolve(Logger.self)
     }
     
@@ -26,6 +28,7 @@ final class UpdateChainTipAction {
         logger.info("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))
         await context.update(lastChainTipUpdateTime: time)
+        await latestBlocksDataProvider.update(latestBlockHeight)
     }
 }
 
