@@ -712,6 +712,21 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
         await updateWalletBirthdayClosure!(walletBirthday)
     }
 
+    // MARK: - update
+
+    var updateCallsCount = 0
+    var updateCalled: Bool {
+        return updateCallsCount > 0
+    }
+    var updateReceivedLatestBlockHeight: BlockHeight?
+    var updateClosure: ((BlockHeight) async -> Void)?
+
+    func update(_ latestBlockHeight: BlockHeight) async {
+        updateCallsCount += 1
+        updateReceivedLatestBlockHeight = latestBlockHeight
+        await updateClosure!(latestBlockHeight)
+    }
+
 }
 class LightWalletServiceMock: LightWalletService {
 

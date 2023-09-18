@@ -11,12 +11,14 @@ final class ScanAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let blockScanner: BlockScanner
     let rustBackend: ZcashRustBackendWelding
+    let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
         blockScanner = container.resolve(BlockScanner.self)
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         logger = container.resolve(Logger.self)
     }
 
@@ -54,7 +56,8 @@ extension ScanAction: Action {
                 let processedHeight = await context.processedHeight
                 let incrementedprocessedHeight = processedHeight + BlockHeight(increment)
                 await context.update(processedHeight: incrementedprocessedHeight)
-
+                await self?.latestBlocksDataProvider.updateScannedData()
+                
                 // report scan progress only if it's available
                 if let scanProgress = try? await self?.rustBackend.getScanProgress() {
                     let progress = try scanProgress.progress()

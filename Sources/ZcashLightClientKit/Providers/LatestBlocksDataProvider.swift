@@ -16,6 +16,7 @@ protocol LatestBlocksDataProvider {
     func updateScannedData() async
     func updateBlockData() async
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async
+    func update(_ latestBlockHeight: BlockHeight) async
 }
 
 actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
@@ -41,13 +42,18 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     }
 
     func updateBlockData() async {
-        if let newLatestBlockHeight = try? await service.latestBlockHeight(),
-        latestBlockHeight < newLatestBlockHeight {
-            latestBlockHeight = newLatestBlockHeight
+        if let newLatestBlockHeight = try? await service.latestBlockHeight() {
+            await update(newLatestBlockHeight)
         }
     }
 
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async {
         self.walletBirthday = walletBirthday
+    }
+    
+    func update(_ newLatestBlockHeight: BlockHeight) async {
+        if latestBlockHeight < newLatestBlockHeight {
+            latestBlockHeight = newLatestBlockHeight
+        }
     }
 }

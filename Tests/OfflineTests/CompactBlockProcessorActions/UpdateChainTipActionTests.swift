@@ -27,11 +27,13 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     func testUpdateChainTipAction_UpdateChainTipTimeTriggered() async throws {
         let loggerMock = LoggerMock()
         let blockDownloaderMock = BlockDownloaderMock()
+        let latestBlocksDataProvider = LatestBlocksDataProviderMock()
 
         loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
-
-        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
+        latestBlocksDataProvider.updateClosure = { _ in }
+        
+        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock, latestBlocksDataProvider)
 
         do {
             let context = ActionContextMock.default()
@@ -53,11 +55,13 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     func testUpdateChainTipAction_UpdateChainTipPrevActionTriggered() async throws {
         let loggerMock = LoggerMock()
         let blockDownloaderMock = BlockDownloaderMock()
+        let latestBlocksDataProvider = LatestBlocksDataProviderMock()
 
         loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
+        latestBlocksDataProvider.updateClosure = { _ in }
 
-        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
+        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock, latestBlocksDataProvider)
 
         do {
             let context = ActionContextMock.default()
@@ -104,7 +108,8 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     
     private func setupAction(
         _ loggerMock: LoggerMock = LoggerMock(),
-        _ blockDownloaderMock: BlockDownloaderMock = BlockDownloaderMock()
+        _ blockDownloaderMock: BlockDownloaderMock = BlockDownloaderMock(),
+        _ latestBlocksDataProvider: LatestBlocksDataProvider = LatestBlocksDataProviderMock()
     ) async -> UpdateChainTipAction {
         let config: CompactBlockProcessor.Configuration = .standard(
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
@@ -133,6 +138,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         mockContainer.mock(type: BlockDownloader.self, isSingleton: true) { _ in blockDownloaderMock }
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in latestBlocksDataProvider }
 
         return UpdateChainTipAction(container: mockContainer)
     }

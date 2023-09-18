@@ -13,7 +13,7 @@ final class ScanActionTests: ZcashTestCase {
     func testScanAction_NextAction() async throws {
         let blockScannerMock = BlockScannerMock()
         let loggerMock = LoggerMock()
-        
+
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
@@ -46,7 +46,7 @@ final class ScanActionTests: ZcashTestCase {
     func testScanAction_EarlyOutForNoDownloadAndScanRangeSet() async throws {
         let blockScannerMock = BlockScannerMock()
         let loggerMock = LoggerMock()
-                
+
         let scanAction = setupAction(blockScannerMock, loggerMock)
         let syncContext = ActionContextMock.default()
         
@@ -83,7 +83,7 @@ final class ScanActionTests: ZcashTestCase {
     func testScanAction_EndRangeProperlySetLowerThanBatchSize() async throws {
         let blockScannerMock = BlockScannerMock()
         let loggerMock = LoggerMock()
-        
+
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
@@ -107,7 +107,7 @@ final class ScanActionTests: ZcashTestCase {
     func testScanAction_EndRangeProperlySetBatchSize() async throws {
         let blockScannerMock = BlockScannerMock()
         let loggerMock = LoggerMock()
-        
+
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
@@ -130,7 +130,8 @@ final class ScanActionTests: ZcashTestCase {
     
     private func setupAction(
         _ blockScannerMock: BlockScannerMock,
-        _ loggerMock: LoggerMock
+        _ loggerMock: LoggerMock,
+        _ latestBlocksDataProvider: LatestBlocksDataProvider = LatestBlocksDataProviderMock()
     ) -> ScanAction {
         let rustBackendMock = ZcashRustBackendWeldingMock(
             consensusBranchIdForHeightClosure: { height in
@@ -142,7 +143,8 @@ final class ScanActionTests: ZcashTestCase {
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: BlockScanner.self, isSingleton: true) { _ in blockScannerMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
-        
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in latestBlocksDataProvider }
+
         let config: CompactBlockProcessor.Configuration = .standard(
             for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: 0
         )
