@@ -48,7 +48,6 @@ public enum ZcashTransaction {
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
-        public let id: Int
         public let index: Int?
         public var isSentTransaction: Bool { value < Zatoshi(0) }
         public let hasChange: Bool
@@ -79,7 +78,7 @@ public enum ZcashTransaction {
             }
         }
 
-        public let idTx: Int
+        public let rawID: Data
         public let pool: Pool
         public let index: Int
         public let fromAccount: Int?
@@ -99,7 +98,7 @@ public enum ZcashTransaction {
 
 extension ZcashTransaction.Output {
     enum Column {
-        static let idTx = Expression<Int>("id_tx")
+        static let rawID = Expression<Blob>("txid")
         static let pool = Expression<Int>("output_pool")
         static let index = Expression<Int>("output_index")
         static let toAccount = Expression<Int?>("to_account")
@@ -112,7 +111,7 @@ extension ZcashTransaction.Output {
 
     init(row: Row) throws {
         do {
-            idTx = try row.get(Column.idTx)
+            rawID = Data(blob: try row.get(Column.rawID))
             pool = .init(rawValue: try row.get(Column.pool))
             index = try row.get(Column.index)
             fromAccount = try row.get(Column.fromAccount)
@@ -144,7 +143,6 @@ extension ZcashTransaction.Output {
 extension ZcashTransaction.Overview {
     enum Column {
         static let accountId = Expression<Int>("account_id")
-        static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int?>("tx_index")
         static let rawID = Expression<Blob>("txid")
@@ -164,7 +162,6 @@ extension ZcashTransaction.Overview {
         do {
             self.accountId = try row.get(Column.accountId)
             self.expiryHeight = try row.get(Column.expiryHeight)
-            self.id = try row.get(Column.id)
             self.index = try row.get(Column.index)
             self.hasChange = try row.get(Column.hasChange)
             self.memoCount = try row.get(Column.memoCount)

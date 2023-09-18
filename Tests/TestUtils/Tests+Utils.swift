@@ -146,7 +146,7 @@ extension ZcashRustBackend {
         spendParamsPath: URL = SaplingParamsSourceURL.default.spendParamFileURL,
         outputParamsPath: URL = SaplingParamsSourceURL.default.outputParamFileURL,
         networkType: NetworkType
-    ) -> ZcashRustBackendWelding {
+    ) -> ZcashRustBackend {
         ZcashRustBackend(
             dbData: dbData,
             fsBlockDbRoot: fsBlockDbRoot,

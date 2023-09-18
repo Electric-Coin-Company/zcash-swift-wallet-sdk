@@ -1148,14 +1148,14 @@ class BalanceTests: ZcashTestCase {
             )
         )
 
-        let expiredPending = try await transactionRepo.find(id: pendingTransaction.id)
+        let expiredPending = try await transactionRepo.find(rawID: pendingTransaction.rawID)
         
         /*
         there no sent transaction displayed
         */
 
         let sentTransactions = try await coordinator.synchronizer.allSentTransactions()
-        XCTAssertNil(sentTransactions.first(where: { $0.id == pendingTransaction.id }))
+        XCTAssertNil(sentTransactions.first(where: { $0.rawID == pendingTransaction.rawID }))
         /*
         There’s a pending transaction that has expired
         */

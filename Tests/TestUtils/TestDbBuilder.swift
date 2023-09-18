@@ -54,10 +54,8 @@ enum TestDbBuilder {
         Bundle.module.url(forResource: "darkside_caches", withExtension: "db")
     }
     
-    static func prepopulatedDataDbProvider(rustBackend: ZcashRustBackendWelding) async throws -> ConnectionProvider? {
-        guard let url = prePopulatedMainnetDataDbURL() else { return nil }
-
-        let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
+    static func prepopulatedDataDbProvider(rustBackend: ZcashRustBackend) async throws -> ConnectionProvider? {
+        let provider = SimpleConnectionProvider(path: (await rustBackend.dbData).0, readonly: true)
 
         let initResult = try await rustBackend.initDataDb(seed: Environment.seedBytes)
         
@@ -68,13 +66,13 @@ enum TestDbBuilder {
         }
     }
     
-    static func transactionRepository(rustBackend: ZcashRustBackendWelding) async throws -> TransactionRepository? {
+    static func transactionRepository(rustBackend: ZcashRustBackend) async throws -> TransactionRepository? {
         guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
         
         return TransactionSQLDAO(dbProvider: provider)
     }
 
-    static func transactionRepository(rustBackend: ZcashRustBackendWelding, withTrace closure: @escaping ((String) -> Void)) async throws -> TransactionRepository? {
+    static func transactionRepository(rustBackend: ZcashRustBackend, withTrace closure: @escaping ((String) -> Void)) async throws -> TransactionRepository? {
         guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
 
         return TransactionSQLDAO(dbProvider: provider, traceClosure: closure)
