@@ -197,21 +197,21 @@ class TransactionRepositoryTests: XCTestCase {
         let transaction = try await self.transactionRepository.find(rawID: rawID)
         let transactionsFrom = try await self.transactionRepository.find(from: transaction, limit: Int.max, kind: .all)
 
-        XCTAssertEqual(transactionsFrom.count, 8)
+        XCTAssertEqual(transactionsFrom.count, 15)
 
         transactionsFrom.forEach { preceededTransaction in
-            guard let preceededTransactionIndex = preceededTransaction.index, let transactionIndex = transaction.index else {
+            guard let precedingHeight = preceededTransaction.minedHeight, let transactionHeight = transaction.minedHeight else {
                 XCTFail("Transactions are missing indexes.")
                 return
             }
 
-            guard let preceededTransactionBlockTime = preceededTransaction.blockTime, let transactionBlockTime = transaction.blockTime else {
+            guard let precedingBlockTime = preceededTransaction.blockTime, let transactionBlockTime = transaction.blockTime else {
                 XCTFail("Transactions are missing block time.")
                 return
             }
 
-            XCTAssertLessThan(preceededTransactionIndex, transactionIndex)
-            XCTAssertLessThan(preceededTransactionBlockTime, transactionBlockTime)
+            XCTAssertLessThanOrEqual(precedingHeight, transactionHeight)
+            XCTAssertLessThan(precedingBlockTime, transactionBlockTime)
         }
     }
 }

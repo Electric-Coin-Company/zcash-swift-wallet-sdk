@@ -88,14 +88,17 @@ class TransactionSQLDAO: TransactionRepository {
     func find(from transaction: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
         guard
             let transactionIndex = transaction.index,
-            let transactionBlockTime = transaction.blockTime
+            let transactionBlockHeight = transaction.minedHeight
         else { throw ZcashError.transactionRepositoryTransactionMissingRequiredFields }
         
         let query = transactionsView
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .filter(
-                Int64(transactionBlockTime) > ZcashTransaction.Overview.Column.blockTime
-                && transactionIndex > ZcashTransaction.Overview.Column.index
+                transactionBlockHeight > ZcashTransaction.Overview.Column.minedHeight
+                || (
+                    transactionBlockHeight == ZcashTransaction.Overview.Column.minedHeight &&
+                    transactionIndex > (ZcashTransaction.Overview.Column.index ?? -1)
+                )
             )
             .filterQueryFor(kind: kind)
             .limit(limit)
