@@ -37,8 +37,10 @@ class TransactionsDataSource: NSObject {
         case .cleared:
             let rawTransactions = await synchronizer.transactions
             for transaction in rawTransactions {
-                let memos = try await synchronizer.getMemos(for: transaction)
-                transactions.append(TransactionDetailModel(transaction: transaction, memos: memos))
+                if transaction.minedHeight != nil {
+                    let memos = try await synchronizer.getMemos(for: transaction)
+                    transactions.append(TransactionDetailModel(transaction: transaction, memos: memos))
+                }
             }
         case .received:
             let rawTransactions = await synchronizer.receivedTransactions
