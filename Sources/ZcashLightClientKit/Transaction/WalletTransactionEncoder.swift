@@ -157,7 +157,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 extension ZcashTransaction.Overview {
     func encodedTransaction() throws -> EncodedTransaction {
         guard let raw else {
-            throw TransactionEncoderError.notEncoded(transactionId: self.id)
+            throw TransactionEncoderError.notEncoded(txId: self.rawID)
         }
 
         return EncodedTransaction(transactionId: self.rawID, raw: raw)

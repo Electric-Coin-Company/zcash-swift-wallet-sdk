@@ -14,7 +14,11 @@ class TransactionRepositoryTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.uniqueTestTempDirectory, networkType: .testnet)
+        let rustBackend = ZcashRustBackend.makeForTests(
+            dbData: TestDbBuilder.prePopulatedMainnetDataDbURL()!,
+            fsBlockDbRoot: Environment.uniqueTestTempDirectory,
+            networkType: .mainnet
+        )
         transactionRepository = try! await TestDbBuilder.transactionRepository(rustBackend: rustBackend)
     }
     
@@ -46,17 +50,10 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(transactions[2].isSentTransaction, false)
     }
     
-    func testFindById() async throws {
-        let transaction = try await self.transactionRepository.find(id: 10)
-        XCTAssertEqual(transaction.id, 10)
-        XCTAssertEqual(transaction.minedHeight, 663942)
-        XCTAssertEqual(transaction.index, 5)
-    }
-    
     func testFindByTxId() async throws {
         let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         let transaction = try await self.transactionRepository.find(rawID: id)
-        XCTAssertEqual(transaction.id, 8)
+        XCTAssertEqual(transaction.rawID, id)
         XCTAssertEqual(transaction.minedHeight, 663922)
         XCTAssertEqual(transaction.index, 1)
     }
@@ -94,19 +91,26 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(transactions[2].minedHeight, 663956)
     }
 
+    func testGetTransactionOutputs() async throws {
+        let rawID = Data(fromHexEncodedString: "08cb5838ffd2c18ce15e7e8c50174940cd9526fff37601986f5480b7ca07e534")!
+
+        let outputs = try await self.transactionRepository.getTransactionOutputs(for: rawID)
+        XCTAssertEqual(outputs.count, 2)
+    }
+
     func testFindMemoForTransaction() async throws {
+        let rawID = Data(fromHexEncodedString: "08cb5838ffd2c18ce15e7e8c50174940cd9526fff37601986f5480b7ca07e534")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: nil,
             expiryHeight: nil,
             fee: nil,
-            id: 9,
             index: nil,
             hasChange: false,
             memoCount: 0,
             minedHeight: nil,
             raw: nil,
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 0,
             sentNoteCount: 0,
             value: Zatoshi(-1000),
@@ -116,7 +120,7 @@ class TransactionRepositoryTests: XCTestCase {
         let memos = try await self.transactionRepository.findMemos(for: transaction)
 
         guard memos.count == 1 else {
-            XCTFail("Expected transaction to have one memo")
+            XCTFail("Expected transaction to have one memo, found \(memos.count)")
             return
         }
 
@@ -124,18 +128,18 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForReceivedTransaction() async throws {
+        let rawID = Data(fromHexEncodedString: "1f49cfcfcdebd5cb9085d9ff2efbcda87121dda13f2c791113fcf2e79ba82108")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
-            id: 5,
             index: 0,
             hasChange: false,
             memoCount: 1,
             minedHeight: 0,
             raw: nil,
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 1,
             sentNoteCount: 0,
             value: .zero,
@@ -148,18 +152,18 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForSentTransaction() async throws {
+        let rawID = Data(fromHexEncodedString: "08cb5838ffd2c18ce15e7e8c50174940cd9526fff37601986f5480b7ca07e534")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
-            id: 9,
             index: 0,
             hasChange: false,
             memoCount: 1,
             minedHeight: nil,
             raw: nil,
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 0,
             sentNoteCount: 2,
             value: .zero,
@@ -189,24 +193,25 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFrom() async throws {
-        let transaction = try await self.transactionRepository.find(id: 16)
+        let rawID = Data(fromHexEncodedString: "5d9b91e31a6d3f94844a4c330e727a2d5d0643f6caa6c75573b28aefe859e8d2")!
+        let transaction = try await self.transactionRepository.find(rawID: rawID)
         let transactionsFrom = try await self.transactionRepository.find(from: transaction, limit: Int.max, kind: .all)
 
-        XCTAssertEqual(transactionsFrom.count, 8)
+        XCTAssertEqual(transactionsFrom.count, 15)
 
         transactionsFrom.forEach { preceededTransaction in
-            guard let preceededTransactionIndex = preceededTransaction.index, let transactionIndex = transaction.index else {
-                XCTFail("Transactions are missing indexes.")
+            guard let precedingHeight = preceededTransaction.minedHeight, let transactionHeight = transaction.minedHeight else {
+                XCTFail("Transactions are missing mined heights.")
                 return
             }
 
-            guard let preceededTransactionBlockTime = preceededTransaction.blockTime, let transactionBlockTime = transaction.blockTime else {
+            guard let precedingBlockTime = preceededTransaction.blockTime, let transactionBlockTime = transaction.blockTime else {
                 XCTFail("Transactions are missing block time.")
                 return
             }
 
-            XCTAssertLessThan(preceededTransactionIndex, transactionIndex)
-            XCTAssertLessThan(preceededTransactionBlockTime, transactionBlockTime)
+            XCTAssertLessThanOrEqual(precedingHeight, transactionHeight)
+            XCTAssertLessThan(precedingBlockTime, transactionBlockTime)
         }
     }
 }

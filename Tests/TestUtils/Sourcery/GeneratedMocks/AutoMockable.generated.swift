@@ -1708,30 +1708,6 @@ class TransactionRepositoryMock: TransactionRepository {
 
     // MARK: - find
 
-    var findIdThrowableError: Error?
-    var findIdCallsCount = 0
-    var findIdCalled: Bool {
-        return findIdCallsCount > 0
-    }
-    var findIdReceivedId: Int?
-    var findIdReturnValue: ZcashTransaction.Overview!
-    var findIdClosure: ((Int) async throws -> ZcashTransaction.Overview)?
-
-    func find(id: Int) async throws -> ZcashTransaction.Overview {
-        if let error = findIdThrowableError {
-            throw error
-        }
-        findIdCallsCount += 1
-        findIdReceivedId = id
-        if let closure = findIdClosure {
-            return try await closure(id)
-        } else {
-            return findIdReturnValue
-        }
-    }
-
-    // MARK: - find
-
     var findRawIDThrowableError: Error?
     var findRawIDCallsCount = 0
     var findRawIDCalled: Bool {
@@ -1929,18 +1905,18 @@ class TransactionRepositoryMock: TransactionRepository {
     var getRecipientsForCalled: Bool {
         return getRecipientsForCallsCount > 0
     }
-    var getRecipientsForReceivedId: Int?
+    var getRecipientsForReceivedRawID: Data?
     var getRecipientsForReturnValue: [TransactionRecipient]!
-    var getRecipientsForClosure: ((Int) async throws -> [TransactionRecipient])?
+    var getRecipientsForClosure: ((Data) async throws -> [TransactionRecipient])?
 
-    func getRecipients(for id: Int) async throws -> [TransactionRecipient] {
+    func getRecipients(for rawID: Data) async throws -> [TransactionRecipient] {
         if let error = getRecipientsForThrowableError {
             throw error
         }
         getRecipientsForCallsCount += 1
-        getRecipientsForReceivedId = id
+        getRecipientsForReceivedRawID = rawID
         if let closure = getRecipientsForClosure {
-            return try await closure(id)
+            return try await closure(rawID)
         } else {
             return getRecipientsForReturnValue
         }
@@ -1953,18 +1929,18 @@ class TransactionRepositoryMock: TransactionRepository {
     var getTransactionOutputsForCalled: Bool {
         return getTransactionOutputsForCallsCount > 0
     }
-    var getTransactionOutputsForReceivedId: Int?
+    var getTransactionOutputsForReceivedRawID: Data?
     var getTransactionOutputsForReturnValue: [ZcashTransaction.Output]!
-    var getTransactionOutputsForClosure: ((Int) async throws -> [ZcashTransaction.Output])?
+    var getTransactionOutputsForClosure: ((Data) async throws -> [ZcashTransaction.Output])?
 
-    func getTransactionOutputs(for id: Int) async throws -> [ZcashTransaction.Output] {
+    func getTransactionOutputs(for rawID: Data) async throws -> [ZcashTransaction.Output] {
         if let error = getTransactionOutputsForThrowableError {
             throw error
         }
         getTransactionOutputsForCallsCount += 1
-        getTransactionOutputsForReceivedId = id
+        getTransactionOutputsForReceivedRawID = rawID
         if let closure = getTransactionOutputsForClosure {
-            return try await closure(id)
+            return try await closure(rawID)
         } else {
             return getTransactionOutputsForReturnValue
         }

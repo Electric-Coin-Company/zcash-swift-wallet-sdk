@@ -141,18 +141,18 @@ final class EnhanceActionTests: ZcashTestCase {
     func testEnhanceAction_EnhancementOfBlocksCalled_FoundTransactions() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
 
+        let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
-            id: 2,
             index: 1,
             hasChange: false,
             memoCount: 1,
             minedHeight: 663188,
             raw: Data(),
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 1,
             sentNoteCount: 0,
             value: Zatoshi(100000),
@@ -197,19 +197,19 @@ final class EnhanceActionTests: ZcashTestCase {
     
     func testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        
+
+        let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
-            id: 2,
             index: 1,
             hasChange: false,
             memoCount: 1,
             minedHeight: 663188,
             raw: Data(),
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 1,
             sentNoteCount: 0,
             value: Zatoshi(100000),
@@ -259,18 +259,18 @@ final class EnhanceActionTests: ZcashTestCase {
     func testEnhanceAction_EnhancementOfBlocksCalled_usingSmallRange_minedTransaction() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
 
+        let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
-            id: 2,
             index: 1,
             hasChange: false,
             memoCount: 1,
             minedHeight: 663188,
             raw: Data(),
-            rawID: Data(),
+            rawID: rawID,
             receivedNoteCount: 1,
             sentNoteCount: 0,
             value: Zatoshi(100000),

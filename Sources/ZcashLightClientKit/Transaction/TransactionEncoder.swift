@@ -10,8 +10,8 @@ import Foundation
 typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction, Error>) -> Void
 
 public enum TransactionEncoderError: Error {
-    case notFound(transactionId: Int)
-    case notEncoded(transactionId: Int)
+    case notFound(txId: Data)
+    case notEncoded(txId: Data)
     case missingParams
     case spendingKeyWrongNetwork
     case couldNotExpand(txId: Data)

@@ -386,11 +386,11 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient] {
-        return (try? await transactionRepository.getRecipients(for: transaction.id)) ?? []
+        return (try? await transactionRepository.getRecipients(for: transaction.rawID)) ?? []
     }
 
     public func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output] {
-        return (try? await transactionRepository.getTransactionOutputs(for: transaction.id)) ?? []
+        return (try? await transactionRepository.getTransactionOutputs(for: transaction.rawID)) ?? []
     }
 
     public func latestHeight() async throws -> BlockHeight {

@@ -390,7 +390,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.id, self.data.pendingTransactionEntity.id)
+                    XCTAssertEqual(value.rawID, self.data.pendingTransactionEntity.rawID)
                 }
             )
             .store(in: &cancellables)
@@ -444,7 +444,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.clearedTransaction.id])
+                    XCTAssertEqual(value.map { $0.rawID }, [self.data.clearedTransaction.rawID])
                 }
             )
             .store(in: &cancellables)
@@ -468,7 +468,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.sentTransaction.id])
+                    XCTAssertEqual(value.map { $0.rawID }, [self.data.sentTransaction.rawID])
                 }
             )
             .store(in: &cancellables)
@@ -492,7 +492,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.receivedTransaction.id])
+                    XCTAssertEqual(value.map { $0.rawID }, [self.data.receivedTransaction.rawID])
                 }
             )
             .store(in: &cancellables)
@@ -504,7 +504,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         let memo: Memo = .text(try MemoText("Some message"))
 
         synchronizerMock.getMemosForClearedTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             return [memo]
         }
 
@@ -559,7 +559,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         let expectedRecipient = TransactionRecipient.address(.transparent(self.data.transparentAddress))
 
         synchronizerMock.getRecipientsForClearedTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             return [expectedRecipient]
         }
 
@@ -586,7 +586,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
     func testAllConfirmedTransactionsSucceed() throws {
         synchronizerMock.allTransactionsFromLimitClosure = { receivedTransaction, limit in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             XCTAssertEqual(limit, 3)
             return [self.data.clearedTransaction]
         }
@@ -604,7 +604,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.clearedTransaction.id])
+                    XCTAssertEqual(value.map { $0.rawID }, [self.data.clearedTransaction.rawID])
                 }
             )
             .store(in: &cancellables)
