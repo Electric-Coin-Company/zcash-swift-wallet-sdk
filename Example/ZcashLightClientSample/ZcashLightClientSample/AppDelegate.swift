@@ -81,7 +81,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             options: NotificationBubble.sucessOptions(
                 animation: NotificationBubble.Animation.fade(duration: 1)
             ),
-            attributedText: NSAttributedString(string: "Transaction \(String(describing: transaction.id))mined!"),
+            attributedText: NSAttributedString(string: "Transaction \(String(describing: transaction.rawID))mined!"),
             handleTap: {}
         )
     }
