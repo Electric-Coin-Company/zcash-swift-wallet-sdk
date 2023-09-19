@@ -201,7 +201,7 @@ class TransactionRepositoryTests: XCTestCase {
 
         transactionsFrom.forEach { preceededTransaction in
             guard let precedingHeight = preceededTransaction.minedHeight, let transactionHeight = transaction.minedHeight else {
-                XCTFail("Transactions are missing indexes.")
+                XCTFail("Transactions are missing mined heights.")
                 return
             }
 
