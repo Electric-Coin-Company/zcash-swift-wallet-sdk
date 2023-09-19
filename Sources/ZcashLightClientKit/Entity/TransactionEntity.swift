@@ -25,9 +25,9 @@ public enum ZcashTransaction {
             init(
                 currentHeight: BlockHeight,
                 minedHeight: BlockHeight?,
-                expiredUnmined: Bool
+                expiredUnmined: Bool?
             ) {
-                guard !expiredUnmined else {
+                guard let expiredUnmined, !expiredUnmined else {
                     self = .expired
                     return
                 }
@@ -58,7 +58,7 @@ public enum ZcashTransaction {
         public let receivedNoteCount: Int
         public let sentNoteCount: Int
         public let value: Zatoshi
-        public let isExpiredUmined: Bool
+        public let isExpiredUmined: Bool?
     }
 
     public struct Output {
@@ -155,7 +155,7 @@ extension ZcashTransaction.Overview {
         static let receivedNoteCount = Expression<Int>("received_note_count")
         static let memoCount = Expression<Int>("memo_count")
         static let blockTime = Expression<Int64?>("block_time")
-        static let expiredUnmined = Expression<Bool>("expired_unmined")
+        static let expiredUnmined = Expression<Bool?>("expired_unmined")
     }
 
     init(row: Row) throws {
