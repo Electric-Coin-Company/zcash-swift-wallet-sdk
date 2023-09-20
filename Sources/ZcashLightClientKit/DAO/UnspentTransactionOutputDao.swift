@@ -109,6 +109,9 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             )
             """
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+            
             try dbProvider.connection().run(stringStatement)
         } catch {
             throw ZcashError.unspentTransactionOutputDAOCreateTable(error)
@@ -118,8 +121,11 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     /// - Throws: `unspentTransactionOutputDAOStore` if sqlite query fails.
     func store(utxos: [UnspentTransactionOutputEntity]) async throws {
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+
             let db = try dbProvider.connection()
-            try dbProvider.connection().transaction {
+            try db.transaction {
                 for utxo in utxos.map({ $0 as? UTXO ?? $0.asUTXO() }) {
                     try db.run(table.insert(utxo))
                 }
@@ -132,6 +138,9 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     /// - Throws: `unspentTransactionOutputDAOClearAll` if sqlite query fails.
     func clearAll(address: String?) async throws {
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+
             if let tAddr = address {
                 try dbProvider.connection().run(table.filter(TableColumns.address == tAddr).delete())
             } else {
@@ -178,16 +187,16 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     /// - Throws: `unspentTransactionOutputDAOBalance` if sqlite query fails.
     func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
         do {
-            let verified = try dbProvider.connection().scalar(
+            let verified = try dbProvider.connection().scalarLocked(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)
                     .filter(TableColumns.height <= latestHeight - ZcashSDK.defaultStaleTolerance)
             ) ?? 0
-            let total = try dbProvider.connection().scalar(
+            let total = try dbProvider.connection().scalarLocked(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)
             ) ?? 0
-            
+
             return WalletBalance(
                 verified: Zatoshi(Int64(verified)),
                 total: Zatoshi(Int64(total))

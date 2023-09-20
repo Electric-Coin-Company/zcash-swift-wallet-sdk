@@ -8,6 +8,22 @@
 import Foundation
 import SQLite
 
+extension Connection {
+    public func scalarLocked<V: Value>(_ query: ScalarQuery<V?>) throws -> V.ValueType? {
+        globalDBLock.lock()
+        defer { globalDBLock.unlock() }
+
+        return try scalar(query)
+    }
+    
+    public func scalarLocked<V: Value>(_ query: ScalarQuery<V>) throws -> V {
+        globalDBLock.lock()
+        defer { globalDBLock.unlock() }
+
+        return try scalar(query)
+    }
+}
+
 class TransactionSQLDAO: TransactionRepository {
     enum NotesTableStructure {
         static let transactionID = Expression<Int>("tx")
@@ -41,7 +57,7 @@ class TransactionSQLDAO: TransactionRepository {
     
     func countAll() async throws -> Int {
         do {
-            return try connection().scalar(transactionsView.count)
+            return try connection().scalarLocked(transactionsView.count)
         } catch {
             throw ZcashError.transactionRepositoryCountAll(error)
         }
@@ -49,7 +65,7 @@ class TransactionSQLDAO: TransactionRepository {
     
     func countUnmined() async throws -> Int {
         do {
-            return try connection().scalar(transactionsView.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
+            return try connection().scalarLocked(transactionsView.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
         } catch {
             throw ZcashError.transactionRepositoryCountUnmined(error)
         }
@@ -160,11 +176,14 @@ class TransactionSQLDAO: TransactionRepository {
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> [Entity] {
+        globalDBLock.lock()
+        defer { globalDBLock.unlock() }
+        
         do {
             let entities = try connection()
                 .prepare(query)
                 .map(createEntity)
-            
+
             return entities
         } catch {
             if let error = error as? ZcashError {
