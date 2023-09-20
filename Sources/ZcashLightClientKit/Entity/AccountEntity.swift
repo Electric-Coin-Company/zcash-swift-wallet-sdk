@@ -66,6 +66,9 @@ class AccountSQDAO: AccountRepository {
     ///     - `accountDAOGetAll` if sqlite query fetching account data failed.
     func getAll() throws -> [AccountEntity] {
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+            
             return try dbProvider.connection()
                 .prepare(table)
                 .map { row -> DbAccount in
@@ -90,6 +93,9 @@ class AccountSQDAO: AccountRepository {
     func findBy(account: Int) throws -> AccountEntity? {
         let query = table.filter(TableColums.account == account).limit(1)
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+
             return try dbProvider.connection()
                 .prepare(query)
                 .map {
@@ -119,6 +125,9 @@ class AccountSQDAO: AccountRepository {
 
         let updatedRows: Int
         do {
+            globalDBLock.lock()
+            defer { globalDBLock.unlock() }
+
             updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         } catch {
             throw ZcashError.accountDAOUpdate(error)
