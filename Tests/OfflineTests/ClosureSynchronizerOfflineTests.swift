@@ -415,7 +415,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         synchronizer.clearedTransactions() { transactions in
             XCTAssertEqual(transactions.count, 1)
-            XCTAssertEqual(transactions[0].id, self.data.clearedTransaction.id)
+            XCTAssertEqual(transactions[0].rawID, self.data.clearedTransaction.rawID)
             expectation.fulfill()
         }
 
@@ -429,7 +429,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         synchronizer.sentTranscations() { transactions in
             XCTAssertEqual(transactions.count, 1)
-            XCTAssertEqual(transactions[0].id, self.data.sentTransaction.id)
+            XCTAssertEqual(transactions[0].rawID, self.data.sentTransaction.rawID)
             expectation.fulfill()
         }
 
@@ -443,7 +443,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         synchronizer.receivedTransactions() { transactions in
             XCTAssertEqual(transactions.count, 1)
-            XCTAssertEqual(transactions[0].id, self.data.receivedTransaction.id)
+            XCTAssertEqual(transactions[0].rawID, self.data.receivedTransaction.rawID)
             expectation.fulfill()
         }
 
@@ -454,7 +454,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         let memo: Memo = .text(try MemoText("Some message"))
 
         synchronizerMock.getMemosForClearedTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             return [memo]
         }
 
@@ -497,7 +497,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         let expectedRecipient: TransactionRecipient = .address(.transparent(data.transparentAddress))
 
         synchronizerMock.getRecipientsForClearedTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             return [expectedRecipient]
         }
 
@@ -514,7 +514,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
     func testAllConfirmedTransactionsSucceed() throws {
         synchronizerMock.allTransactionsFromLimitClosure = { receivedTransaction, limit in
-            XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
+            XCTAssertEqual(receivedTransaction.rawID, self.data.clearedTransaction.rawID)
             XCTAssertEqual(limit, 3)
             return [self.data.clearedTransaction]
         }
@@ -525,7 +525,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             switch result {
             case let .success(transactions):
                 XCTAssertEqual(transactions.count, 1)
-                XCTAssertEqual(transactions[0].id, self.data.clearedTransaction.id)
+                XCTAssertEqual(transactions[0].rawID, self.data.clearedTransaction.rawID)
                 expectation.fulfill()
             case let .failure(error):
                 XCTFail("Unpected failure with error: \(error)")

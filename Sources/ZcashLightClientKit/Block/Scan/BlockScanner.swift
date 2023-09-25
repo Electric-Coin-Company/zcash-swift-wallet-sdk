@@ -49,8 +49,7 @@ extension BlockScannerImpl: BlockScanner {
             let previousScannedHeight = lastScannedHeight
             let startHeight = previousScannedHeight + 1
 
-            // TODO: [#576] remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
-            let batchSize = scanBatchSize(startScanHeight: startHeight, network: config.networkType)
+            let batchSize = UInt32(config.scanningBatchSize)
 
             let scanStartTime = Date()
             do {
@@ -86,18 +85,5 @@ extension BlockScannerImpl: BlockScanner {
         } while !Task.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
 
         return lastScannedHeight
-    }
-
-    private func scanBatchSize(startScanHeight height: BlockHeight, network: NetworkType) -> UInt32 {
-        assert(config.scanningBatchSize > 0, "ZcashSDK.DefaultScanningBatch must be larger than 0!")
-        guard network == .mainnet else { return UInt32(config.scanningBatchSize) }
-
-        if height > 1_650_000 {
-            // librustzcash thread saturation at a number of blocks
-            // that contains 100 * num_cores Sapling outputs.
-            return UInt32(max(ProcessInfo().activeProcessorCount, 10))
-        }
-
-        return UInt32(config.scanningBatchSize)
     }
 }

@@ -12,8 +12,11 @@ struct ScanProgress: Equatable {
     let denominator: UInt64
     
     func progress() throws -> Float {
-        // division by 0 is not a concern here because `ZcashRustBackend.getScanProgress() -> ScanProgress?`
-        // handles the 0 and returns nil rather than returning nil progress or 0 value here
+        guard denominator != 0 else {
+            // this shouldn't happen but if it does, we need to get notified by clients and work on a fix
+            throw ZcashError.rustScanProgressOutOfRange("\(numerator)/\(denominator)")
+        }
+
         let value = Float(numerator) / Float(denominator)
         
         // this shouldn't happen but if it does, we need to get notified by clients and work on a fix

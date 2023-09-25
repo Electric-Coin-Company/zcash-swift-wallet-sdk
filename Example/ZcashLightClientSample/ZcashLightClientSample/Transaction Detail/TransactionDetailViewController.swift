@@ -10,6 +10,10 @@ import UIKit
 import ZcashLightClientKit
 
 final class TransactionDetailModel {
+    // FIXME: This enumeration does not represent a sensible set of potential transaction states.
+    // A transaction may be both sent from and received by the same wallet, and in either
+    // case this designation is orthogonal with respect to whether the transaction is
+    // in a pending, mined, or expired state.
     enum Transaction {
         case sent(ZcashTransaction.Overview)
         case received(ZcashTransaction.Overview)
@@ -62,7 +66,11 @@ final class TransactionDetailModel {
     }
     
     init(transaction: ZcashTransaction.Overview, memos: [Memo]) {
-        self.transaction = .cleared(transaction)
+        if transaction.minedHeight == nil {
+            self.transaction = .pending(transaction)
+        } else {
+            self.transaction = .cleared(transaction)
+        }
         self.id = transaction.rawID
         self.minedHeight = transaction.minedHeight
         self.expiryHeight = transaction.expiryHeight

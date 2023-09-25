@@ -46,7 +46,7 @@ public struct EnhancementProgress: Equatable {
         return
             lhs.totalTransactions == rhs.totalTransactions &&
             lhs.enhancedTransactions == rhs.enhancedTransactions &&
-            lhs.lastFoundTransaction?.id == rhs.lastFoundTransaction?.id &&
+            lhs.lastFoundTransaction?.rawID == rhs.lastFoundTransaction?.rawID &&
             lhs.range == rhs.range
     }
 }

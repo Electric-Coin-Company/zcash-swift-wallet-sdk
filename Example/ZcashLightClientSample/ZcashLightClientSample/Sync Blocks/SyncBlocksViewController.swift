@@ -93,7 +93,7 @@ class SyncBlocksViewController: UIViewController {
                 metricLabel.text = currentMetricName + report.debugDescription
             }
 
-        case .upToDate:
+        case .upToDate, .stopped:
             accumulateMetrics()
             summaryLabel.text = "enhancement: \(accumulatedMetrics.debugDescription)"
             overallSummary()
@@ -205,7 +205,7 @@ class SyncBlocksViewController: UIViewController {
         switch state {
         case .syncing:
             return "Pause"
-        case .unprepared:
+        case .unprepared, .stopped:
             return "Start"
         case .upToDate:
             return "Chill!"
@@ -222,6 +222,8 @@ class SyncBlocksViewController: UIViewController {
             return "Up to Date 😎"
         case .unprepared:
             return "Unprepared"
+        case .stopped:
+            return "Stopped"
         case .error(ZcashError.synchronizerDisconnected):
             return "Disconnected"
         case .error:

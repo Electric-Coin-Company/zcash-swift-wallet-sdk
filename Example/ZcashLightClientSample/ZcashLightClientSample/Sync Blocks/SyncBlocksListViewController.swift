@@ -64,7 +64,7 @@ class SyncBlocksListViewController: UIViewController {
             loggerProxy.debug("Processing synchronizer with alias \(synchronizer.alias.description) \(index)")
 
             switch syncStatus {
-            case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error:
+            case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error, .stopped:
                 do {
                     if syncStatus == .unprepared {
                         _ = try! await synchronizer.prepare(
@@ -145,7 +145,7 @@ extension SyncBlocksListViewController: UITableViewDataSource {
 
         let image: UIImage?
         switch synchronizerStatus {
-        case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error:
+        case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error, .stopped:
             image = UIImage(systemName: "play.circle")
         case .syncing:
             image = UIImage(systemName: "stop.circle")
@@ -176,6 +176,8 @@ extension SyncStatus {
             return "Up to Date 😎"
         case .unprepared:
             return "Unprepared"
+        case .stopped:
+            return "Stopped"
         case .error(ZcashError.synchronizerDisconnected):
             return "Disconnected"
         case let .error(error):

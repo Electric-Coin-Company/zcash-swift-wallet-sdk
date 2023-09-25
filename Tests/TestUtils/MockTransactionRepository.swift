@@ -73,7 +73,7 @@ extension MockTransactionRepository.Kind: Equatable {}
 
 // MARK: - TransactionRepository
 extension MockTransactionRepository: TransactionRepository {
-    func getTransactionOutputs(for id: Int) async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
+    func getTransactionOutputs(for rawID: Data) async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
         []
     }
 
@@ -81,7 +81,7 @@ extension MockTransactionRepository: TransactionRepository {
         []
     }
 
-    func getRecipients(for id: Int) -> [TransactionRecipient] {
+    func getRecipients(for rawID: Data) -> [TransactionRecipient] {
         []
     }
 
@@ -93,10 +93,6 @@ extension MockTransactionRepository: TransactionRepository {
 
     func countUnmined() throws -> Int {
         unminedCount
-    }
-
-    func findBy(id: Int) throws -> ZcashTransaction.Overview? {
-        transactions.first(where: { $0.id == id })
     }
 
     func findBy(rawId: Data) throws -> ZcashTransaction.Overview? {
@@ -139,7 +135,6 @@ extension MockTransactionRepository: TransactionRepository {
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
-            id: index,
             index: index,
             hasChange: true,
             memoCount: 0,
@@ -159,7 +154,6 @@ extension MockTransactionRepository: TransactionRepository {
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
-            id: index,
             index: index,
             hasChange: true,
             memoCount: 0,
@@ -177,14 +171,6 @@ extension MockTransactionRepository: TransactionRepository {
         guard offset < txs.count else { return [] }
 
         return Array(txs[offset ..< min(offset + limit, txs.count - offset)])
-    }
-
-    func find(id: Int) throws -> ZcashTransaction.Overview {
-        guard let transaction = transactions.first(where: { $0.id == id }) else {
-            throw ZcashError.transactionRepositoryEntityNotFound
-        }
-
-        return transaction
     }
 
     func find(rawID: Data) throws -> ZcashTransaction.Overview {
