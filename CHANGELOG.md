@@ -4,7 +4,7 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# 2.0.0-rc.1 - 2023-09-08
+# 2.0.0 - 2023-09-25
 
 ## Notable Changes
 
@@ -13,7 +13,8 @@ synchronization algorithm.
 
 ## Changed
 
-Updated to `zcash-light-client-ffi 0.4.0-rc.1`
+Updated dependencies: 
+- `zcash-light-client-ffi 0.4.0`
 
 `CompactBlockProcessor` now processes compact blocks from the lightwalletd server with Spend-before-Sync algorithm (i.e. non-linear order). This feature shortens the time after which a wallet's spendable balance can be used.
 
