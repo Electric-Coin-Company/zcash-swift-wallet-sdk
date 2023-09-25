@@ -317,6 +317,9 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn green.
     case upToDate
 
+    /// Indicates that this Synchronizer was succesfully stopped via `stop()` method.
+    case stopped
+    
     case error(_ error: Error)
     
     public var isSyncing: Bool {
@@ -347,6 +350,7 @@ public enum SyncStatus: Equatable {
         switch self {
         case .unprepared: return "unprepared"
         case .syncing: return "syncing"
+        case .stopped: return "stopped"
         case .upToDate: return "up to date"
         case .error: return "error"
         }
@@ -469,7 +473,7 @@ extension InternalSyncStatus {
         case .synced:
             return .upToDate
         case .stopped:
-            return .upToDate
+            return .stopped
         case .disconnected:
             return .error(ZcashError.synchronizerDisconnected)
         case .error(let error):

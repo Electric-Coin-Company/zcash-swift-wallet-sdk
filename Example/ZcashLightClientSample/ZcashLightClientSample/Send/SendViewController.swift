@@ -316,6 +316,9 @@ extension SDKSynchronizer {
         case .unprepared:
             return "Unprepared 😅"
 
+        case .stopped:
+            return "Stopped"
+
         case .error(ZcashError.synchronizerDisconnected):
             return "disconnected 💔"
 
