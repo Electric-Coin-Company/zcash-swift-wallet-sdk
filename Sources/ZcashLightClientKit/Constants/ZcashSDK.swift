@@ -154,19 +154,13 @@ public protocol NetworkConstants {
     /// Default prefix for db filenames
     static var defaultDbNamePrefix: String { get }
 
-    /// fixed height where the SDK considers that the ZIP-321 was deployed. This is a workaround
-    /// for librustzcash not figuring out the tx fee from the tx itself.
-    static var feeChangeHeight: BlockHeight { get }
-
-    /// Returns the default fee according to the blockheight. see [ZIP-313](https://zips.z.cash/zip-0313)
-    static func defaultFee(for height: BlockHeight) -> Zatoshi
+    /// Returns the default fee, hardcoded 10k Zatoshi is the minimum ZIP 317 fee
+    static func defaultFee() -> Zatoshi
 }
 
 public extension NetworkConstants {
-    static func defaultFee(for height: BlockHeight = BlockHeight.max) -> Zatoshi {
-        guard height >= feeChangeHeight else { return Zatoshi(10_000) }
-
-        return Zatoshi(1_000)
+    static func defaultFee() -> Zatoshi {
+        Zatoshi(10_000)
     }
 }
 
@@ -184,8 +178,6 @@ public enum ZcashSDKMainnetConstants: NetworkConstants {
     public static let defaultCacheDbName = "caches.db"
     
     public static let defaultDbNamePrefix = "ZcashSdk_mainnet_"
-    
-    public static let feeChangeHeight: BlockHeight = 1_077_550
 }
 
 public enum ZcashSDKTestnetConstants: NetworkConstants {
@@ -202,7 +194,4 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
     public static let defaultFsBlockDbRootName = "fs_cache"
     
     public static let defaultDbNamePrefix = "ZcashSdk_testnet_"
-
-    /// Estimated height where wallets are supposed to change the fee
-    public static let feeChangeHeight: BlockHeight = 1_028_500
 }

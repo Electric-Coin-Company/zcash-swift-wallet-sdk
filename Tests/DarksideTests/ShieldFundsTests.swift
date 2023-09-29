@@ -81,7 +81,6 @@ class ShieldFundsTests: ZcashTestCase {
     /// 13. sync up to chain tip
     /// Now it should verify that the balance has been shielded. The resulting balance should be zero
     /// transparent funds and `10000 - fee` total shielded funds,  zero verified shielded funds.
-    /// Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
     /// 14. proceed confirm the shielded funds by staging ten more blocks
     /// 15. sync up to the new chain tip
     /// verify that the shielded transactions are confirmed
@@ -294,7 +293,6 @@ class ShieldFundsTests: ZcashTestCase {
 
         // Now it should verify that the balance has been shielded. The resulting balance should be zero
         // transparent funds and `10000 - fee` total shielded funds,  zero verified shielded funds.
-        // Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
         let postShieldingShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(postShieldingShieldedBalance.total, .zero)

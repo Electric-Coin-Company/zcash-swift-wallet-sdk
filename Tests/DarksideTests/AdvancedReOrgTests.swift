@@ -415,7 +415,7 @@ class AdvancedReOrgTests: ZcashTestCase {
 //                    XCTAssertEqual(pMinedHeight, sentTxHeight)
 //                    // fee change on this branch
 //                    let expectedBalance = try await synchronizer.getShieldedBalance()
-//                    XCTAssertEqual(initialTotalBalance - sendAmount - Zatoshi(1000), expectedBalance)
+//                    XCTAssertEqual(initialTotalBalance - sendAmount - Zatoshi(10000), expectedBalance)
 //                    afterReOrgExpectation.fulfill()
 //                },
 //                error: self.handleError

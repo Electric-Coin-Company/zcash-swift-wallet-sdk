@@ -210,10 +210,6 @@ enum DarksideWalletDConstants: NetworkConstants {
     static var defaultDbNamePrefix: String {
         ZcashSDKMainnetConstants.defaultDbNamePrefix
     }
-    
-    static var feeChangeHeight: BlockHeight {
-        ZcashSDKMainnetConstants.feeChangeHeight
-    }
 }
 
 class DarksideWalletDNetwork: ZcashNetwork {

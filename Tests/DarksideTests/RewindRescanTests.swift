@@ -90,7 +90,7 @@ class RewindRescanTests: ZcashTestCase {
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
 
         let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
@@ -179,7 +179,7 @@ class RewindRescanTests: ZcashTestCase {
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to birthday
@@ -277,7 +277,7 @@ class RewindRescanTests: ZcashTestCase {
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to transaction
@@ -365,10 +365,10 @@ class RewindRescanTests: ZcashTestCase {
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - Zatoshi(1000)
+        let maxBalance = verifiedBalance - Zatoshi(10000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
