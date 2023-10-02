@@ -38,7 +38,7 @@ class TestsData {
             accountId: 0,
             blockTime: nil,
             expiryHeight: nil,
-            fee: Zatoshi(1000),
+            fee: Zatoshi(10000),
             index: nil,
             hasChange: true,
             memoCount: 0,

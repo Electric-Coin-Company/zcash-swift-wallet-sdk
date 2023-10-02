@@ -4,6 +4,15 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# 2.0.1 - 2023-09-29
+
+## Changed
+
+### [#1294] Remove all uses of the incorrect 1000-ZAT fee
+The 1000 Zatoshi fee proposed in ZIP-313 is deprecated now and so the minimum is 10k Zatoshi, defined in ZIP-317.
+The SDK has been cleaned up from deprecated fee but note, real fee is handled in a rust layer. 
+The public API `NetworkConstants.defaultFee(for: BlockHeight)` has been refactored to `NetworkConstants.defaultFee()`.
+ 
 # 2.0.0 - 2023-09-25
 
 ## Notable Changes

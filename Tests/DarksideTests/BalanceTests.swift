@@ -86,10 +86,10 @@ class BalanceTests: ZcashTestCase {
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - Zatoshi(1000)
+        let maxBalance = verifiedBalance - Zatoshi(10000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -238,10 +238,10 @@ class BalanceTests: ZcashTestCase {
 
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
 
-        let maxBalanceMinusOne = verifiedBalance - Zatoshi(1000)
+        let maxBalanceMinusOne = verifiedBalance - Zatoshi(10000)
 
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -385,10 +385,10 @@ class BalanceTests: ZcashTestCase {
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = verifiedBalance - Zatoshi(1000) - Zatoshi(1)
+        let maxBalanceMinusOne = verifiedBalance - Zatoshi(10000) - Zatoshi(1)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -450,10 +450,10 @@ class BalanceTests: ZcashTestCase {
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusFee = Zatoshi(100000) - Zatoshi(1000)
+        let maxBalanceMinusFee = Zatoshi(100000) - Zatoshi(10000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -613,7 +613,7 @@ class BalanceTests: ZcashTestCase {
         /*
         there's more zatoshi to send than network fee
         */
-        XCTAssertTrue(presendVerifiedBalance >= network.constants.defaultFee(for: defaultLatestHeight) + sendAmount)
+        XCTAssertTrue(presendVerifiedBalance >= network.constants.defaultFee() + sendAmount)
         
         var pendingTx: ZcashTransaction.Overview?
 
@@ -663,12 +663,12 @@ class BalanceTests: ZcashTestCase {
         let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
 
         XCTAssertEqual(
-            presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),
+            presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(),
             expectedBalance
         )
         
         XCTAssertEqual(
-            presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),
+            presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(),
             expectedVerifiedBalance
         )
         
@@ -754,7 +754,7 @@ class BalanceTests: ZcashTestCase {
         let presendBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
 
         // there's more zatoshi to send than network fee
-        XCTAssertTrue(presendBalance >= network.constants.defaultFee(for: defaultLatestHeight) + sendAmount)
+        XCTAssertTrue(presendBalance >= network.constants.defaultFee() + sendAmount)
         var pendingTx: ZcashTransaction.Overview?
         
         var testError: Error?
@@ -793,7 +793,7 @@ class BalanceTests: ZcashTestCase {
         var expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
         XCTAssertEqual(
             expectedBalance,
-            presendBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight)
+            presendBalance - self.sendAmount - network.constants.defaultFee()
         )
         
         let latestHeight = try await coordinator.latestHeight()
@@ -824,7 +824,7 @@ class BalanceTests: ZcashTestCase {
 
         expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
         XCTAssertEqual(
-            presendBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),
+            presendBalance - self.sendAmount - network.constants.defaultFee(),
             expectedBalance
         )
     }
@@ -1003,7 +1003,7 @@ class BalanceTests: ZcashTestCase {
                     There’s a change note of value (previous note value - sent amount)
                     */
                     XCTAssertEqual(
-                        previousVerifiedBalance - self.sendAmount - Zatoshi(1000),
+                        previousVerifiedBalance - self.sendAmount - Zatoshi(10000),
                         changeOutput.value
                     )
 
@@ -1188,7 +1188,7 @@ class BalanceTests: ZcashTestCase {
         previousTotalbalance: Zatoshi,
         sentAmount: Zatoshi
     ) {
-        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Zatoshi(1000))
+        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Zatoshi(10000))
     }
 }
 

@@ -279,7 +279,7 @@ final class SynchronizerTests: ZcashTestCase {
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
 
         // Add more blocks to the chain so the long sync can start.

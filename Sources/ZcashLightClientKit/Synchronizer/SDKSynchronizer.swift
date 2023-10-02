@@ -312,7 +312,7 @@ public class SDKSynchronizer: Synchronizer {
         let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
         // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
-        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.maxScannedHeight) else {
+        guard tBalance.verified >= self.network.constants.defaultFee() else {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
