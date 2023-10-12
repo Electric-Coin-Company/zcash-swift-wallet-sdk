@@ -22,7 +22,7 @@ actor CompactBlockProcessor {
     private var syncTask: Task<Void, Error>?
 
     private let actions: [CBPState: Action]
-    private var context: ActionContext
+    var context: ActionContext
 
     private(set) var config: Configuration
     private let configProvider: ConfigProvider
@@ -346,6 +346,8 @@ extension CompactBlockProcessor {
         } catch {
             return await context.completion(.failure(error))
         }
+        
+        await resetContext(restoreLastEnhancedHeight: false)
 
         await context.completion(.success(rewindBlockHeight))
     }
@@ -615,10 +617,12 @@ extension CompactBlockProcessor {
         }
     }
 
-    private func resetContext() async {
-        let lastEnhancedheight = await context.lastEnhancedHeight
+    func resetContext(restoreLastEnhancedHeight: Bool = true) async {
+        let lastEnhancedHeight = await context.lastEnhancedHeight
         context = ActionContextImpl(state: .idle)
-        await context.update(lastEnhancedHeight: lastEnhancedheight)
+        if restoreLastEnhancedHeight {
+            await context.update(lastEnhancedHeight: lastEnhancedHeight)
+        }
     }
 
     private func syncStarted() async {
