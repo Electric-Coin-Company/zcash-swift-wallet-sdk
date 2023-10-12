@@ -4,6 +4,18 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# 2.0.2 - Date TBD
+
+## Changed
+
+### [#1303] Don't invalidate the timer with the error
+The SDK has some simple logic of retrying when some erros occurs. There were 5 attempts of retry until the SDK stopped the synchronization process completely. (The timer is not restarted after those). That approach led to some annoying UX issue of manually starting the SDKSynchronizer from the client, shifting the responsibility to the devs/clients. This has been changed, the SDK never stops the timer unless `synchronizer.stop()` is called. 
+
+## Fixed
+
+### [#1301] foundTransactions don't emit after rewind
+The `.foundTransactions` observed on eventStream worked well during the sync until the rewind was called. That API missed reset of the ActionContext in the CompactBlockProcesser and that led to never observing the same transactions again. This ticket fixed the problem, reset is called in the rewind and new sync passes the transactions to the stream.  
+
 # 2.0.1 - 2023-10-03
 
 ## Changed

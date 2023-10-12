@@ -98,7 +98,12 @@ public enum ZcashSDK {
     public static let defaultPollInterval: TimeInterval = 20
 
     /// Default attempts at retrying.
-    public static let defaultRetries: Int = 5
+    // This has been tweaked in https://github.com/zcash/ZcashLightClientKit/issues/1303
+    // There are many places that rely on hasRetryAttempt() that reads and compares this value.
+    // Better solution is to think about retry logic and potentially either remove completely
+    // or implement more sophisticated solutuion. Until that time, Int.max solves our UX issues
+    // TODO: [#1304] smart retry logic, https://github.com/zcash/ZcashLightClientKit/issues/1304
+    public static let defaultRetries = Int.max
 
     /// The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
     /// this before retrying.
