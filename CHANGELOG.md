@@ -11,6 +11,28 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [#1308] Enhancing seems to not process all ranges
 The enhancing of the transactions now processes all the blocks suggested by scan ranges. The issue was that when new scan ranges were suggested the value that drives the enhancing range computation wasn't reset, so when higher ranges were processed, the lower ranges were skipped. This fix ensures all transaction data are properly set, as well as fixing eventStream `.foundTransaction` reporting.
 
+### Fix incorrect note deduplication in v_transactions (librustzcash)
+This is a fix in the rust layer. The amount sent in the transaction was incorrectly reported even though the actual amount was sent properly. Now clients should see the amount they expect to see in the UI. 
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2250000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2267500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2540000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2550000.json
+````
+
+
 # 2.0.2 - 2023-10-12
 
 ## Changed
