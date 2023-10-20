@@ -9,7 +9,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 
 ### [#1308] Enhancing seems to not process all ranges
-The enhancing of the transactions now processes all the blocks suggested by scan ranges. The issue was that when new scan ranges were suggested the value that drives the enhancing range computation wasn't reseted so when higher ranges were processed, the lower ranges were skipped. This fix ensures all transaction data are properly set as well as fixes eventStream `.foundTransaction` reporting.
+The enhancing of the transactions now processes all the blocks suggested by scan ranges. The issue was that when new scan ranges were suggested the value that drives the enhancing range computation wasn't reset, so when higher ranges were processed, the lower ranges were skipped. This fix ensures all transaction data are properly set, as well as fixing eventStream `.foundTransaction` reporting.
 
 # 2.0.2 - 2023-10-12
 
