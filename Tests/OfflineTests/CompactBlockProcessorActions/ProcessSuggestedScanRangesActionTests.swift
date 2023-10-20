@@ -66,6 +66,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
+            context.updateLastEnhancedHeightClosure = { _ in }
             context.updateLastScannedHeightClosure = { _ in }
             context.updateLastDownloadedHeightClosure = { _ in }
             context.updateSyncControlDataClosure = { _ in }
@@ -77,6 +78,12 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 XCTAssertFalse(
                     nextContextMock.updateRequestedRewindHeightCalled,
                     "context.update(requestedRewindHeight:) is not expected to be called"
+                )
+                
+                let enhancedValue = nextContextMock.updateLastEnhancedHeightReceivedLastEnhancedHeight
+                XCTAssertNil(
+                    enhancedValue,
+                    "context.update(updateLastEnhancedHeight:) is expected to reset the value to nil but received \(enhancedValue)"
                 )
             } else {
                 XCTFail("`nextContext` is not the ActionContextMock")

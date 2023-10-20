@@ -43,6 +43,7 @@ extension ProcessSuggestedScanRangesAction: Action {
                 firstUnenhancedHeight [DB]:     \(rangeStartExclusive + 1)
                 """)
 
+            await context.update(lastEnhancedHeight: nil)
             await context.update(lastScannedHeight: rangeStartExclusive)
             await context.update(lastDownloadedHeight: rangeStartExclusive)
             await context.update(syncControlData: syncControlData)
