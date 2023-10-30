@@ -107,7 +107,8 @@ class ZcashRustBackendTests: XCTestCase {
         let initResult = try await rustBackend.initDataDb(seed: seed)
         XCTAssertEqual(initResult, .success)
 
-        let treeState = Checkpoint.birthday(with: 1234567, network: ZcashMainnet()).treeState()
+        let checkpointSource = CheckpointSourceFactory.fromBundle(for: .mainnet)
+        let treeState = checkpointSource.birthday(for: 1234567).treeState()
 
         let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState, recoverUntil: nil)
         XCTAssertEqual(usk.account, 0)

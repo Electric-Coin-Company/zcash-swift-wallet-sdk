@@ -281,7 +281,7 @@ public class Initializer {
         self.storage = container.resolve(CompactBlockRepository.self)
         self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
         self.network = network
-        self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
+        self.walletBirthday = container.resolve(CheckpointSource.self).saplingActivation.height
         self.urlsParsingError = urlsParsingError
         self.logger = container.resolve(Logger.self)
     }
@@ -416,7 +416,9 @@ public class Initializer {
             return .seedRequired
         }
 
-        let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
+        let checkpointSource = container.resolve(CheckpointSource.self)
+
+        let checkpoint = checkpointSource.birthday(for: walletBirthday)
 
         self.walletBirthday = checkpoint.height
 

@@ -52,7 +52,8 @@ class TransactionEnhancementTests: ZcashTestCase {
         
         waitExpectation = XCTestExpectation(description: "\(self.description) waitExpectation")
 
-        let birthday = Checkpoint.birthday(with: walletBirthday, network: network)
+        let checkpointSource = CheckpointSourceFactory.fromBundle(for: network.networkType)
+        let birthday = checkpointSource.birthday(for: walletBirthday)
 
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
