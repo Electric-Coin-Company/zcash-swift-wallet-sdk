@@ -1,5 +1,5 @@
 //
-//  WalletBirthday+Constants.swift
+//  Checkpoint+helpers.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 7/28/21.
