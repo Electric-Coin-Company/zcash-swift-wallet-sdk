@@ -10,14 +10,14 @@ import Foundation
 /// A protocol that abstracts the requirements around obtaining wallet checkpoints
 /// (also known as TreeStates).
 protocol CheckpointSource {
-    /// network type of this Checkpoint source
+    /// `NetworkType` of this Checkpoint source
     var network: NetworkType { get }
 
     /// The `Checkpoint` that represents the block in which Sapling was activated
     var saplingActivation: Checkpoint { get }
 
     /// Obtain the latest `Checkpoint` in terms of block height known by
-    /// this `CheckpointSource`. It is possible that the returned checkpoints
+    /// this `CheckpointSource`. It is possible that the returned checkpoint
     /// is not the latest checkpoint that exists in the blockchain.
     /// - Returns a `Checkpoint` with the highest height known by this source
     func latestKnownCheckpoint() -> Checkpoint

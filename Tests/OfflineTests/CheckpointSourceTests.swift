@@ -93,7 +93,7 @@ class CheckpointSourceTests: XCTestCase {
 
         let source = CheckpointSourceFactory.fromBundle(for: .mainnet)
 
-        let birthday = source.birthday(for: 4)
+        let birthday = source.birthday(for: activationHeight)
 
         XCTAssertEqual(birthday.height, activationHeight)
         XCTAssertEqual(birthday.orchardTree, "000000")
