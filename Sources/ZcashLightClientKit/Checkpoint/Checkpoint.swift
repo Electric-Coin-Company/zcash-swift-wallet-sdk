@@ -84,3 +84,13 @@ extension Checkpoint: Decodable {
         return ret
     }
 }
+
+public extension BlockHeight {
+    /// Useful when creating a new wallet to reduce sync times.
+    /// - Parameters:
+    ///  - zcashNetwork: Network to use for the block height.
+    /// - Returns: The block height of the newest checkpoint known by the SDK.
+    static func ofLatestCheckpoint(network: ZcashNetwork) -> BlockHeight {
+        Checkpoint.birthday(with: BlockHeight.max, network: network).height
+    }
+}
