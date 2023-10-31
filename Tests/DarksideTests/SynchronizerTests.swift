@@ -26,7 +26,11 @@ final class SynchronizerTests: ZcashTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-
+        
+        mockContainer.mock  (type: CheckpointSource.self, isSingleton: true) { _ in
+            return DarksideMainnetCheckpointSource()
+        }
+        
         // don't use an exact birthday, users never do.
         self.coordinator = try await TestCoordinator(
             container: mockContainer,

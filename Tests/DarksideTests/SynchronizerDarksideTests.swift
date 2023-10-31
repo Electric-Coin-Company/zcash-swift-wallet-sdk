@@ -30,6 +30,11 @@ class SynchronizerDarksideTests: ZcashTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        
+        mockContainer.mock  (type: CheckpointSource.self, isSingleton: true) { _ in
+            return DarksideMainnetCheckpointSource()
+        }
+
         let idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
         mockContainer.mock(type: SyncSessionIDGenerator.self, isSingleton: false) { _ in idGenerator }
         self.idGenerator = idGenerator

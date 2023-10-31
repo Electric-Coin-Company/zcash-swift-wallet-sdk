@@ -25,6 +25,10 @@ class ShieldFundsTests: ZcashTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
+        mockContainer.mock  (type: CheckpointSource.self, isSingleton: true) { _ in
+            return DarksideMainnetCheckpointSource()
+        }
+        
         self.coordinator = try await TestCoordinator(
             container: mockContainer,
             walletBirthday: birthday,

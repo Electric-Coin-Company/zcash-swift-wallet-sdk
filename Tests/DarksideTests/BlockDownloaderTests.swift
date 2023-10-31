@@ -25,6 +25,11 @@ class BlockDownloaderTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+
+        mockContainer.mock  (type: CheckpointSource.self, isSingleton: true) { _ in
+            return DarksideMainnetCheckpointSource()
+        }
+        
         testTempDirectory = Environment.uniqueTestTempDirectory
 
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
