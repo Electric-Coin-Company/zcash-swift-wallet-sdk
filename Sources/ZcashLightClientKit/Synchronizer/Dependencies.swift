@@ -17,6 +17,10 @@ enum Dependencies {
         loggingPolicy: Initializer.LoggingPolicy = .default(.debug),
         enableBackendTracing: Bool = false
     ) {
+        container.register(type: CheckpointSource.self, isSingleton: true) { _ in
+            return CheckpointSourceFactory.fromBundle(for: networkType)
+        }
+
         container.register(type: Logger.self, isSingleton: true) { _ in
             let logger: Logger
             switch loggingPolicy {

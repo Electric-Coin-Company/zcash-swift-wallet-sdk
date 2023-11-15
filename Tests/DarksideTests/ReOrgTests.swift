@@ -97,8 +97,9 @@ class ReOrgTests: ZcashTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663202)
         let reOrgHeight = BlockHeight(663195)
-        let walletBirthday = Checkpoint.birthday(with: 663150, network: network).height
-        
+        let checkpointSource = CheckpointSourceFactory.fromBundle(for: network.networkType)
+        let walletBirthday = checkpointSource.birthday(for: 663150).height
+
         try await basicReOrgTest(
             baseDataset: .beforeReOrg,
             reorgDataset: .afterSmallReorg,
@@ -113,8 +114,9 @@ class ReOrgTests: ZcashTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663250)
         let reOrgHeight = BlockHeight(663180)
-        let walletBirthday = Checkpoint.birthday(with: BlockHeight(663150), network: network).height
-        
+        let checkpointSource = CheckpointSourceFactory.fromBundle(for: network.networkType)
+        let walletBirthday = checkpointSource.birthday(for: 663150).height
+
         try await basicReOrgTest(
             baseDataset: .beforeReOrg,
             reorgDataset: .afterLargeReorg,
