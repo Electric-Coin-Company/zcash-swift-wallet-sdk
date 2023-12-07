@@ -40,9 +40,9 @@ extension DbAccount: Hashable {
 }
 
 protocol AccountRepository {
-    func getAll() throws -> [AccountEntity]
-    func findBy(account: Int) throws -> AccountEntity?
-    func update(_ account: AccountEntity) throws
+    func getAll() async throws -> [AccountEntity]
+    func findBy(account: Int) async throws -> AccountEntity?
+    func update(_ account: AccountEntity) async throws
 }
 
 class AccountSQDAO: AccountRepository {
@@ -64,11 +64,8 @@ class AccountSQDAO: AccountRepository {
     /// - Throws:
     ///     - `accountDAOGetAllCantDecode` if account data fetched from the db can't be decoded to the `Account` object.
     ///     - `accountDAOGetAll` if sqlite query fetching account data failed.
-    func getAll() throws -> [AccountEntity] {
+    @DBActor func getAll() async throws -> [AccountEntity] {
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-            
             return try dbProvider.connection()
                 .prepare(table)
                 .map { row -> DbAccount in
@@ -90,12 +87,9 @@ class AccountSQDAO: AccountRepository {
     /// - Throws:
     ///     - `accountDAOFindByCantDecode` if account data fetched from the db can't be decoded to the `Account` object.
     ///     - `accountDAOFindBy` if sqlite query fetching account data failed.
-    func findBy(account: Int) throws -> AccountEntity? {
+    @DBActor func findBy(account: Int) async throws -> AccountEntity? {
         let query = table.filter(TableColums.account == account).limit(1)
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-
             return try dbProvider.connection()
                 .prepare(query)
                 .map {
@@ -118,16 +112,13 @@ class AccountSQDAO: AccountRepository {
     /// - Throws:
     ///     - `accountDAOUpdate` if sqlite query updating account failed.
     ///     - `accountDAOUpdatedZeroRows` if sqlite query updating account pass but it affects 0 rows.
-    func update(_ account: AccountEntity) throws {
+    @DBActor func update(_ account: AccountEntity) async throws {
         guard let acc = account as? DbAccount else {
             throw ZcashError.accountDAOUpdateInvalidAccount
         }
 
         let updatedRows: Int
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-
             updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         } catch {
             throw ZcashError.accountDAOUpdate(error)
@@ -142,30 +133,33 @@ class AccountSQDAO: AccountRepository {
 
 class CachingAccountDao: AccountRepository {
     let dao: AccountRepository
-    lazy var cache: [Int: AccountEntity] = {
-        var accountCache: [Int: AccountEntity] = [:]
-        guard let all = try? dao.getAll() else {
-            return accountCache
-        }
+    private var cacheLoaded = false
+    private var cache: [Int: AccountEntity] = [:]
 
-        for acc in all {
-            accountCache[acc.account] = acc
-        }
-
-        return accountCache
-    }()
-    
     init(dao: AccountRepository) {
         self.dao = dao
     }
-    
-    func getAll() throws -> [AccountEntity] {
+
+    private func loadCache() async {
+        guard !cacheLoaded else { return }
+        cacheLoaded = true
+        guard let all = try? await dao.getAll() else {
+            return
+        }
+
+        for acc in all {
+            cache[acc.account] = acc
+        }
+    }
+
+    func getAll() async throws -> [AccountEntity] {
+        await loadCache()
         guard cache.isEmpty else {
             return cache.values.sorted(by: { $0.account < $1.account })
         }
 
-        let all = try dao.getAll()
-        
+        let all = try await dao.getAll()
+
         for acc in all {
             cache[acc.account] = acc
         }
@@ -173,19 +167,20 @@ class CachingAccountDao: AccountRepository {
         return all
     }
     
-    func findBy(account: Int) throws -> AccountEntity? {
+    func findBy(account: Int) async throws -> AccountEntity? {
+        await loadCache()
         if let acc = cache[account] {
             return acc
         }
         
-        let acc = try dao.findBy(account: account)
+        let acc = try await dao.findBy(account: account)
         cache[account] = acc
 
         return acc
     }
         
-    func update(_ account: AccountEntity) throws {
-        try dao.update(account)
+    func update(_ account: AccountEntity) async throws {
+        try await dao.update(account)
     }
 }
 

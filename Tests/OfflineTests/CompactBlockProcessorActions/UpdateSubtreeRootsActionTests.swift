@@ -70,7 +70,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
                 continuation.finish()
             }
         }
-        await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure({ _, _ in })
+        tupple.rustBackendMock.putSaplingSubtreeRootsStartIndexRootsClosure = { _, _ in }
 
         do {
             let context = ActionContextMock.default()
@@ -100,7 +100,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
                 continuation.finish()
             }
         }
-        await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsThrowableError("putSaplingFailed")
+        tupple.rustBackendMock.putSaplingSubtreeRootsStartIndexRootsThrowableError = "putSaplingFailed"
 
         do {
             let context = ActionContextMock.default()
@@ -127,12 +127,11 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
         )
 
-        let rustBackendMock = ZcashRustBackendWeldingMock(
-            consensusBranchIdForHeightClosure: { height in
-                XCTAssertEqual(height, 2, "")
-                return -1026109260
-            }
-        )
+        let rustBackendMock = ZcashRustBackendWeldingMock()
+        rustBackendMock.consensusBranchIdForHeightClosure = { height in
+            XCTAssertEqual(height, 2, "")
+            return -1026109260
+        }
         
         let lightWalletdInfoMock = LightWalletdInfoMock()
         lightWalletdInfoMock.underlyingConsensusBranchID = underlyingConsensusBranchID

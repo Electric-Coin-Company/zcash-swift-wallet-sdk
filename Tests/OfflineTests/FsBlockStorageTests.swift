@@ -414,7 +414,7 @@ final class FsBlockStorageTests: ZcashTestCase {
             return
         }
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(ZcashError.rustWriteBlocksMetadataAllocationProblem)
+        mockBackend.rustBackendMock.writeBlocksMetadataBlocksThrowableError = ZcashError.rustWriteBlocksMetadataAllocationProblem
 
         do {
             try await FSMetadataStore.saveBlocksMeta(
@@ -434,7 +434,7 @@ final class FsBlockStorageTests: ZcashTestCase {
         let expectedHeight = BlockHeight(1000)
 
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(ZcashError.rustRewindToHeight(Int32(expectedHeight), "oops"))
+        mockBackend.rustBackendMock.rewindCacheToHeightHeightThrowableError = ZcashError.rustRewindToHeight(Int32(expectedHeight), "oops")
 
         do {
             try await FSMetadataStore.live(
