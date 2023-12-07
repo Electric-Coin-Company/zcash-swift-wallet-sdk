@@ -104,8 +104,8 @@ class CompactBlockReorgTests: ZcashTestCase {
             loggingPolicy: .default(.debug)
         )
         
-        await self.rustBackendMockHelper.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure { _, _ in }
-        await self.rustBackendMockHelper.rustBackendMock.setUpdateChainTipHeightClosure { _ in }
+        self.rustBackendMockHelper.rustBackendMock.putSaplingSubtreeRootsStartIndexRootsClosure = { _, _ in }
+        self.rustBackendMockHelper.rustBackendMock.updateChainTipHeightClosure = { _ in }
 
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in
             LatestBlocksDataProviderImpl(service: service, rustBackend: self.rustBackend)

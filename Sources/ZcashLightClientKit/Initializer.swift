@@ -423,7 +423,7 @@ public class Initializer {
         self.walletBirthday = checkpoint.height
 
         // If there are no accounts it must be created, the default amount of accounts is 1
-        if let seed, try accountRepository.getAll().isEmpty {
+        if let seed, try await accountRepository.getAll().isEmpty {
             var chainTip: UInt32?
             
             if walletMode == .restoreWallet {

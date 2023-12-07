@@ -37,7 +37,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
     ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
-        let accounts = try accountRepository.getAll()
+        let accounts = try await accountRepository.getAll()
             .map { $0.account }
 
         var tAddresses: [TransparentAddress] = []

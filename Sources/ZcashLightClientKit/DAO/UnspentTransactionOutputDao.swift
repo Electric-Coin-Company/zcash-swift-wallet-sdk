@@ -92,7 +92,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         try await createTableIfNeeded()
     }
     
-    private func createTableIfNeeded() async throws {
+    @DBActor private func createTableIfNeeded() async throws {
         let stringStatement =
             """
             CREATE TABLE IF NOT EXISTS utxos (
@@ -109,9 +109,6 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             )
             """
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-            
             try dbProvider.connection().run(stringStatement)
         } catch {
             throw ZcashError.unspentTransactionOutputDAOCreateTable(error)
@@ -119,11 +116,8 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     }
 
     /// - Throws: `unspentTransactionOutputDAOStore` if sqlite query fails.
-    func store(utxos: [UnspentTransactionOutputEntity]) async throws {
+    @DBActor func store(utxos: [UnspentTransactionOutputEntity]) async throws {
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-
             let db = try dbProvider.connection()
             try db.transaction {
                 for utxo in utxos.map({ $0 as? UTXO ?? $0.asUTXO() }) {
@@ -136,11 +130,8 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     }
 
     /// - Throws: `unspentTransactionOutputDAOClearAll` if sqlite query fails.
-    func clearAll(address: String?) async throws {
+    @DBActor func clearAll(address: String?) async throws {
         do {
-            globalDBLock.lock()
-            defer { globalDBLock.unlock() }
-
             if let tAddr = address {
                 try dbProvider.connection().run(table.filter(TableColumns.address == tAddr).delete())
             } else {
@@ -185,14 +176,14 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     }
 
     /// - Throws: `unspentTransactionOutputDAOBalance` if sqlite query fails.
-    func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
+    @DBActor func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
         do {
-            let verified = try dbProvider.connection().scalarLocked(
+            let verified = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)
                     .filter(TableColumns.height <= latestHeight - ZcashSDK.defaultStaleTolerance)
             ) ?? 0
-            let total = try dbProvider.connection().scalarLocked(
+            let total = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)
             ) ?? 0

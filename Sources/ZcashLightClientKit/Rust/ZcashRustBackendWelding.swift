@@ -18,7 +18,6 @@ public enum DbInitResult {
     case seedRequired
 }
 
-// sourcery: mockActor
 protocol ZcashRustBackendWelding {
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.

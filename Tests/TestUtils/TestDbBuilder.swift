@@ -55,7 +55,7 @@ enum TestDbBuilder {
     }
     
     static func prepopulatedDataDbProvider(rustBackend: ZcashRustBackend) async throws -> ConnectionProvider? {
-        let provider = SimpleConnectionProvider(path: (await rustBackend.dbData).0, readonly: true)
+        let provider = SimpleConnectionProvider(path: (rustBackend.dbData).0, readonly: true)
 
         let initResult = try await rustBackend.initDataDb(seed: Environment.seedBytes)
         
