@@ -29,7 +29,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         let blockDownloaderMock = BlockDownloaderMock()
         let latestBlocksDataProvider = LatestBlocksDataProviderMock()
 
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
         latestBlocksDataProvider.updateClosure = { _ in }
         
@@ -57,7 +57,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         let blockDownloaderMock = BlockDownloaderMock()
         let latestBlocksDataProvider = LatestBlocksDataProviderMock()
 
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
         latestBlocksDataProvider.updateClosure = { _ in }
 

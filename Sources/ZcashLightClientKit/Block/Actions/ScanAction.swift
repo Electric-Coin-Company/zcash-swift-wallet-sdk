@@ -50,7 +50,8 @@ extension ScanAction: Action {
         let batchRange = batchRangeStart...batchRangeEnd
         
         logger.debug("Starting scan blocks with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
-        
+        logger.sync("Starting scan blocks with range \(batchRange.lowerBound)...\(batchRange.upperBound)")
+
         do {
             try await blockScanner.scanBlocks(at: batchRange) { [weak self] lastScannedHeight, increment in
                 let processedHeight = await context.processedHeight

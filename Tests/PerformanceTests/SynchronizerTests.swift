@@ -80,7 +80,6 @@ class SynchronizerTests: ZcashTestCase {
             
             guard let synchronizer else { fatalError("Synchronizer not initialized.") }
             
-            synchronizer.metrics.enableMetrics()
             _ = try await synchronizer.prepare(with: seedBytes, walletBirthday: birthday, for: .existingWallet)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
@@ -93,28 +92,6 @@ class SynchronizerTests: ZcashTestCase {
             try await synchronizer.start()
             
             await fulfillment(of: [syncSyncedExpectation], timeout: 100)
-            
-            synchronizer.metrics.cumulateReportsAndStartNewSet()
         }
-
-        if let cumulativeSummary = synchronizer?.metrics.summarizedCumulativeReports() {
-            let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? .zero
-            let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? .zero
-            let enhancementReport = cumulativeSummary.enhancementReport ?? .zero
-            let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? .zero
-            let totalSyncReport = cumulativeSummary.totalSyncReport ?? .zero
-
-            let downloadedBlockAVGTime = downloadedBlocksReport.avgTime
-            LoggerProxy.debug("""
-            testHundredBlocksSync() SUMMARY min max avg REPORT:
-            downloadedBlocksTimes: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlockAVGTime)
-            scannedBlocksTimes: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
-            enhancementTimes: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
-            fetchUTXOsTimes: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
-            totalSyncTimes: min: \(totalSyncReport.minTime) max: \(totalSyncReport.maxTime) avg: \(totalSyncReport.avgTime)
-            """)
-        }
-        
-        synchronizer?.metrics.disableMetrics()
     }
 }

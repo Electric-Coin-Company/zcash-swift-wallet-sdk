@@ -106,7 +106,7 @@ class BlockStreamingTest: ZcashTestCase {
             service: service,
             downloaderService: BlockDownloaderServiceImpl(service: service, storage: storage),
             storage: storage,
-            metrics: SDKMetrics(),
+            metrics: SDKMetricsImpl(),
             logger: logger
         )
         mockContainer.mock(type: BlockDownloader.self, isSingleton: true) { _ in blockDownloader }

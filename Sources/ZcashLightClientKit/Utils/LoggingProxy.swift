@@ -16,6 +16,7 @@ public protocol Logger {
     func event(_ message: String, file: StaticString, function: StaticString, line: Int)
     func warn(_ message: String, file: StaticString, function: StaticString, line: Int)
     func error(_ message: String, file: StaticString, function: StaticString, line: Int)
+    func sync(_ message: String, file: StaticString, function: StaticString, line: Int)
 }
 
 extension Logger {
@@ -34,6 +35,9 @@ extension Logger {
     func error(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         error(message, file: file, function: function, line: line)
     }
+    func sync(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
+        sync(message, file: file, function: function, line: line)
+    }
 }
 
 /**
@@ -45,4 +49,5 @@ struct NullLogger: Logger {
     func event(_ message: String, file: StaticString, function: StaticString, line: Int) {}
     func warn(_ message: String, file: StaticString, function: StaticString, line: Int) {}
     func error(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+    func sync(_ message: String, file: StaticString, function: StaticString, line: Int) {}
 }

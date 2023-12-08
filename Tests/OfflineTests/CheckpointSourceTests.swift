@@ -62,7 +62,7 @@ class CheckpointSourceTests: XCTestCase {
 
         let birthday = source.birthday(for: 1520000)
 
-
+        // swiftlint:disable line_length
         let expected = Checkpoint(
             height: 1520000,
             hash: "0014a50344a6a43b02421286f6db15dad50cea54f3f0858f044ad0f1b845c395",

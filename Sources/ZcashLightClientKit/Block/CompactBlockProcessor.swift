@@ -478,6 +478,7 @@ extension CompactBlockProcessor {
     // swiftlint:disable:next cyclomatic_complexity
     private func run() async {
         logger.debug("Starting run")
+        metrics.cbpStart()
         await resetContext()
 
         while true {
@@ -513,6 +514,7 @@ extension CompactBlockProcessor {
                 try Task.checkCancellation()
 
                 // Execute action.
+                metrics.actionStart(state)
                 context = try await action.run(with: context) { [weak self] event in
                     await self?.send(event: event)
                     if let progressChanged = await self?.compactBlockProgress.hasProgressUpdated(event), progressChanged {
@@ -633,6 +635,7 @@ extension CompactBlockProcessor {
 
     private func syncFinished() async -> Bool {
         logger.debug("Sync finished")
+        metrics.logCBPOverviewReport(logger)
         let latestBlockHeightWhenSyncing = await context.syncControlData.latestBlockHeight
         let latestBlockHeight = await latestBlocksDataProvider.latestBlockHeight
         // If `latestBlockHeightWhenSyncing` is 0 then it means that there was nothing to sync in last sync process.

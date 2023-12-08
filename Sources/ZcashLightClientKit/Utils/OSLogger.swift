@@ -23,7 +23,11 @@ public class OSLogger: Logger {
     
     var level: LogLevel
     
-    public init(logLevel: LogLevel, category: String = "logs", alias: ZcashSynchronizerAlias? = nil) {
+    public init(
+        logLevel: LogLevel,
+        category: String = "sdkLogs",
+        alias: ZcashSynchronizerAlias? = nil
+    ) {
         self.alias = alias
         self.level = logLevel
         if let bundleName = Bundle.main.bundleIdentifier {
@@ -42,37 +46,14 @@ public class OSLogger: Logger {
         line: Int = #line
     ) {
         guard level.rawValue == LogLevel.debug.rawValue else { return }
-        log(level: "DEBUG 🐞", message: message, file: file, function: function, line: line)
-    }
-    
-    public func error(
-        _ message: String,
-        file: StaticString = #file,
-        function: StaticString = #function,
-        line: Int = #line
-    ) {
-        guard level.rawValue <= LogLevel.error.rawValue else { return }
-        log(level: "ERROR 💥", message: message, file: file, function: function, line: line)
-    }
-    
-    public func warn(
-        _ message: String,
-        file: StaticString = #file,
-        function: StaticString = #function,
-        line: Int = #line
-    ) {
-        guard level.rawValue <= LogLevel.warning.rawValue else { return }
-        log(level: "WARNING ⚠️", message: message, file: file, function: function, line: line)
-    }
-
-    public func event(
-        _ message: String,
-        file: StaticString = #file,
-        function: StaticString = #function,
-        line: Int = #line
-    ) {
-        guard level.rawValue <= LogLevel.event.rawValue else { return }
-        log(level: "EVENT ⏱", message: message, file: file, function: function, line: line)
+        log(
+            level: "DEBUG 🐞",
+            logType: .debug,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
     }
     
     public func info(
@@ -82,11 +63,86 @@ public class OSLogger: Logger {
         line: Int = #line
     ) {
         guard level.rawValue <= LogLevel.info.rawValue else { return }
-        log(level: "INFO ℹ️", message: message, file: file, function: function, line: line)
+        log(
+            level: "INFO ℹ️",
+            logType: .info,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    public func event(
+        _ message: String,
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: Int = #line
+    ) {
+        guard level.rawValue <= LogLevel.event.rawValue else { return }
+        log(
+            level: "EVENT ⏱",
+            logType: .default,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    public func warn(
+        _ message: String,
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: Int = #line
+    ) {
+        guard level.rawValue <= LogLevel.warning.rawValue else { return }
+        log(
+            level: "WARNING ⚠️",
+            logType: .default,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
+    public func error(
+        _ message: String,
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: Int = #line
+    ) {
+        guard level.rawValue <= LogLevel.error.rawValue else { return }
+        log(
+            level: "ERROR 💥",
+            logType: .error,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
     }
     
+    public func sync(
+        _ message: String,
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: Int = #line
+    ) {
+        log(
+            level: "SYNC_METRIC",
+            logType: .info,
+            message: message,
+            file: file,
+            function: function,
+            line: line
+        )
+    }
+
     private func log(
         level: String,
+        logType: OSLogType,
         message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -99,6 +155,7 @@ public class OSLogger: Logger {
         os_log(
             "[%{public}@] %{public}@ - %{public}@ - Line: %{public}d -> %{public}@",
             log: oslog,
+            type: logType,
             level,
             fileName,
             String(describing: function),

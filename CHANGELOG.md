@@ -4,6 +4,35 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Unreleased
+
+## Changed
+The `SDKMetrics` logs data using os_log. The public API `enableMetrics()` and `disableMetrics()` no longer exist. All metrics are automatically logged for every sync run. Extraction of the metrics is up to the client/dev - done by using `OSLogStore`. 
+
+## Added
+
+### [#1325] Log metrics
+The sync process is measured and detailed metrics are logged for every sync run. The data are logged using os_log so any client can export it. Verbose logs are under `sdkLogs_default` category, `default` level. Sync specific logs use `error` level. 
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2270000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2327500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2560000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2620000.json
+````
+
 # 2.0.3 - 2023-10-20
 
 ## Fixed

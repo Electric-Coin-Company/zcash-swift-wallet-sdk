@@ -1110,6 +1110,100 @@ class LoggerMock: Logger {
         errorFileFunctionLineClosure!(message, file, function, line)
     }
 
+    // MARK: - sync
+
+    var syncFileFunctionLineCallsCount = 0
+    var syncFileFunctionLineCalled: Bool {
+        return syncFileFunctionLineCallsCount > 0
+    }
+    var syncFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var syncFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func sync(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        syncFileFunctionLineCallsCount += 1
+        syncFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        syncFileFunctionLineClosure!(message, file, function, line)
+    }
+
+}
+class SDKMetricsMock: SDKMetrics {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - cbpStart
+
+    var cbpStartCallsCount = 0
+    var cbpStartCalled: Bool {
+        return cbpStartCallsCount > 0
+    }
+    var cbpStartClosure: (() -> Void)?
+
+    func cbpStart() {
+        cbpStartCallsCount += 1
+        cbpStartClosure!()
+    }
+
+    // MARK: - actionStart
+
+    var actionStartCallsCount = 0
+    var actionStartCalled: Bool {
+        return actionStartCallsCount > 0
+    }
+    var actionStartReceivedAction: CBPState?
+    var actionStartClosure: ((CBPState) -> Void)?
+
+    func actionStart(_ action: CBPState) {
+        actionStartCallsCount += 1
+        actionStartReceivedAction = action
+        actionStartClosure!(action)
+    }
+
+    // MARK: - actionDetail
+
+    var actionDetailForCallsCount = 0
+    var actionDetailForCalled: Bool {
+        return actionDetailForCallsCount > 0
+    }
+    var actionDetailForReceivedArguments: (detail: String, action: CBPState)?
+    var actionDetailForClosure: ((String, CBPState) -> Void)?
+
+    func actionDetail(_ detail: String, `for` action: CBPState) {
+        actionDetailForCallsCount += 1
+        actionDetailForReceivedArguments = (detail: detail, action: action)
+        actionDetailForClosure!(detail, action)
+    }
+
+    // MARK: - actionStop
+
+    var actionStopCallsCount = 0
+    var actionStopCalled: Bool {
+        return actionStopCallsCount > 0
+    }
+    var actionStopClosure: (() -> Void)?
+
+    func actionStop() {
+        actionStopCallsCount += 1
+        actionStopClosure!()
+    }
+
+    // MARK: - logCBPOverviewReport
+
+    var logCBPOverviewReportCallsCount = 0
+    var logCBPOverviewReportCalled: Bool {
+        return logCBPOverviewReportCallsCount > 0
+    }
+    var logCBPOverviewReportReceivedLogger: Logger?
+    var logCBPOverviewReportClosure: ((Logger) -> Void)?
+
+    func logCBPOverviewReport(_ logger: Logger) {
+        logCBPOverviewReportCallsCount += 1
+        logCBPOverviewReportReceivedLogger = logger
+        logCBPOverviewReportClosure!(logger)
+    }
+
 }
 class SaplingParametersHandlerMock: SaplingParametersHandler {
 
@@ -1162,10 +1256,6 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingEventStream }
     }
     var underlyingEventStream: AnyPublisher<SynchronizerEvent, Never>!
-    var metrics: SDKMetrics {
-        get { return underlyingMetrics }
-    }
-    var underlyingMetrics: SDKMetrics!
     var transactions: [ZcashTransaction.Overview] {
         get async { return underlyingTransactions }
     }

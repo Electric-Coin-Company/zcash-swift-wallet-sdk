@@ -24,16 +24,6 @@ class SyncBlocksViewController: UIViewController {
     private var queue = DispatchQueue(label: "metrics.queue", qos: .default)
     private var enhancingStarted = false
     private var accumulatedMetrics: ProcessorMetrics = .initial
-    private var currentMetric: SDKMetrics.Operation?
-    private var currentMetricName: String {
-        guard let currentMetric else { return "" }
-        switch currentMetric {
-        case .downloadBlocks: return "download: "
-        case .scanBlocks: return "scan: "
-        case .enhancement: return "enhancement: "
-        case .fetchUTXOs: return "fetchUTXOs: "
-        }
-    }
 
     var cancellables: [AnyCancellable] = []
     let dateFormatter = DateFormatter()
@@ -88,50 +78,14 @@ class SyncBlocksViewController: UIViewController {
             """
             progressDataLabel.text = progressText
 
-            if let currentMetric {
-                let report = synchronizer.metrics.popBlock(operation: currentMetric)?.last
-                metricLabel.text = currentMetricName + report.debugDescription
-            }
-
         case .upToDate, .stopped:
-            accumulateMetrics()
             summaryLabel.text = "enhancement: \(accumulatedMetrics.debugDescription)"
-            overallSummary()
 
         case .error:
             break
         }
     }
     
-    func accumulateMetrics() {
-        guard let currentMetric else { return }
-        if let reports = synchronizer.metrics.popBlock(operation: currentMetric) {
-            for report in reports {
-                accumulatedMetrics = .accumulate(accumulatedMetrics, current: report)
-            }
-        }
-    }
-    
-    func overallSummary() {
-        let cumulativeSummary = synchronizer.metrics.cumulativeSummary()
-        
-        let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? SDKMetrics.ReportSummary.zero
-        let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? SDKMetrics.ReportSummary.zero
-        let enhancementReport = cumulativeSummary.enhancementReport ?? SDKMetrics.ReportSummary.zero
-        let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? SDKMetrics.ReportSummary.zero
-        let totalSyncReport = cumulativeSummary.totalSyncReport ?? SDKMetrics.ReportSummary.zero
-
-        metricLabel.text =
-            """
-            Summary:
-                downloadedBlocks: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlocksReport.avgTime)
-                scannedBlocks: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
-                enhancement: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
-                fetchUTXOs: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
-                totalSync: min: \(totalSyncReport.minTime) max: \(totalSyncReport.maxTime) avg: \(totalSyncReport.avgTime)
-            """
-    }
-
     @IBAction func startStop() {
         Task { @MainActor in
             await doStartStop()
@@ -156,7 +110,6 @@ class SyncBlocksViewController: UIViewController {
                     }
                 }
 
-                synchronizer.metrics.enableMetrics()
                 try await synchronizer.start()
                 updateUI()
             } catch {
@@ -165,7 +118,6 @@ class SyncBlocksViewController: UIViewController {
             }
         default:
             synchronizer.stop()
-            synchronizer.metrics.disableMetrics()
             updateUI()
         }
 
@@ -253,17 +205,6 @@ struct ProcessorMetrics {
         measuredCount: 0
     )
 
-    static func accumulate(_ prev: ProcessorMetrics, current: SDKMetrics.BlockMetricReport) -> Self {
-        .init(
-            minHeight: prev.minHeight,
-            maxHeight: prev.maxHeight,
-            maxDuration: prev.maxDuration,
-            minDuration: prev.minDuration,
-            cumulativeDuration: prev.cumulativeDuration + current.duration,
-            measuredCount: prev.measuredCount + 1
-        )
-    }
-
     static func compareDuration(
         _ prev: (TimeInterval, CompactBlockRange),
         _ current: (TimeInterval, CompactBlockRange),
@@ -297,16 +238,6 @@ extension ProcessorMetrics: CustomDebugStringConvertible {
 extension CompactBlockRange {
     var description: String {
         "\(self.lowerBound) ... \(self.upperBound)"
-    }
-}
-
-extension SDKMetrics.BlockMetricReport: CustomDebugStringConvertible {
-    public var debugDescription: String {
-        """
-        BlockMetric:
-            batchSize: \(self.batchSize)
-            duration: \(self.duration)
-        """
     }
 }
 

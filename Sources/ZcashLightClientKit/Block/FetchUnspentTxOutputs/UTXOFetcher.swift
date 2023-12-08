@@ -85,13 +85,6 @@ extension UTXOFetcherImpl: UTXOFetcher {
             }
         }
 
-        metrics.pushProgressReport(
-            start: startTime,
-            end: Date(),
-            batchSize: 1,
-            operation: .fetchUTXOs
-        )
-
         let result = (inserted: refreshed, skipped: skipped)
 
         if Task.isCancelled {
