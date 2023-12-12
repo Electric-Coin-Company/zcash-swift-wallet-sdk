@@ -11,10 +11,6 @@ import libzcashlc
 struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
     let networkType: NetworkType
 
-    init(networkType: NetworkType) {
-        self.networkType = networkType
-    }
-
     // MARK: Address metadata and validation
     static func getAddressMetadata(_ address: String) -> AddressMetadata? {
         var networkId: UInt32 = 0

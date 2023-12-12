@@ -31,7 +31,7 @@ struct BundleCheckpointSource: CheckpointSource {
     
     func birthday(for height: BlockHeight) -> Checkpoint {
         Checkpoint.birthday(
-            with: height, 
+            with: height,
             checkpointDirectory: BundleCheckpointURLProvider.default.url(self.network)
         ) ?? saplingActivation
     }

@@ -137,10 +137,6 @@ protocol LightWalletServiceResponse {
 struct LightWalletServiceFactory {
     let endpoint: LightWalletEndpoint
 
-    init(endpoint: LightWalletEndpoint) {
-        self.endpoint = endpoint
-    }
-
     func make() -> LightWalletService {
         return LightWalletGRPCService(endpoint: endpoint)
     }
