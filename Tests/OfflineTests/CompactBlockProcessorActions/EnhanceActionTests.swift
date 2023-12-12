@@ -332,11 +332,15 @@ final class EnhanceActionTests: ZcashTestCase {
     private func setupAction(
         _ blockEnhancerMock: BlockEnhancerMock = BlockEnhancerMock(),
         _ transactionRepositoryMock: TransactionRepositoryMock = TransactionRepositoryMock(),
-        _ loggerMock: LoggerMock = LoggerMock()
+        _ loggerMock: LoggerMock = LoggerMock(),
+        _ sdkMetricsMock: SDKMetricsMock = SDKMetricsMock()
     ) -> EnhanceAction {
         mockContainer.mock(type: BlockEnhancer.self, isSingleton: true) { _ in blockEnhancerMock }
         mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
+        mockContainer.mock(type: SDKMetrics.self, isSingleton: true) { _ in sdkMetricsMock }
+        
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
         
         let config: CompactBlockProcessor.Configuration = .standard(
             for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: 0

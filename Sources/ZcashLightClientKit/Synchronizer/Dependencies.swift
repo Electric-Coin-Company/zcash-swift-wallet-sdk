@@ -79,7 +79,7 @@ enum Dependencies {
         }
 
         container.register(type: SDKMetrics.self, isSingleton: true) { _ in
-            SDKMetrics()
+            SDKMetricsImpl()
         }
 
         container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in

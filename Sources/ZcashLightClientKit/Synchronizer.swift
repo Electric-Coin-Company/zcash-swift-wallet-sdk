@@ -106,9 +106,6 @@ public protocol Synchronizer: AnyObject {
     /// This stream is backed by `PassthroughSubject`. Check `SynchronizerEvent` to see which events may be emitted.
     var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
 
-    /// An object that when enabled collects mertrics from the synchronizer
-    var metrics: SDKMetrics { get }
-
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could

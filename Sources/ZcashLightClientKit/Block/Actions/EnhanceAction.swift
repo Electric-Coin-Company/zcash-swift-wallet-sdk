@@ -88,6 +88,8 @@ extension EnhanceAction: Action {
             if let transactions {
                 await didUpdate(.foundTransactions(transactions, enhanceRange))
             }
+        } else {
+            logger.sync("Action called but skipped for not enough blocks scanned from the last time.")
         }
 
         return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)

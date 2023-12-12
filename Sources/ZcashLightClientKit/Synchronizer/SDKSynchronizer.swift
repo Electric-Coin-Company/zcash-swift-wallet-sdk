@@ -22,7 +22,7 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
-    public let metrics: SDKMetrics
+    let metrics: SDKMetrics
     public let logger: Logger
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
@@ -44,7 +44,6 @@ public class SDKSynchronizer: Synchronizer {
     private let syncSessionIDGenerator: SyncSessionIDGenerator
     private let syncSession: SyncSession
     private let syncSessionTicker: SessionTicker
-    private var syncStartDate: Date?
     let latestBlocksDataProvider: LatestBlocksDataProvider
 
     /// Creates an SDKSynchronizer instance
@@ -104,6 +103,7 @@ public class SDKSynchronizer: Synchronizer {
 
     func updateStatus(_ newValue: InternalSyncStatus, updateExternalStatus: Bool = true) async {
         let oldValue = await underlyingStatus.update(newValue)
+        logger.info("Synchronizer's status updated from \(oldValue) to \(newValue)")
         await notify(oldStatus: oldValue, newStatus: newValue, updateExternalStatus: updateExternalStatus)
     }
 
@@ -165,7 +165,6 @@ public class SDKSynchronizer: Synchronizer {
 
         case .stopped, .synced, .disconnected, .error:
             await updateStatus(.syncing(0))
-            syncStartDate = Date()
             await blockProcessor.start(retry: retry)
         }
     }
@@ -244,13 +243,6 @@ public class SDKSynchronizer: Synchronizer {
         await latestBlocksDataProvider.updateScannedData()
 
         await updateStatus(.synced)
-
-        if let syncStartDate {
-            metrics.pushSyncReport(
-                start: syncStartDate,
-                end: Date()
-            )
-        }
     }
 
     private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {

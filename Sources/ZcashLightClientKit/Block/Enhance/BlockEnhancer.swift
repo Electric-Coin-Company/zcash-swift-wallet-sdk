@@ -96,6 +96,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
 
             guard !transactions.isEmpty else {
                 logger.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
+                logger.sync("No transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
                 return nil
             }
 
@@ -134,12 +135,10 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 }
             }
             
-            metrics.pushProgressReport(
-                start: startTime,
-                end: Date(),
-                batchSize: range.count,
-                operation: .enhancement
-            )
+            let endTime = Date()
+            let logMsg = "Enhanced \(transactions.count) transaction(s) in \(endTime.timeIntervalSince1970 - startTime.timeIntervalSince1970) for range \(range.lowerBound)...\(range.upperBound)"
+            logger.sync(logMsg)
+            metrics.actionDetail(logMsg, for: .enhance)
         } catch {
             logger.error("error enhancing transactions! \(error)")
             throw error

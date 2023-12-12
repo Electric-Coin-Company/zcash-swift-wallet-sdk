@@ -25,7 +25,7 @@ final class UpdateChainTipAction {
     func updateChainTip(_ context: ActionContext, time: TimeInterval) async throws {
         let latestBlockHeight = try await service.latestBlockHeight()
         
-        logger.info("Latest block height is \(latestBlockHeight)")
+        logger.debug("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))
         await context.update(lastChainTipUpdateTime: time)
         await latestBlocksDataProvider.update(latestBlockHeight)

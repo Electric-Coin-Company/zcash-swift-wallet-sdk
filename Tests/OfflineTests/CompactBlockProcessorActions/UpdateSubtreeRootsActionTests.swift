@@ -27,7 +27,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
     func testUpdateSubtreeRootsAction_getSubtreeRootsTimeout() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
@@ -59,7 +59,6 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
     func testUpdateSubtreeRootsAction_RootsAvailablePutRootsSuccess() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
@@ -77,8 +76,6 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
             let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
 
-            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug() is not expected to be called.")
-            
             let acResult = nextContext.checkStateIs(.updateChainTip)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {

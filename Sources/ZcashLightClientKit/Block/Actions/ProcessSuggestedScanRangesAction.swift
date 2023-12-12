@@ -11,11 +11,13 @@ final class ProcessSuggestedScanRangesAction {
     let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService
     let logger: Logger
+    let metrics: SDKMetrics
     
     init(container: DIContainer) {
         service = container.resolve(LightWalletService.self)
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         logger = container.resolve(Logger.self)
+        metrics = container.resolve(SDKMetrics.self)
     }
 }
 
@@ -23,10 +25,17 @@ extension ProcessSuggestedScanRangesAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        logger.info("Getting the suggested scan ranges from the wallet database.")
+        logger.debug("Getting the suggested scan ranges from the wallet database.")
         let scanRanges = try await rustBackend.suggestScanRanges()
 
+        logger.sync("CALL suggestScanRanges \(scanRanges)")
+        
+        for scanRange in scanRanges {
+            metrics.actionDetail("range \(scanRange.priority) \(scanRange.range)", for: .processSuggestedScanRanges)
+        }
+        
         if let firstRange = scanRanges.first {
+            logger.sync("PROCESSING range \(firstRange.priority) \(firstRange.range)")
             let rangeStartExclusive = firstRange.range.lowerBound - 1
             let rangeEndInclusive = firstRange.range.upperBound - 1
             

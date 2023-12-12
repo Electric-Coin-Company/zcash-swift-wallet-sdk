@@ -69,16 +69,10 @@ extension BlockScannerImpl: BlockScanner {
             if scannedNewBlocks {
                 try await didScan(lastScannedHeight, batchSize)
 
-                metrics.pushProgressReport(
-                    start: scanStartTime,
-                    end: scanFinishTime,
-                    batchSize: Int(batchSize),
-                    operation: .scanBlocks
-                )
-
                 let heightCount = lastScannedHeight - previousScannedHeight
                 let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                 logger.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
+                logger.sync("Scanned \(heightCount) blocks in \(seconds) seconds")
             }
 
             await Task.yield()

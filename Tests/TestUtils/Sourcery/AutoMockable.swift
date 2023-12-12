@@ -28,5 +28,6 @@ extension TransactionRepository { }
 extension UTXOFetcher { }
 extension ZcashFileManager { }
 extension ZcashRustBackendWelding { }
+extension SDKMetrics { }
 
 // sourcery:end:

@@ -196,23 +196,12 @@ actor BlockDownloaderImpl {
         logger.debug("Downloading blocks in range: \(range.lowerBound)...\(range.upperBound)")
 
         var startTime = Date()
-        var counter = 0
         var lastDownloadedBlockHeight = -1
-
-        let pushMetrics: (BlockHeight, Date, Date) -> Void = { [metrics] _, startTime, finishTime in
-            metrics.pushProgressReport(
-                start: startTime,
-                end: finishTime,
-                batchSize: maxBlockBufferSize,
-                operation: .downloadBlocks
-            )
-        }
 
         for _ in stride(from: range.lowerBound, to: range.upperBound + 1, by: 1) {
             try Task.checkCancellation()
             guard let block = try await stream.nextBlock() else { break }
 
-            counter += 1
             lastDownloadedBlockHeight = block.height
 
             buffer.append(block)
@@ -222,15 +211,8 @@ actor BlockDownloaderImpl {
                 try await blocksBufferWritten(buffer)
                 buffer.removeAll(keepingCapacity: true)
 
-                pushMetrics(block.height, startTime, finishTime)
-
-                counter = 0
                 startTime = finishTime
             }
-        }
-
-        if counter > 0 {
-            pushMetrics(lastDownloadedBlockHeight, startTime, Date())
         }
 
         try await storage.write(blocks: buffer)

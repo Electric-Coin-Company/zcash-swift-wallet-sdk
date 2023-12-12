@@ -27,7 +27,8 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     func testProcessSuggestedScanRangesAction_EmptyScanRanges() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
         await tupple.rustBackendMock.setSuggestScanRangesClosure({ [] })
@@ -39,11 +40,6 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
 
             let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
 
-            XCTAssertFalse(
-                loggerMock.debugFileFunctionLineCalled,
-                "logger.debug() is not expected to be called."
-            )
-            
             let acResult = nextContext.checkStateIs(.finished)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
@@ -56,8 +52,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         
         loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
-        let tupple = setupAction(loggerMock)
+        let sdkMetricsMock = SDKMetricsMock()
+        
+        sdkMetricsMock.actionDetailForClosure = { _, _ in }
+
+        let tupple = setupAction(loggerMock, sdkMetricsMock)
         await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
             ScanRange(range: 0..<10, priority: .chainTip)
         ] })
@@ -83,7 +84,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 let enhancedValue = nextContextMock.updateLastEnhancedHeightReceivedLastEnhancedHeight
                 XCTAssertNil(
                     enhancedValue,
-                    "context.update(updateLastEnhancedHeight:) is expected to reset the value to nil but received \(enhancedValue)"
+                    "context.update(updateLastEnhancedHeight:) is expected to reset the value to nil but received \(String(describing: enhancedValue))"
                 )
             } else {
                 XCTFail("`nextContext` is not the ActionContextMock")
@@ -94,10 +95,10 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 "logger.debug() is not expected to be called."
             )
             
-            if let infoArguments = loggerMock.infoFileFunctionLineReceivedArguments {
-                XCTAssertFalse(infoArguments.message.contains("Setting the total range for Spend before Sync to"))
+            if let syncArguments = loggerMock.syncFileFunctionLineReceivedArguments {
+                XCTAssertFalse(syncArguments.message.contains("Setting the total range for Spend before Sync to"))
             } else {
-                XCTFail("`infoArguments` unavailable.")
+                XCTFail("`syncArguments` unavailable.")
             }
             
             let acResult = nextContext.checkStateIs(.download)
@@ -109,7 +110,8 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     
     // swiftlint:disable large_tuple
     private func setupAction(
-        _ loggerMock: LoggerMock = LoggerMock()
+        _ loggerMock: LoggerMock = LoggerMock(),
+        _ sdkMetricsMock: SDKMetricsMock = SDKMetricsMock()
     ) -> (
         action: ProcessSuggestedScanRangesAction,
         serviceMock: LightWalletServiceMock,
@@ -138,6 +140,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
+        mockContainer.mock(type: SDKMetrics.self, isSingleton: true) { _ in sdkMetricsMock }
 
         return (
             action: ProcessSuggestedScanRangesAction(container: mockContainer),

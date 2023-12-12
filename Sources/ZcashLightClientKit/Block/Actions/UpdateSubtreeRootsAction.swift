@@ -28,7 +28,7 @@ extension UpdateSubtreeRootsAction: Action {
         var request = GetSubtreeRootsArg()
         request.shieldedProtocol = .sapling
         
-        logger.info("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
+        logger.debug("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
         let stream = service.getSubtreeRoots(request)
         
         var roots: [SubtreeRoot] = []
@@ -41,7 +41,7 @@ extension UpdateSubtreeRootsAction: Action {
             throw ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
         }
 
-        logger.info("Sapling tree has \(roots.count) subtrees")
+        logger.debug("Sapling tree has \(roots.count) subtrees")
         do {
             try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)
             

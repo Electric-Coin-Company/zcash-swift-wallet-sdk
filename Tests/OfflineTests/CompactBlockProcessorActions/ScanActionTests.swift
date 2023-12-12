@@ -15,6 +15,7 @@ final class ScanActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
 
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
 
@@ -85,6 +86,7 @@ final class ScanActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
 
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
         let syncContext = ActionContextMock.default()
@@ -109,6 +111,7 @@ final class ScanActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
 
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
         let scanAction = setupAction(blockScannerMock, loggerMock)
         let syncContext = ActionContextMock.default()
