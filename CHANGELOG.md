@@ -4,7 +4,7 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Unreleased
+# 2.0.4 - 2023-12-12
 
 ## Changed
 The `SDKMetrics` logs data using os_log. The public API `enableMetrics()` and `disableMetrics()` no longer exist. All metrics are automatically logged for every sync run. Extraction of the metrics is up to the client/dev - done by using `OSLogStore`. 
