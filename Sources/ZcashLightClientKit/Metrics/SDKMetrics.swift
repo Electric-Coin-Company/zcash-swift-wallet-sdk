@@ -12,7 +12,7 @@ protocol SDKMetrics {
     func actionStart(_ action: CBPState)
     func actionDetail(_ detail: String, `for` action: CBPState)
     func actionStop()
-    func logCBPOverviewReport(_ logger: Logger)
+    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async
 }
 
 final class SDKMetricsImpl: SDKMetrics {
@@ -102,17 +102,25 @@ final class SDKMetricsImpl: SDKMetrics {
     }
     
     // swiftlint:disable string_concatenation
-    func logCBPOverviewReport(_ logger: Logger) {
+    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async {
         actionStop()
-        
-        var resText = "SYNC (\(syncs)) REPORT\n"
-        
-        resText += "finished in: \(Date().timeIntervalSince1970 - cbpStartTime)\n\n"
-        
+
+        logger.sync(
+            """
+            SYNC (\(syncs)) REPORT
+            finished in: \(Date().timeIntervalSince1970 - cbpStartTime)
+            verified balance: \(shieldedBalance.verified.amount)
+            total balance: \(shieldedBalance.total.amount)
+            """
+        )
+
+        try? await Task.sleep(nanoseconds: 100_000)
+
         for action in cbpOverview {
+
             let report = action.value
 
-            resText += """
+            var resText = """
                 action:             \(action.key)
                 runs:               \(report.runs)
                 cummulativeTime:    \(report.cummulativeTime)
@@ -129,9 +137,7 @@ final class SDKMetricsImpl: SDKMetrics {
                 }
             }
             
-            resText += "\n\n"
+            logger.sync(resText)
         }
-        
-        logger.sync(resText)
     }
 }

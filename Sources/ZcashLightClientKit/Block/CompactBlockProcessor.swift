@@ -635,7 +635,6 @@ extension CompactBlockProcessor {
 
     private func syncFinished() async -> Bool {
         logger.debug("Sync finished")
-        metrics.logCBPOverviewReport(logger)
         let latestBlockHeightWhenSyncing = await context.syncControlData.latestBlockHeight
         let latestBlockHeight = await latestBlocksDataProvider.latestBlockHeight
         // If `latestBlockHeightWhenSyncing` is 0 then it means that there was nothing to sync in last sync process.
@@ -651,6 +650,14 @@ extension CompactBlockProcessor {
         await send(event: .progressUpdated(1))
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
+
+        let verifiedBalance = Zatoshi((try? await rustBackend.getVerifiedBalance(account: 0)) ?? 0)
+        let totalBalance = Zatoshi((try? await rustBackend.getBalance(account: 0)) ?? 0)
+        let shieldedBalance = WalletBalance(
+            verified: verifiedBalance,
+            total: totalBalance
+        )
+        await metrics.logCBPOverviewReport(logger, shieldedBalance: shieldedBalance)
 
         // If new blocks were mined during previous sync run the sync process again
         if newerBlocksWereMinedDuringSync {
