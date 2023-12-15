@@ -1191,17 +1191,17 @@ class SDKMetricsMock: SDKMetrics {
 
     // MARK: - logCBPOverviewReport
 
-    var logCBPOverviewReportCallsCount = 0
-    var logCBPOverviewReportCalled: Bool {
-        return logCBPOverviewReportCallsCount > 0
+    var logCBPOverviewReportShieldedBalanceCallsCount = 0
+    var logCBPOverviewReportShieldedBalanceCalled: Bool {
+        return logCBPOverviewReportShieldedBalanceCallsCount > 0
     }
-    var logCBPOverviewReportReceivedLogger: Logger?
-    var logCBPOverviewReportClosure: ((Logger) -> Void)?
+    var logCBPOverviewReportShieldedBalanceReceivedArguments: (logger: Logger, shieldedBalance: WalletBalance)?
+    var logCBPOverviewReportShieldedBalanceClosure: ((Logger, WalletBalance) async -> Void)?
 
-    func logCBPOverviewReport(_ logger: Logger) {
-        logCBPOverviewReportCallsCount += 1
-        logCBPOverviewReportReceivedLogger = logger
-        logCBPOverviewReportClosure!(logger)
+    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async {
+        logCBPOverviewReportShieldedBalanceCallsCount += 1
+        logCBPOverviewReportShieldedBalanceReceivedArguments = (logger: logger, shieldedBalance: shieldedBalance)
+        await logCBPOverviewReportShieldedBalanceClosure!(logger, shieldedBalance)
     }
 
 }
