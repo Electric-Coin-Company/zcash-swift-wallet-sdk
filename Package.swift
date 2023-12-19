@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.19.1"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", exact: "0.8.0")
+//        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", exact: "0.8.0")
     ],
     targets: [
         .target(
@@ -24,7 +24,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift"),
                 .product(name: "GRPC", package: "grpc-swift"),
-                .product(name: "libzcashlc", package: "zcash-light-client-ffi")
+//                .product(name: "libzcashlc", package: "zcash-light-client-ffi")
             ],
             exclude: [
                 "Modules/Service/GRPC/ProtoBuf/proto/compact_formats.proto",
@@ -34,8 +34,19 @@ let package = Package(
             ],
             resources: [
                 .copy("Resources/checkpoints")
+            ],
+            plugins: [
+                .plugin(name: "RustBuildPlugin")
             ]
         ),
+        .plugin(
+            name: "RustBuildPlugin",
+            capability: .buildTool(),
+            dependencies: [
+                .target(name: "Forklift"),
+            ]
+        ),
+        .executableTarget(name: "Forklift"),
         .target(
             name: "TestUtils",
             dependencies: ["ZcashLightClientKit"],
