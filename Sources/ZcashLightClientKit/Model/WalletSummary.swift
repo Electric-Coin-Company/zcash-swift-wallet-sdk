@@ -1,11 +1,26 @@
 //
-//  ScanProgress.swift
-//  
+//  WalletSummary.swift
+//
 //
 //  Created by Jack Grigg on 06/09/2023.
 //
 
 import Foundation
+
+struct PoolBalance: Equatable {
+    let spendableValue: Zatoshi
+    let changePendingConfirmation: Zatoshi
+    let valuePendingSpendability: Zatoshi
+
+    func total() -> Zatoshi {
+        self.spendableValue + self.changePendingConfirmation + self.valuePendingSpendability
+    }
+}
+
+struct AccountBalance: Equatable {
+    let saplingBalance: PoolBalance
+    let unshielded: Zatoshi
+}
 
 struct ScanProgress: Equatable {
     let numerator: UInt64
@@ -26,4 +41,11 @@ struct ScanProgress: Equatable {
 
         return value
     }
+}
+
+struct WalletSummary: Equatable {
+    let accountBalances: [UInt32: AccountBalance]
+    let chainTipHeight: BlockHeight
+    let fullyScannedHeight: BlockHeight
+    let scanProgress: ScanProgress?
 }

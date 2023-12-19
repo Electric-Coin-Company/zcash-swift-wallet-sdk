@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.0.3 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.1.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1191,17 +1191,17 @@ class SDKMetricsMock: SDKMetrics {
 
     // MARK: - logCBPOverviewReport
 
-    var logCBPOverviewReportShieldedBalanceCallsCount = 0
-    var logCBPOverviewReportShieldedBalanceCalled: Bool {
-        return logCBPOverviewReportShieldedBalanceCallsCount > 0
+    var logCBPOverviewReportWalletSummaryCallsCount = 0
+    var logCBPOverviewReportWalletSummaryCalled: Bool {
+        return logCBPOverviewReportWalletSummaryCallsCount > 0
     }
-    var logCBPOverviewReportShieldedBalanceReceivedArguments: (logger: Logger, shieldedBalance: WalletBalance)?
-    var logCBPOverviewReportShieldedBalanceClosure: ((Logger, WalletBalance) async -> Void)?
+    var logCBPOverviewReportWalletSummaryReceivedArguments: (logger: Logger, walletSummary: WalletSummary?)?
+    var logCBPOverviewReportWalletSummaryClosure: ((Logger, WalletSummary?) async -> Void)?
 
-    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async {
-        logCBPOverviewReportShieldedBalanceCallsCount += 1
-        logCBPOverviewReportShieldedBalanceReceivedArguments = (logger: logger, shieldedBalance: shieldedBalance)
-        await logCBPOverviewReportShieldedBalanceClosure!(logger, shieldedBalance)
+    func logCBPOverviewReport(_ logger: Logger, walletSummary: WalletSummary?) async {
+        logCBPOverviewReportWalletSummaryCallsCount += 1
+        logCBPOverviewReportWalletSummaryReceivedArguments = (logger: logger, walletSummary: walletSummary)
+        await logCBPOverviewReportWalletSummaryClosure!(logger, walletSummary)
     }
 
 }
@@ -2179,39 +2179,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - createToAddress
-
-    var createToAddressUskToValueMemoThrowableError: Error?
-    func setCreateToAddressUskToValueMemoThrowableError(_ param: Error?) async {
-        createToAddressUskToValueMemoThrowableError = param
-    }
-    var createToAddressUskToValueMemoCallsCount = 0
-    var createToAddressUskToValueMemoCalled: Bool {
-        return createToAddressUskToValueMemoCallsCount > 0
-    }
-    var createToAddressUskToValueMemoReceivedArguments: (usk: UnifiedSpendingKey, address: String, value: Int64, memo: MemoBytes?)?
-    var createToAddressUskToValueMemoReturnValue: Data!
-    func setCreateToAddressUskToValueMemoReturnValue(_ param: Data) async {
-        createToAddressUskToValueMemoReturnValue = param
-    }
-    var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Data)?
-    func setCreateToAddressUskToValueMemoClosure(_ param: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Data)?) async {
-        createToAddressUskToValueMemoClosure = param
-    }
-
-    func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) async throws -> Data {
-        if let error = createToAddressUskToValueMemoThrowableError {
-            throw error
-        }
-        createToAddressUskToValueMemoCallsCount += 1
-        createToAddressUskToValueMemoReceivedArguments = (usk: usk, address: address, value: value, memo: memo)
-        if let closure = createToAddressUskToValueMemoClosure {
-            return try await closure(usk, address, value, memo)
-        } else {
-            return createToAddressUskToValueMemoReturnValue
-        }
-    }
-
     // MARK: - decryptAndStoreTransaction
 
     var decryptAndStoreTransactionTxBytesMinedHeightThrowableError: Error?
@@ -2235,39 +2202,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
         try await decryptAndStoreTransactionTxBytesMinedHeightClosure!(txBytes, minedHeight)
-    }
-
-    // MARK: - getBalance
-
-    var getBalanceAccountThrowableError: Error?
-    func setGetBalanceAccountThrowableError(_ param: Error?) async {
-        getBalanceAccountThrowableError = param
-    }
-    var getBalanceAccountCallsCount = 0
-    var getBalanceAccountCalled: Bool {
-        return getBalanceAccountCallsCount > 0
-    }
-    var getBalanceAccountReceivedAccount: Int32?
-    var getBalanceAccountReturnValue: Int64!
-    func setGetBalanceAccountReturnValue(_ param: Int64) async {
-        getBalanceAccountReturnValue = param
-    }
-    var getBalanceAccountClosure: ((Int32) async throws -> Int64)?
-    func setGetBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
-        getBalanceAccountClosure = param
-    }
-
-    func getBalance(account: Int32) async throws -> Int64 {
-        if let error = getBalanceAccountThrowableError {
-            throw error
-        }
-        getBalanceAccountCallsCount += 1
-        getBalanceAccountReceivedAccount = account
-        if let closure = getBalanceAccountClosure {
-            return try await closure(account)
-        } else {
-            return getBalanceAccountReturnValue
-        }
     }
 
     // MARK: - getCurrentAddress
@@ -2501,39 +2435,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - getVerifiedBalance
-
-    var getVerifiedBalanceAccountThrowableError: Error?
-    func setGetVerifiedBalanceAccountThrowableError(_ param: Error?) async {
-        getVerifiedBalanceAccountThrowableError = param
-    }
-    var getVerifiedBalanceAccountCallsCount = 0
-    var getVerifiedBalanceAccountCalled: Bool {
-        return getVerifiedBalanceAccountCallsCount > 0
-    }
-    var getVerifiedBalanceAccountReceivedAccount: Int32?
-    var getVerifiedBalanceAccountReturnValue: Int64!
-    func setGetVerifiedBalanceAccountReturnValue(_ param: Int64) async {
-        getVerifiedBalanceAccountReturnValue = param
-    }
-    var getVerifiedBalanceAccountClosure: ((Int32) async throws -> Int64)?
-    func setGetVerifiedBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
-        getVerifiedBalanceAccountClosure = param
-    }
-
-    func getVerifiedBalance(account: Int32) async throws -> Int64 {
-        if let error = getVerifiedBalanceAccountThrowableError {
-            throw error
-        }
-        getVerifiedBalanceAccountCallsCount += 1
-        getVerifiedBalanceAccountReceivedAccount = account
-        if let closure = getVerifiedBalanceAccountClosure {
-            return try await closure(account)
-        } else {
-            return getVerifiedBalanceAccountReturnValue
-        }
-    }
-
     // MARK: - getVerifiedTransparentBalance
 
     var getVerifiedTransparentBalanceAccountThrowableError: Error?
@@ -2729,34 +2630,34 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - getScanProgress
+    // MARK: - getWalletSummary
 
-    var getScanProgressThrowableError: Error?
-    func setGetScanProgressThrowableError(_ param: Error?) async {
-        getScanProgressThrowableError = param
+    var getWalletSummaryThrowableError: Error?
+    func setGetWalletSummaryThrowableError(_ param: Error?) async {
+        getWalletSummaryThrowableError = param
     }
-    var getScanProgressCallsCount = 0
-    var getScanProgressCalled: Bool {
-        return getScanProgressCallsCount > 0
+    var getWalletSummaryCallsCount = 0
+    var getWalletSummaryCalled: Bool {
+        return getWalletSummaryCallsCount > 0
     }
-    var getScanProgressReturnValue: ScanProgress?
-    func setGetScanProgressReturnValue(_ param: ScanProgress?) async {
-        getScanProgressReturnValue = param
+    var getWalletSummaryReturnValue: WalletSummary?
+    func setGetWalletSummaryReturnValue(_ param: WalletSummary?) async {
+        getWalletSummaryReturnValue = param
     }
-    var getScanProgressClosure: (() async throws -> ScanProgress?)?
-    func setGetScanProgressClosure(_ param: (() async throws -> ScanProgress?)?) async {
-        getScanProgressClosure = param
+    var getWalletSummaryClosure: (() async throws -> WalletSummary?)?
+    func setGetWalletSummaryClosure(_ param: (() async throws -> WalletSummary?)?) async {
+        getWalletSummaryClosure = param
     }
 
-    func getScanProgress() async throws -> ScanProgress? {
-        if let error = getScanProgressThrowableError {
+    func getWalletSummary() async throws -> WalletSummary? {
+        if let error = getWalletSummaryThrowableError {
             throw error
         }
-        getScanProgressCallsCount += 1
-        if let closure = getScanProgressClosure {
+        getWalletSummaryCallsCount += 1
+        if let closure = getWalletSummaryClosure {
             return try await closure()
         } else {
-            return getScanProgressReturnValue
+            return getWalletSummaryReturnValue
         }
     }
 
@@ -2841,36 +2742,102 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure!(txid, index, script, value, height)
     }
 
-    // MARK: - shieldFunds
+    // MARK: - proposeTransfer
 
-    var shieldFundsUskMemoShieldingThresholdThrowableError: Error?
-    func setShieldFundsUskMemoShieldingThresholdThrowableError(_ param: Error?) async {
-        shieldFundsUskMemoShieldingThresholdThrowableError = param
+    var proposeTransferAccountToValueMemoThrowableError: Error?
+    func setProposeTransferAccountToValueMemoThrowableError(_ param: Error?) async {
+        proposeTransferAccountToValueMemoThrowableError = param
     }
-    var shieldFundsUskMemoShieldingThresholdCallsCount = 0
-    var shieldFundsUskMemoShieldingThresholdCalled: Bool {
-        return shieldFundsUskMemoShieldingThresholdCallsCount > 0
+    var proposeTransferAccountToValueMemoCallsCount = 0
+    var proposeTransferAccountToValueMemoCalled: Bool {
+        return proposeTransferAccountToValueMemoCallsCount > 0
     }
-    var shieldFundsUskMemoShieldingThresholdReceivedArguments: (usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
-    var shieldFundsUskMemoShieldingThresholdReturnValue: Data!
-    func setShieldFundsUskMemoShieldingThresholdReturnValue(_ param: Data) async {
-        shieldFundsUskMemoShieldingThresholdReturnValue = param
+    var proposeTransferAccountToValueMemoReceivedArguments: (account: Int32, address: String, value: Int64, memo: MemoBytes?)?
+    var proposeTransferAccountToValueMemoReturnValue: FfiProposal!
+    func setProposeTransferAccountToValueMemoReturnValue(_ param: FfiProposal) async {
+        proposeTransferAccountToValueMemoReturnValue = param
     }
-    var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Data)?
-    func setShieldFundsUskMemoShieldingThresholdClosure(_ param: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Data)?) async {
-        shieldFundsUskMemoShieldingThresholdClosure = param
+    var proposeTransferAccountToValueMemoClosure: ((Int32, String, Int64, MemoBytes?) async throws -> FfiProposal)?
+    func setProposeTransferAccountToValueMemoClosure(_ param: ((Int32, String, Int64, MemoBytes?) async throws -> FfiProposal)?) async {
+        proposeTransferAccountToValueMemoClosure = param
     }
 
-    func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> Data {
-        if let error = shieldFundsUskMemoShieldingThresholdThrowableError {
+    func proposeTransfer(account: Int32, to address: String, value: Int64, memo: MemoBytes?) async throws -> FfiProposal {
+        if let error = proposeTransferAccountToValueMemoThrowableError {
             throw error
         }
-        shieldFundsUskMemoShieldingThresholdCallsCount += 1
-        shieldFundsUskMemoShieldingThresholdReceivedArguments = (usk: usk, memo: memo, shieldingThreshold: shieldingThreshold)
-        if let closure = shieldFundsUskMemoShieldingThresholdClosure {
-            return try await closure(usk, memo, shieldingThreshold)
+        proposeTransferAccountToValueMemoCallsCount += 1
+        proposeTransferAccountToValueMemoReceivedArguments = (account: account, address: address, value: value, memo: memo)
+        if let closure = proposeTransferAccountToValueMemoClosure {
+            return try await closure(account, address, value, memo)
         } else {
-            return shieldFundsUskMemoShieldingThresholdReturnValue
+            return proposeTransferAccountToValueMemoReturnValue
+        }
+    }
+
+    // MARK: - proposeShielding
+
+    var proposeShieldingAccountMemoShieldingThresholdThrowableError: Error?
+    func setProposeShieldingAccountMemoShieldingThresholdThrowableError(_ param: Error?) async {
+        proposeShieldingAccountMemoShieldingThresholdThrowableError = param
+    }
+    var proposeShieldingAccountMemoShieldingThresholdCallsCount = 0
+    var proposeShieldingAccountMemoShieldingThresholdCalled: Bool {
+        return proposeShieldingAccountMemoShieldingThresholdCallsCount > 0
+    }
+    var proposeShieldingAccountMemoShieldingThresholdReceivedArguments: (account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
+    var proposeShieldingAccountMemoShieldingThresholdReturnValue: FfiProposal!
+    func setProposeShieldingAccountMemoShieldingThresholdReturnValue(_ param: FfiProposal) async {
+        proposeShieldingAccountMemoShieldingThresholdReturnValue = param
+    }
+    var proposeShieldingAccountMemoShieldingThresholdClosure: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?
+    func setProposeShieldingAccountMemoShieldingThresholdClosure(_ param: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?) async {
+        proposeShieldingAccountMemoShieldingThresholdClosure = param
+    }
+
+    func proposeShielding(account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> FfiProposal {
+        if let error = proposeShieldingAccountMemoShieldingThresholdThrowableError {
+            throw error
+        }
+        proposeShieldingAccountMemoShieldingThresholdCallsCount += 1
+        proposeShieldingAccountMemoShieldingThresholdReceivedArguments = (account: account, memo: memo, shieldingThreshold: shieldingThreshold)
+        if let closure = proposeShieldingAccountMemoShieldingThresholdClosure {
+            return try await closure(account, memo, shieldingThreshold)
+        } else {
+            return proposeShieldingAccountMemoShieldingThresholdReturnValue
+        }
+    }
+
+    // MARK: - createProposedTransaction
+
+    var createProposedTransactionProposalUskThrowableError: Error?
+    func setCreateProposedTransactionProposalUskThrowableError(_ param: Error?) async {
+        createProposedTransactionProposalUskThrowableError = param
+    }
+    var createProposedTransactionProposalUskCallsCount = 0
+    var createProposedTransactionProposalUskCalled: Bool {
+        return createProposedTransactionProposalUskCallsCount > 0
+    }
+    var createProposedTransactionProposalUskReceivedArguments: (proposal: FfiProposal, usk: UnifiedSpendingKey)?
+    var createProposedTransactionProposalUskReturnValue: Data!
+    func setCreateProposedTransactionProposalUskReturnValue(_ param: Data) async {
+        createProposedTransactionProposalUskReturnValue = param
+    }
+    var createProposedTransactionProposalUskClosure: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?
+    func setCreateProposedTransactionProposalUskClosure(_ param: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?) async {
+        createProposedTransactionProposalUskClosure = param
+    }
+
+    func createProposedTransaction(proposal: FfiProposal, usk: UnifiedSpendingKey) async throws -> Data {
+        if let error = createProposedTransactionProposalUskThrowableError {
+            throw error
+        }
+        createProposedTransactionProposalUskCallsCount += 1
+        createProposedTransactionProposalUskReceivedArguments = (proposal: proposal, usk: usk)
+        if let closure = createProposedTransactionProposalUskClosure {
+            return try await closure(proposal, usk)
+        } else {
+            return createProposedTransactionProposalUskReturnValue
         }
     }
 

@@ -75,7 +75,6 @@ class RustBackendMockHelper {
         await rustBackendMock.setInitBlockMetadataDbClosure() { }
         await rustBackendMock.setWriteBlocksMetadataBlocksClosure() { _ in }
         await rustBackendMock.setGetTransparentBalanceAccountReturnValue(0)
-        await rustBackendMock.setGetVerifiedBalanceAccountReturnValue(0)
         await rustBackendMock.setListTransparentReceiversAccountReturnValue([])
         await rustBackendMock.setGetCurrentAddressAccountThrowableError(ZcashError.rustGetCurrentAddress("mocked error"))
         await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(ZcashError.rustGetNextAvailableAddress("mocked error"))
@@ -84,20 +83,13 @@ class RustBackendMockHelper {
         await rustBackendMock.setInitDataDbSeedReturnValue(.seedRequired)
         await rustBackendMock.setGetNearestRewindHeightHeightReturnValue(-1)
         await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
-        await rustBackendMock.setCreateToAddressUskToValueMemoThrowableError(ZcashError.rustCreateToAddress("mocked error"))
-        await rustBackendMock.setShieldFundsUskMemoShieldingThresholdThrowableError(ZcashError.rustShieldFunds("mocked error"))
+        await rustBackendMock.setProposeTransferAccountToValueMemoThrowableError(ZcashError.rustCreateToAddress("mocked error"))
+        await rustBackendMock.setProposeShieldingAccountMemoShieldingThresholdThrowableError(ZcashError.rustShieldFunds("mocked error"))
+        await rustBackendMock.setCreateProposedTransactionProposalUskThrowableError(ZcashError.rustCreateToAddress("mocked error"))
         await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(ZcashError.rustDecryptAndStoreTransaction("mock fail"))
 
         await rustBackendMock.setInitDataDbSeedClosure() { seed in
             return try await rustBackend.initDataDb(seed: seed)
-        }
-
-        await rustBackendMock.setGetBalanceAccountClosure() { account in
-            return try await rustBackend.getBalance(account: account)
-        }
-
-        await rustBackendMock.setGetVerifiedBalanceAccountClosure() { account in
-            return try await rustBackend.getVerifiedBalance(account: account)
         }
 
         await rustBackendMock.setRewindToHeightHeightClosure() { height in

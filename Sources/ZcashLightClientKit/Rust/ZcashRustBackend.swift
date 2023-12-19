@@ -80,45 +80,36 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return ffiBinaryKeyPtr.pointee.unsafeToUnifiedSpendingKey(network: networkType)
     }
 
-    func createToAddress(
-        usk: UnifiedSpendingKey,
+    func proposeTransfer(
+        account: Int32,
         to address: String,
         value: Int64,
         memo: MemoBytes?
-    ) async throws -> Data {
-        var contiguousTxIdBytes = ContiguousArray<UInt8>([UInt8](repeating: 0x0, count: 32))
-
+    ) async throws -> FfiProposal {
         globalDBLock.lock()
-        let success = contiguousTxIdBytes.withUnsafeMutableBufferPointer { txIdBytePtr in
-            usk.bytes.withUnsafeBufferPointer { uskPtr in
-                zcashlc_create_to_address(
-                    dbData.0,
-                    dbData.1,
-                    uskPtr.baseAddress,
-                    UInt(usk.bytes.count),
-                    [CChar](address.utf8CString),
-                    value,
-                    memo?.bytes,
-                    spendParamsPath.0,
-                    spendParamsPath.1,
-                    outputParamsPath.0,
-                    outputParamsPath.1,
-                    networkType.networkId,
-                    minimumConfirmations,
-                    useZIP317Fees,
-                    txIdBytePtr.baseAddress
-                )
-            }
-        }
+        let proposal = zcashlc_propose_transfer(
+            dbData.0,
+            dbData.1,
+            account,
+            [CChar](address.utf8CString),
+            value,
+            memo?.bytes,
+            networkType.networkId,
+            minimumConfirmations,
+            useZIP317Fees
+        )
         globalDBLock.unlock()
 
-        guard success else {
-            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))
+        guard let proposal else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`proposeTransfer` failed with unknown error"))
         }
 
-        return contiguousTxIdBytes.withUnsafeBufferPointer { txIdBytePtr in
-            Data(txIdBytePtr)
-        }
+        defer { zcashlc_free_boxed_slice(proposal) }
+
+        return try FfiProposal(contiguousBytes: Data(
+            bytes: proposal.pointee.ptr,
+            count: Int(proposal.pointee.len)
+        ))
     }
 
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
@@ -136,18 +127,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         guard result != 0 else {
             throw ZcashError.rustDecryptAndStoreTransaction(lastErrorMessage(fallback: "`decryptAndStoreTransaction` failed with unknown error"))
         }
-    }
-
-    func getBalance(account: Int32) async throws -> Int64 {
-        globalDBLock.lock()
-        let balance = zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
-        globalDBLock.unlock()
-
-        guard balance >= 0 else {
-            throw ZcashError.rustGetBalance(Int(account), lastErrorMessage(fallback: "Error getting total balance from account \(account)"))
-        }
-
-        return balance
     }
 
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
@@ -250,27 +229,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             throw ZcashError.rustGetTransparentBalance(
                 Int(account),
                 lastErrorMessage(fallback: "Error getting Total Transparent balance from account \(account)")
-            )
-        }
-
-        return balance
-    }
-
-    func getVerifiedBalance(account: Int32) async throws -> Int64 {
-        globalDBLock.lock()
-        let balance = zcashlc_get_verified_balance(
-            dbData.0,
-            dbData.1,
-            account,
-            networkType.networkId,
-            minimumConfirmations
-        )
-        globalDBLock.unlock()
-
-        guard balance >= 0 else {
-            throw ZcashError.rustGetVerifiedBalance(
-                Int(account),
-                lastErrorMessage(fallback: "Error getting verified balance from account \(account)")
             )
         }
 
@@ -576,21 +534,34 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func getScanProgress() async throws -> ScanProgress? {
+    func getWalletSummary() async throws -> WalletSummary? {
         globalDBLock.lock()
-        let result = zcashlc_get_scan_progress(dbData.0, dbData.1, networkType.networkId)
+        let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, minimumConfirmations)
         globalDBLock.unlock()
 
-        if result.denominator == 0 {
-            switch result.numerator {
-            case 0:
-                return nil
-            default:
-                throw ZcashError.rustGetScanProgress(lastErrorMessage(fallback: "`getScanProgress` failed with unknown error"))
-            }
-        } else {
-            return ScanProgress(numerator: result.numerator, denominator: result.denominator)
+        guard let summaryPtr else {
+            throw ZcashError.rustGetWalletSummary(lastErrorMessage(fallback: "`getWalletSummary` failed with unknown error"))
         }
+
+        defer { zcashlc_free_wallet_summary(summaryPtr) }
+
+        if summaryPtr.pointee.fully_scanned_height < 0 {
+            return nil
+        }
+
+        var accountBalances: [UInt32: AccountBalance] = [:]
+
+        for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
+            let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
+            accountBalances[accountBalance.account_id] = accountBalance.toAccountBalance()
+        }
+
+        return WalletSummary(
+            accountBalances: accountBalances,
+            chainTipHeight: BlockHeight(summaryPtr.pointee.chain_tip_height),
+            fullyScannedHeight: BlockHeight(summaryPtr.pointee.fully_scanned_height),
+            scanProgress: summaryPtr.pointee.scan_progress?.pointee.toScanProgress()
+        )
     }
 
     func suggestScanRanges() async throws -> [ScanRange] {
@@ -633,38 +604,69 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func shieldFunds(
-        usk: UnifiedSpendingKey,
+    func proposeShielding(
+        account: Int32,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi
+    ) async throws -> FfiProposal {
+        globalDBLock.lock()
+        let proposal = zcashlc_propose_shielding(
+            dbData.0,
+            dbData.1,
+            account,
+            memo?.bytes,
+            UInt64(shieldingThreshold.amount),
+            networkType.networkId,
+            minimumConfirmations,
+            useZIP317Fees
+        )
+        globalDBLock.unlock()
+
+        guard let proposal else {
+            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`proposeShielding` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(proposal) }
+
+        return try FfiProposal(contiguousBytes: Data(
+            bytes: proposal.pointee.ptr,
+            count: Int(proposal.pointee.len)
+        ))
+    }
+
+    func createProposedTransaction(
+        proposal: FfiProposal,
+        usk: UnifiedSpendingKey
     ) async throws -> Data {
         var contiguousTxIdBytes = ContiguousArray<UInt8>([UInt8](repeating: 0x0, count: 32))
 
+        let proposalBytes = try proposal.serializedData(partial: false).bytes
+
         globalDBLock.lock()
         let success = contiguousTxIdBytes.withUnsafeMutableBufferPointer { txIdBytePtr in
-            usk.bytes.withUnsafeBufferPointer { uskBuffer in
-                zcashlc_shield_funds(
-                    dbData.0,
-                    dbData.1,
-                    uskBuffer.baseAddress,
-                    UInt(usk.bytes.count),
-                    memo?.bytes,
-                    UInt64(shieldingThreshold.amount),
-                    spendParamsPath.0,
-                    spendParamsPath.1,
-                    outputParamsPath.0,
-                    outputParamsPath.1,
-                    networkType.networkId,
-                    minimumConfirmations,
-                    useZIP317Fees,
-                    txIdBytePtr.baseAddress
-                )
+            proposalBytes.withUnsafeBufferPointer { proposalPtr in
+                usk.bytes.withUnsafeBufferPointer { uskPtr in
+                    zcashlc_create_proposed_transaction(
+                        dbData.0,
+                        dbData.1,
+                        proposalPtr.baseAddress,
+                        UInt(proposalBytes.count),
+                        uskPtr.baseAddress,
+                        UInt(usk.bytes.count),
+                        spendParamsPath.0,
+                        spendParamsPath.1,
+                        outputParamsPath.0,
+                        outputParamsPath.1,
+                        networkType.networkId,
+                        txIdBytePtr.baseAddress
+                    )
+                }
             }
         }
         globalDBLock.unlock()
 
         guard success else {
-            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`shieldFunds` failed with unknown error"))
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))
         }
 
         return contiguousTxIdBytes.withUnsafeBufferPointer { txIdBytePtr in
@@ -776,5 +778,36 @@ extension Array where Element == FfiSubtreeRoot {
         self.forEach { element in
             element.root_hash_ptr.deallocate()
         }
+    }
+}
+
+extension FfiBalance {
+    /// Converts an [`FfiBalance`] into a [`PoolBalance`].
+    func toPoolBalance() -> PoolBalance {
+        .init(
+            spendableValue: Zatoshi(self.spendable_value),
+            changePendingConfirmation: Zatoshi(self.change_pending_confirmation),
+            valuePendingSpendability: Zatoshi(self.value_pending_spendability)
+        )
+    }
+}
+
+extension FfiAccountBalance {
+    /// Converts an [`FfiAccountBalance`] into a [`AccountBalance`].
+    func toAccountBalance() -> AccountBalance {
+        .init(
+            saplingBalance: self.sapling_balance.toPoolBalance(),
+            unshielded: Zatoshi(self.unshielded)
+        )
+    }
+}
+
+extension FfiScanProgress {
+    /// Converts an [`FfiScanProgress`] into a [`ScanProgress`].
+    func toScanProgress() -> ScanProgress {
+        .init(
+            numerator: self.numerator,
+            denominator: self.denominator
+        )
     }
 }

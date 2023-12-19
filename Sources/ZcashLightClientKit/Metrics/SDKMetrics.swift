@@ -12,7 +12,7 @@ protocol SDKMetrics {
     func actionStart(_ action: CBPState)
     func actionDetail(_ detail: String, `for` action: CBPState)
     func actionStop()
-    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async
+    func logCBPOverviewReport(_ logger: Logger, walletSummary: WalletSummary?) async
 }
 
 final class SDKMetricsImpl: SDKMetrics {
@@ -102,15 +102,16 @@ final class SDKMetricsImpl: SDKMetrics {
     }
     
     // swiftlint:disable string_concatenation
-    func logCBPOverviewReport(_ logger: Logger, shieldedBalance: WalletBalance) async {
+    func logCBPOverviewReport(_ logger: Logger, walletSummary: WalletSummary?) async {
         actionStop()
 
+        let accountBalance = walletSummary?.accountBalances[0]
         logger.sync(
             """
             SYNC (\(syncs)) REPORT
             finished in: \(Date().timeIntervalSince1970 - cbpStartTime)
-            verified balance: \(shieldedBalance.verified.amount)
-            total balance: \(shieldedBalance.total.amount)
+            verified balance: \(accountBalance?.saplingBalance.spendableValue.amount ?? 0)
+            total balance: \(accountBalance?.saplingBalance.total().amount ?? 0)
             """
         )
 

@@ -60,7 +60,7 @@ extension ScanAction: Action {
                 await self?.latestBlocksDataProvider.updateScannedData()
                 
                 // report scan progress only if it's available
-                if let scanProgress = try? await self?.rustBackend.getScanProgress() {
+                if let scanProgress = try? await self?.rustBackend.getWalletSummary()?.scanProgress {
                     let progress = try scanProgress.progress()
                     self?.logger.debug("progress: \(progress)")
                     await didUpdate(.syncProgress(progress))
