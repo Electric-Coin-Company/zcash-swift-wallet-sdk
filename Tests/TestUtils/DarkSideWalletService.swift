@@ -198,6 +198,10 @@ class DarksideWalletService: LightWalletService {
     func getTreeState(_ id: BlockID) async throws -> TreeState {
         try await service.getTreeState(id)
     }
+
+    func setSubtreeRoots(_ request: DarksideSubtreeRoots) {
+        _ = darksideService.setSubtreeRoots(request)
+    }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {

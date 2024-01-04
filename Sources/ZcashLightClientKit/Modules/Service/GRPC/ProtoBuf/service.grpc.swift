@@ -255,7 +255,8 @@ extension CompactTxStreamerClientProtocol {
     )
   }
 
-  /// Return the txids corresponding to the given t-address within the given block range
+  /// Return the transactions corresponding to the given t-address within the given block range
+  /// NB - this method is misnamed, it returns transactions, not transaction IDs.
   ///
   /// - Parameters:
   ///   - request: Request to send to GetTaddressTxids.
@@ -402,8 +403,8 @@ extension CompactTxStreamerClientProtocol {
     )
   }
 
-  /// Returns a stream of information about roots of subtrees of the Sapling and Orchard
-  /// note commitment trees.
+  /// Returns a stream of information about roots of subtrees of the note commitment tree
+  /// for the specified shielded protocol (Sapling or Orchard).
   ///
   /// - Parameters:
   ///   - request: Request to send to GetSubtreeRoots.
@@ -1358,3 +1359,818 @@ internal enum CompactTxStreamerClientMetadata {
   }
 }
 
+/// To build a server, implement a class that conforms to this protocol.
+internal protocol CompactTxStreamerProvider: CallHandlerProvider {
+  var interceptors: CompactTxStreamerServerInterceptorFactoryProtocol? { get }
+
+  /// Return the height of the tip of the best chain
+  func getLatestBlock(request: ChainSpec, context: StatusOnlyCallContext) -> EventLoopFuture<BlockID>
+
+  /// Return the compact block corresponding to the given block identifier
+  func getBlock(request: BlockID, context: StatusOnlyCallContext) -> EventLoopFuture<CompactBlock>
+
+  /// Same as GetBlock except actions contain only nullifiers
+  func getBlockNullifiers(request: BlockID, context: StatusOnlyCallContext) -> EventLoopFuture<CompactBlock>
+
+  /// Return a list of consecutive compact blocks
+  func getBlockRange(request: BlockRange, context: StreamingResponseCallContext<CompactBlock>) -> EventLoopFuture<GRPCStatus>
+
+  /// Same as GetBlockRange except actions contain only nullifiers
+  func getBlockRangeNullifiers(request: BlockRange, context: StreamingResponseCallContext<CompactBlock>) -> EventLoopFuture<GRPCStatus>
+
+  /// Return the requested full (not compact) transaction (as from zcashd)
+  func getTransaction(request: TxFilter, context: StatusOnlyCallContext) -> EventLoopFuture<RawTransaction>
+
+  /// Submit the given transaction to the Zcash network
+  func sendTransaction(request: RawTransaction, context: StatusOnlyCallContext) -> EventLoopFuture<SendResponse>
+
+  /// Return the transactions corresponding to the given t-address within the given block range
+  /// NB - this method is misnamed, it returns transactions, not transaction IDs.
+  func getTaddressTxids(request: TransparentAddressBlockFilter, context: StreamingResponseCallContext<RawTransaction>) -> EventLoopFuture<GRPCStatus>
+
+  func getTaddressBalance(request: AddressList, context: StatusOnlyCallContext) -> EventLoopFuture<Balance>
+
+  func getTaddressBalanceStream(context: UnaryResponseCallContext<Balance>) -> EventLoopFuture<(StreamEvent<Address>) -> Void>
+
+  /// Return the compact transactions currently in the mempool; the results
+  /// can be a few seconds out of date. If the Exclude list is empty, return
+  /// all transactions; otherwise return all *except* those in the Exclude list
+  /// (if any); this allows the client to avoid receiving transactions that it
+  /// already has (from an earlier call to this rpc). The transaction IDs in the
+  /// Exclude list can be shortened to any number of bytes to make the request
+  /// more bandwidth-efficient; if two or more transactions in the mempool
+  /// match a shortened txid, they are all sent (none is excluded). Transactions
+  /// in the exclude list that don't exist in the mempool are ignored.
+  func getMempoolTx(request: Exclude, context: StreamingResponseCallContext<CompactTx>) -> EventLoopFuture<GRPCStatus>
+
+  /// Return a stream of current Mempool transactions. This will keep the output stream open while
+  /// there are mempool transactions. It will close the returned stream when a new block is mined.
+  func getMempoolStream(request: Empty, context: StreamingResponseCallContext<RawTransaction>) -> EventLoopFuture<GRPCStatus>
+
+  /// GetTreeState returns the note commitment tree state corresponding to the given block.
+  /// See section 3.7 of the Zcash protocol specification. It returns several other useful
+  /// values also (even though they can be obtained using GetBlock).
+  /// The block can be specified by either height or hash.
+  func getTreeState(request: BlockID, context: StatusOnlyCallContext) -> EventLoopFuture<TreeState>
+
+  func getLatestTreeState(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<TreeState>
+
+  /// Returns a stream of information about roots of subtrees of the note commitment tree
+  /// for the specified shielded protocol (Sapling or Orchard).
+  func getSubtreeRoots(request: GetSubtreeRootsArg, context: StreamingResponseCallContext<SubtreeRoot>) -> EventLoopFuture<GRPCStatus>
+
+  func getAddressUtxos(request: GetAddressUtxosArg, context: StatusOnlyCallContext) -> EventLoopFuture<GetAddressUtxosReplyList>
+
+  func getAddressUtxosStream(request: GetAddressUtxosArg, context: StreamingResponseCallContext<GetAddressUtxosReply>) -> EventLoopFuture<GRPCStatus>
+
+  /// Return information about this lightwalletd instance and the blockchain
+  func getLightdInfo(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<LightdInfo>
+
+  /// Testing-only, requires lightwalletd --ping-very-insecure (do not enable in production)
+  func ping(request: Duration, context: StatusOnlyCallContext) -> EventLoopFuture<PingResponse>
+}
+
+extension CompactTxStreamerProvider {
+  internal var serviceName: Substring {
+    return CompactTxStreamerServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  internal func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "GetLatestBlock":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<ChainSpec>(),
+        responseSerializer: ProtobufSerializer<BlockID>(),
+        interceptors: self.interceptors?.makeGetLatestBlockInterceptors() ?? [],
+        userFunction: self.getLatestBlock(request:context:)
+      )
+
+    case "GetBlock":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockInterceptors() ?? [],
+        userFunction: self.getBlock(request:context:)
+      )
+
+    case "GetBlockNullifiers":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockNullifiersInterceptors() ?? [],
+        userFunction: self.getBlockNullifiers(request:context:)
+      )
+
+    case "GetBlockRange":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockRange>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockRangeInterceptors() ?? [],
+        userFunction: self.getBlockRange(request:context:)
+      )
+
+    case "GetBlockRangeNullifiers":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockRange>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockRangeNullifiersInterceptors() ?? [],
+        userFunction: self.getBlockRangeNullifiers(request:context:)
+      )
+
+    case "GetTransaction":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TxFilter>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetTransactionInterceptors() ?? [],
+        userFunction: self.getTransaction(request:context:)
+      )
+
+    case "SendTransaction":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<RawTransaction>(),
+        responseSerializer: ProtobufSerializer<SendResponse>(),
+        interceptors: self.interceptors?.makeSendTransactionInterceptors() ?? [],
+        userFunction: self.sendTransaction(request:context:)
+      )
+
+    case "GetTaddressTxids":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TransparentAddressBlockFilter>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetTaddressTxidsInterceptors() ?? [],
+        userFunction: self.getTaddressTxids(request:context:)
+      )
+
+    case "GetTaddressBalance":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<AddressList>(),
+        responseSerializer: ProtobufSerializer<Balance>(),
+        interceptors: self.interceptors?.makeGetTaddressBalanceInterceptors() ?? [],
+        userFunction: self.getTaddressBalance(request:context:)
+      )
+
+    case "GetTaddressBalanceStream":
+      return ClientStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Address>(),
+        responseSerializer: ProtobufSerializer<Balance>(),
+        interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? [],
+        observerFactory: self.getTaddressBalanceStream(context:)
+      )
+
+    case "GetMempoolTx":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Exclude>(),
+        responseSerializer: ProtobufSerializer<CompactTx>(),
+        interceptors: self.interceptors?.makeGetMempoolTxInterceptors() ?? [],
+        userFunction: self.getMempoolTx(request:context:)
+      )
+
+    case "GetMempoolStream":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetMempoolStreamInterceptors() ?? [],
+        userFunction: self.getMempoolStream(request:context:)
+      )
+
+    case "GetTreeState":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<TreeState>(),
+        interceptors: self.interceptors?.makeGetTreeStateInterceptors() ?? [],
+        userFunction: self.getTreeState(request:context:)
+      )
+
+    case "GetLatestTreeState":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<TreeState>(),
+        interceptors: self.interceptors?.makeGetLatestTreeStateInterceptors() ?? [],
+        userFunction: self.getLatestTreeState(request:context:)
+      )
+
+    case "GetSubtreeRoots":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetSubtreeRootsArg>(),
+        responseSerializer: ProtobufSerializer<SubtreeRoot>(),
+        interceptors: self.interceptors?.makeGetSubtreeRootsInterceptors() ?? [],
+        userFunction: self.getSubtreeRoots(request:context:)
+      )
+
+    case "GetAddressUtxos":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosArg>(),
+        responseSerializer: ProtobufSerializer<GetAddressUtxosReplyList>(),
+        interceptors: self.interceptors?.makeGetAddressUtxosInterceptors() ?? [],
+        userFunction: self.getAddressUtxos(request:context:)
+      )
+
+    case "GetAddressUtxosStream":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosArg>(),
+        responseSerializer: ProtobufSerializer<GetAddressUtxosReply>(),
+        interceptors: self.interceptors?.makeGetAddressUtxosStreamInterceptors() ?? [],
+        userFunction: self.getAddressUtxosStream(request:context:)
+      )
+
+    case "GetLightdInfo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<LightdInfo>(),
+        interceptors: self.interceptors?.makeGetLightdInfoInterceptors() ?? [],
+        userFunction: self.getLightdInfo(request:context:)
+      )
+
+    case "Ping":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Duration>(),
+        responseSerializer: ProtobufSerializer<PingResponse>(),
+        interceptors: self.interceptors?.makePingInterceptors() ?? [],
+        userFunction: self.ping(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+internal protocol CompactTxStreamerAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: CompactTxStreamerServerInterceptorFactoryProtocol? { get }
+
+  /// Return the height of the tip of the best chain
+  func getLatestBlock(
+    request: ChainSpec,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> BlockID
+
+  /// Return the compact block corresponding to the given block identifier
+  func getBlock(
+    request: BlockID,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> CompactBlock
+
+  /// Same as GetBlock except actions contain only nullifiers
+  func getBlockNullifiers(
+    request: BlockID,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> CompactBlock
+
+  /// Return a list of consecutive compact blocks
+  func getBlockRange(
+    request: BlockRange,
+    responseStream: GRPCAsyncResponseStreamWriter<CompactBlock>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// Same as GetBlockRange except actions contain only nullifiers
+  func getBlockRangeNullifiers(
+    request: BlockRange,
+    responseStream: GRPCAsyncResponseStreamWriter<CompactBlock>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// Return the requested full (not compact) transaction (as from zcashd)
+  func getTransaction(
+    request: TxFilter,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> RawTransaction
+
+  /// Submit the given transaction to the Zcash network
+  func sendTransaction(
+    request: RawTransaction,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> SendResponse
+
+  /// Return the transactions corresponding to the given t-address within the given block range
+  /// NB - this method is misnamed, it returns transactions, not transaction IDs.
+  func getTaddressTxids(
+    request: TransparentAddressBlockFilter,
+    responseStream: GRPCAsyncResponseStreamWriter<RawTransaction>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  func getTaddressBalance(
+    request: AddressList,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Balance
+
+  func getTaddressBalanceStream(
+    requestStream: GRPCAsyncRequestStream<Address>,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Balance
+
+  /// Return the compact transactions currently in the mempool; the results
+  /// can be a few seconds out of date. If the Exclude list is empty, return
+  /// all transactions; otherwise return all *except* those in the Exclude list
+  /// (if any); this allows the client to avoid receiving transactions that it
+  /// already has (from an earlier call to this rpc). The transaction IDs in the
+  /// Exclude list can be shortened to any number of bytes to make the request
+  /// more bandwidth-efficient; if two or more transactions in the mempool
+  /// match a shortened txid, they are all sent (none is excluded). Transactions
+  /// in the exclude list that don't exist in the mempool are ignored.
+  func getMempoolTx(
+    request: Exclude,
+    responseStream: GRPCAsyncResponseStreamWriter<CompactTx>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// Return a stream of current Mempool transactions. This will keep the output stream open while
+  /// there are mempool transactions. It will close the returned stream when a new block is mined.
+  func getMempoolStream(
+    request: Empty,
+    responseStream: GRPCAsyncResponseStreamWriter<RawTransaction>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// GetTreeState returns the note commitment tree state corresponding to the given block.
+  /// See section 3.7 of the Zcash protocol specification. It returns several other useful
+  /// values also (even though they can be obtained using GetBlock).
+  /// The block can be specified by either height or hash.
+  func getTreeState(
+    request: BlockID,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> TreeState
+
+  func getLatestTreeState(
+    request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> TreeState
+
+  /// Returns a stream of information about roots of subtrees of the note commitment tree
+  /// for the specified shielded protocol (Sapling or Orchard).
+  func getSubtreeRoots(
+    request: GetSubtreeRootsArg,
+    responseStream: GRPCAsyncResponseStreamWriter<SubtreeRoot>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  func getAddressUtxos(
+    request: GetAddressUtxosArg,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> GetAddressUtxosReplyList
+
+  func getAddressUtxosStream(
+    request: GetAddressUtxosArg,
+    responseStream: GRPCAsyncResponseStreamWriter<GetAddressUtxosReply>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// Return information about this lightwalletd instance and the blockchain
+  func getLightdInfo(
+    request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> LightdInfo
+
+  /// Testing-only, requires lightwalletd --ping-very-insecure (do not enable in production)
+  func ping(
+    request: Duration,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> PingResponse
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension CompactTxStreamerAsyncProvider {
+  internal static var serviceDescriptor: GRPCServiceDescriptor {
+    return CompactTxStreamerServerMetadata.serviceDescriptor
+  }
+
+  internal var serviceName: Substring {
+    return CompactTxStreamerServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  internal var interceptors: CompactTxStreamerServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  internal func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "GetLatestBlock":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<ChainSpec>(),
+        responseSerializer: ProtobufSerializer<BlockID>(),
+        interceptors: self.interceptors?.makeGetLatestBlockInterceptors() ?? [],
+        wrapping: { try await self.getLatestBlock(request: $0, context: $1) }
+      )
+
+    case "GetBlock":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockInterceptors() ?? [],
+        wrapping: { try await self.getBlock(request: $0, context: $1) }
+      )
+
+    case "GetBlockNullifiers":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockNullifiersInterceptors() ?? [],
+        wrapping: { try await self.getBlockNullifiers(request: $0, context: $1) }
+      )
+
+    case "GetBlockRange":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockRange>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockRangeInterceptors() ?? [],
+        wrapping: { try await self.getBlockRange(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetBlockRangeNullifiers":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockRange>(),
+        responseSerializer: ProtobufSerializer<CompactBlock>(),
+        interceptors: self.interceptors?.makeGetBlockRangeNullifiersInterceptors() ?? [],
+        wrapping: { try await self.getBlockRangeNullifiers(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetTransaction":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TxFilter>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetTransactionInterceptors() ?? [],
+        wrapping: { try await self.getTransaction(request: $0, context: $1) }
+      )
+
+    case "SendTransaction":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<RawTransaction>(),
+        responseSerializer: ProtobufSerializer<SendResponse>(),
+        interceptors: self.interceptors?.makeSendTransactionInterceptors() ?? [],
+        wrapping: { try await self.sendTransaction(request: $0, context: $1) }
+      )
+
+    case "GetTaddressTxids":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TransparentAddressBlockFilter>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetTaddressTxidsInterceptors() ?? [],
+        wrapping: { try await self.getTaddressTxids(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetTaddressBalance":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<AddressList>(),
+        responseSerializer: ProtobufSerializer<Balance>(),
+        interceptors: self.interceptors?.makeGetTaddressBalanceInterceptors() ?? [],
+        wrapping: { try await self.getTaddressBalance(request: $0, context: $1) }
+      )
+
+    case "GetTaddressBalanceStream":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Address>(),
+        responseSerializer: ProtobufSerializer<Balance>(),
+        interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? [],
+        wrapping: { try await self.getTaddressBalanceStream(requestStream: $0, context: $1) }
+      )
+
+    case "GetMempoolTx":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Exclude>(),
+        responseSerializer: ProtobufSerializer<CompactTx>(),
+        interceptors: self.interceptors?.makeGetMempoolTxInterceptors() ?? [],
+        wrapping: { try await self.getMempoolTx(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetMempoolStream":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetMempoolStreamInterceptors() ?? [],
+        wrapping: { try await self.getMempoolStream(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetTreeState":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<TreeState>(),
+        interceptors: self.interceptors?.makeGetTreeStateInterceptors() ?? [],
+        wrapping: { try await self.getTreeState(request: $0, context: $1) }
+      )
+
+    case "GetLatestTreeState":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<TreeState>(),
+        interceptors: self.interceptors?.makeGetLatestTreeStateInterceptors() ?? [],
+        wrapping: { try await self.getLatestTreeState(request: $0, context: $1) }
+      )
+
+    case "GetSubtreeRoots":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetSubtreeRootsArg>(),
+        responseSerializer: ProtobufSerializer<SubtreeRoot>(),
+        interceptors: self.interceptors?.makeGetSubtreeRootsInterceptors() ?? [],
+        wrapping: { try await self.getSubtreeRoots(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetAddressUtxos":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosArg>(),
+        responseSerializer: ProtobufSerializer<GetAddressUtxosReplyList>(),
+        interceptors: self.interceptors?.makeGetAddressUtxosInterceptors() ?? [],
+        wrapping: { try await self.getAddressUtxos(request: $0, context: $1) }
+      )
+
+    case "GetAddressUtxosStream":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosArg>(),
+        responseSerializer: ProtobufSerializer<GetAddressUtxosReply>(),
+        interceptors: self.interceptors?.makeGetAddressUtxosStreamInterceptors() ?? [],
+        wrapping: { try await self.getAddressUtxosStream(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "GetLightdInfo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<LightdInfo>(),
+        interceptors: self.interceptors?.makeGetLightdInfoInterceptors() ?? [],
+        wrapping: { try await self.getLightdInfo(request: $0, context: $1) }
+      )
+
+    case "Ping":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Duration>(),
+        responseSerializer: ProtobufSerializer<PingResponse>(),
+        interceptors: self.interceptors?.makePingInterceptors() ?? [],
+        wrapping: { try await self.ping(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+internal protocol CompactTxStreamerServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'getLatestBlock'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetLatestBlockInterceptors() -> [ServerInterceptor<ChainSpec, BlockID>]
+
+  /// - Returns: Interceptors to use when handling 'getBlock'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetBlockInterceptors() -> [ServerInterceptor<BlockID, CompactBlock>]
+
+  /// - Returns: Interceptors to use when handling 'getBlockNullifiers'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetBlockNullifiersInterceptors() -> [ServerInterceptor<BlockID, CompactBlock>]
+
+  /// - Returns: Interceptors to use when handling 'getBlockRange'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetBlockRangeInterceptors() -> [ServerInterceptor<BlockRange, CompactBlock>]
+
+  /// - Returns: Interceptors to use when handling 'getBlockRangeNullifiers'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetBlockRangeNullifiersInterceptors() -> [ServerInterceptor<BlockRange, CompactBlock>]
+
+  /// - Returns: Interceptors to use when handling 'getTransaction'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetTransactionInterceptors() -> [ServerInterceptor<TxFilter, RawTransaction>]
+
+  /// - Returns: Interceptors to use when handling 'sendTransaction'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeSendTransactionInterceptors() -> [ServerInterceptor<RawTransaction, SendResponse>]
+
+  /// - Returns: Interceptors to use when handling 'getTaddressTxids'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetTaddressTxidsInterceptors() -> [ServerInterceptor<TransparentAddressBlockFilter, RawTransaction>]
+
+  /// - Returns: Interceptors to use when handling 'getTaddressBalance'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetTaddressBalanceInterceptors() -> [ServerInterceptor<AddressList, Balance>]
+
+  /// - Returns: Interceptors to use when handling 'getTaddressBalanceStream'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetTaddressBalanceStreamInterceptors() -> [ServerInterceptor<Address, Balance>]
+
+  /// - Returns: Interceptors to use when handling 'getMempoolTx'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetMempoolTxInterceptors() -> [ServerInterceptor<Exclude, CompactTx>]
+
+  /// - Returns: Interceptors to use when handling 'getMempoolStream'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetMempoolStreamInterceptors() -> [ServerInterceptor<Empty, RawTransaction>]
+
+  /// - Returns: Interceptors to use when handling 'getTreeState'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetTreeStateInterceptors() -> [ServerInterceptor<BlockID, TreeState>]
+
+  /// - Returns: Interceptors to use when handling 'getLatestTreeState'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetLatestTreeStateInterceptors() -> [ServerInterceptor<Empty, TreeState>]
+
+  /// - Returns: Interceptors to use when handling 'getSubtreeRoots'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetSubtreeRootsInterceptors() -> [ServerInterceptor<GetSubtreeRootsArg, SubtreeRoot>]
+
+  /// - Returns: Interceptors to use when handling 'getAddressUtxos'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetAddressUtxosInterceptors() -> [ServerInterceptor<GetAddressUtxosArg, GetAddressUtxosReplyList>]
+
+  /// - Returns: Interceptors to use when handling 'getAddressUtxosStream'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetAddressUtxosStreamInterceptors() -> [ServerInterceptor<GetAddressUtxosArg, GetAddressUtxosReply>]
+
+  /// - Returns: Interceptors to use when handling 'getLightdInfo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetLightdInfoInterceptors() -> [ServerInterceptor<Empty, LightdInfo>]
+
+  /// - Returns: Interceptors to use when handling 'ping'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makePingInterceptors() -> [ServerInterceptor<Duration, PingResponse>]
+}
+
+internal enum CompactTxStreamerServerMetadata {
+  internal static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "CompactTxStreamer",
+    fullName: "cash.z.wallet.sdk.rpc.CompactTxStreamer",
+    methods: [
+      CompactTxStreamerServerMetadata.Methods.getLatestBlock,
+      CompactTxStreamerServerMetadata.Methods.getBlock,
+      CompactTxStreamerServerMetadata.Methods.getBlockNullifiers,
+      CompactTxStreamerServerMetadata.Methods.getBlockRange,
+      CompactTxStreamerServerMetadata.Methods.getBlockRangeNullifiers,
+      CompactTxStreamerServerMetadata.Methods.getTransaction,
+      CompactTxStreamerServerMetadata.Methods.sendTransaction,
+      CompactTxStreamerServerMetadata.Methods.getTaddressTxids,
+      CompactTxStreamerServerMetadata.Methods.getTaddressBalance,
+      CompactTxStreamerServerMetadata.Methods.getTaddressBalanceStream,
+      CompactTxStreamerServerMetadata.Methods.getMempoolTx,
+      CompactTxStreamerServerMetadata.Methods.getMempoolStream,
+      CompactTxStreamerServerMetadata.Methods.getTreeState,
+      CompactTxStreamerServerMetadata.Methods.getLatestTreeState,
+      CompactTxStreamerServerMetadata.Methods.getSubtreeRoots,
+      CompactTxStreamerServerMetadata.Methods.getAddressUtxos,
+      CompactTxStreamerServerMetadata.Methods.getAddressUtxosStream,
+      CompactTxStreamerServerMetadata.Methods.getLightdInfo,
+      CompactTxStreamerServerMetadata.Methods.ping,
+    ]
+  )
+
+  internal enum Methods {
+    internal static let getLatestBlock = GRPCMethodDescriptor(
+      name: "GetLatestBlock",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLatestBlock",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getBlock = GRPCMethodDescriptor(
+      name: "GetBlock",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlock",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getBlockNullifiers = GRPCMethodDescriptor(
+      name: "GetBlockNullifiers",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlockNullifiers",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getBlockRange = GRPCMethodDescriptor(
+      name: "GetBlockRange",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlockRange",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getBlockRangeNullifiers = GRPCMethodDescriptor(
+      name: "GetBlockRangeNullifiers",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlockRangeNullifiers",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTransaction = GRPCMethodDescriptor(
+      name: "GetTransaction",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTransaction",
+      type: GRPCCallType.unary
+    )
+
+    internal static let sendTransaction = GRPCMethodDescriptor(
+      name: "SendTransaction",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/SendTransaction",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getTaddressTxids = GRPCMethodDescriptor(
+      name: "GetTaddressTxids",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressTxids",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTaddressBalance = GRPCMethodDescriptor(
+      name: "GetTaddressBalance",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalance",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getTaddressBalanceStream = GRPCMethodDescriptor(
+      name: "GetTaddressBalanceStream",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalanceStream",
+      type: GRPCCallType.clientStreaming
+    )
+
+    internal static let getMempoolTx = GRPCMethodDescriptor(
+      name: "GetMempoolTx",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolTx",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getMempoolStream = GRPCMethodDescriptor(
+      name: "GetMempoolStream",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolStream",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTreeState = GRPCMethodDescriptor(
+      name: "GetTreeState",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTreeState",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getLatestTreeState = GRPCMethodDescriptor(
+      name: "GetLatestTreeState",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLatestTreeState",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getSubtreeRoots = GRPCMethodDescriptor(
+      name: "GetSubtreeRoots",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetSubtreeRoots",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getAddressUtxos = GRPCMethodDescriptor(
+      name: "GetAddressUtxos",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxos",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getAddressUtxosStream = GRPCMethodDescriptor(
+      name: "GetAddressUtxosStream",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxosStream",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getLightdInfo = GRPCMethodDescriptor(
+      name: "GetLightdInfo",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo",
+      type: GRPCCallType.unary
+    )
+
+    internal static let ping = GRPCMethodDescriptor(
+      name: "Ping",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/Ping",
+      type: GRPCCallType.unary
+    )
+  }
+}
