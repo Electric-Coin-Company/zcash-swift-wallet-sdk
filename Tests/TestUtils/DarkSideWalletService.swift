@@ -190,6 +190,10 @@ class DarksideWalletService: LightWalletService {
     func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
         service.getSubtreeRoots(request)
     }
+
+    func setSubtreeRoots(_ request: DarksideSubtreeRoots) {
+        _ = darksideService.setSubtreeRoots(request)
+    }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {
