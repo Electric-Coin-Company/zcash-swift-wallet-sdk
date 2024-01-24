@@ -105,6 +105,11 @@ public enum ZcashSDK {
     // TODO: [#1304] smart retry logic, https://github.com/zcash/ZcashLightClientKit/issues/1304
     public static let defaultRetries = Int.max
 
+    /// The communication errors are represented as serviceBlockStreamFailed : LightWalletServiceError, unavailable 14
+    /// These cases are usually false positive and another try will continue the work, in case the service is trully down we
+    /// cap the amount of retries by this value.
+    public static let blockStreamRetries = 3
+
     /// The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
     /// this before retrying.
     public static let defaultMaxBackOffInterval: TimeInterval = 600

@@ -11,6 +11,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [#1346] Troubleshooting synchronization
 We focused on performance of the synchronization and found out a root cause in progress reporting. Simple change reduced the synchronization significantly by reporting less frequently. This affect the UX a bit because the % of the sync is updated only every 500 scanned blocks instead of every 100. Proper solution is going to be handled in #1353.
 
+### [#1351] Recover from block stream issues
+Async block stream grpc calls sometimes fail with unknown error 14, most of the times represented as `Transport became inactive` or `NIOHTTP2.StreamClosed`. Unless the service is truly down, these errors are usually false positive ones. The SDK was able to recover from this error with the next sync triggered but it takes 10-30s to happen. This delay is unnecessary so we made 2 changes. When these errors are caught the next sync is triggered immediately (at most 3 times) + the error state is not passed to the clients.  
+
 # 2.0.5 - 2023-12-15
 
 ## Added
