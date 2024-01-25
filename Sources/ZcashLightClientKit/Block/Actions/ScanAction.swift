@@ -8,11 +8,16 @@
 import Foundation
 
 final class ScanAction {
+    enum Constants {
+        static let reportDelay = 5
+    }
+    
     let configProvider: CompactBlockProcessor.ConfigProvider
     let blockScanner: BlockScanner
     let rustBackend: ZcashRustBackendWelding
     let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
+    var progressReportReducer = Constants.reportDelay
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
@@ -55,19 +60,28 @@ extension ScanAction: Action {
         do {
             try await blockScanner.scanBlocks(at: batchRange) { [weak self] lastScannedHeight, increment in
                 let processedHeight = await context.processedHeight
-                let incrementedprocessedHeight = processedHeight + BlockHeight(increment)
-                await context.update(processedHeight: incrementedprocessedHeight)
+                let incrementedProcessedHeight = processedHeight + BlockHeight(increment)
+                await context.update(processedHeight: incrementedProcessedHeight)
                 await self?.latestBlocksDataProvider.updateScannedData()
-                
-                // report scan progress only if it's available
-                if let scanProgress = try? await self?.rustBackend.getScanProgress() {
-                    let progress = try scanProgress.progress()
-                    self?.logger.debug("progress: \(progress)")
-                    await didUpdate(.syncProgress(progress))
-                }
                 
                 // ScanAction is controlled locally so it must report back the updated scanned height
                 await context.update(lastScannedHeight: lastScannedHeight)
+            }
+            
+            // This is a simple change that reduced the synchronization time significantly while affecting the UX only a bit.
+            // The frequency of UI progress update is lowered x5 times.
+            // Proper solution is handled in
+            // TODO: [#1353] Advanced progress reporting, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1353
+            if progressReportReducer == 0 {
+                // report scan progress only if it's available
+                if let scanProgress = try? await rustBackend.getScanProgress() {
+                    let progress = try scanProgress.progress()
+                    logger.debug("progress: \(progress)")
+                    await didUpdate(.syncProgress(progress))
+                }
+                progressReportReducer = Constants.reportDelay
+            } else {
+                progressReportReducer -= 1
             }
         } catch ZcashError.rustScanBlocks(let errorMsg) {
             if isContinuityError(errorMsg) {
@@ -84,7 +98,9 @@ extension ScanAction: Action {
         return await update(context: context)
     }
 
-    func stop() async { }
+    func stop() async { 
+        progressReportReducer = Constants.reportDelay
+    }
 }
 
 private extension ScanAction {

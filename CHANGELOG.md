@@ -4,6 +4,13 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+## Changed
+
+### [#1346] Troubleshooting synchronization
+We focused on performance of the synchronization and found out a root cause in progress reporting. Simple change reduced the synchronization significantly by reporting less frequently. This affect the UX a bit because the % of the sync is updated only every 500 scanned blocks instead of every 100. Proper solution is going to be handled in #1353.
+
 # 2.0.5 - 2023-12-15
 
 ## Added
