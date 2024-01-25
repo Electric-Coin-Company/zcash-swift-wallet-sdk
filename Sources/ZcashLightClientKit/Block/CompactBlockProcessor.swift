@@ -40,6 +40,7 @@ actor CompactBlockProcessor {
     private let fileManager: ZcashFileManager
 
     private var retryAttempts: Int = 0
+    private var blockStreamRetryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var consecutiveChainValidationErrors: Int = 0
     
@@ -263,6 +264,7 @@ extension CompactBlockProcessor {
     func start(retry: Bool = false) async {
         if retry {
             self.retryAttempts = 0
+            self.blockStreamRetryAttempts = 0
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
         }
@@ -289,6 +291,7 @@ extension CompactBlockProcessor {
         self.backoffTimer = nil
         await stopAllActions()
         retryAttempts = 0
+        blockStreamRetryAttempts = 0
     }
 
     func latestHeight() async throws -> BlockHeight {
@@ -530,7 +533,17 @@ extension CompactBlockProcessor {
                 await stopAllActions()
                 logger.error("Sync failed with error: \(error)")
 
-                if Task.isCancelled {
+                // catching the block stream error
+                if case ZcashError.serviceBlockStreamFailed = error, self.blockStreamRetryAttempts < ZcashSDK.blockStreamRetries {
+                    // This may be false positive communication error that is usually resolved by retry.
+                    // We will try to reset the sync and continue but this will we done at most `ZcashSDK.blockStreamRetries` times.
+                    logger.error("ZcashError.serviceBlockStreamFailed, retry is available, starting the sync all over again.")
+
+                    self.blockStreamRetryAttempts += 1
+                    
+                    // Start sync all over again
+                    await resetContext()
+                } else if Task.isCancelled {
                     logger.info("Processing cancelled.")
                     do {
                         if try await syncTaskWasCancelled() {
@@ -545,13 +558,8 @@ extension CompactBlockProcessor {
                         break
                     }
                 } else {
-                    if await handleSyncFailure(action: action, error: error) {
-                        // Start sync all over again
-                        await resetContext()
-                    } else {
-                        // end the sync loop
-                        break
-                    }
+                    await handleSyncFailure(action: action, error: error)
+                    break
                 }
             }
         }
@@ -567,15 +575,13 @@ extension CompactBlockProcessor {
         return try await handleAfterSyncHooks()
     }
 
-    private func handleSyncFailure(action: Action, error: Error) async -> Bool {
+    private func handleSyncFailure(action: Action, error: Error) async {
         if action.removeBlocksCacheWhenFailed {
             await ifTaskIsNotCanceledClearCompactBlockCache()
         }
 
         logger.error("Sync failed with error: \(error)")
         await failure(error)
-
-        return false
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -642,6 +648,7 @@ extension CompactBlockProcessor {
             latestBlockHeightWhenSyncing > 0 && latestBlockHeightWhenSyncing < latestBlockHeight
 
         retryAttempts = 0
+        blockStreamRetryAttempts = 0
         consecutiveChainValidationErrors = 0
 
         let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
