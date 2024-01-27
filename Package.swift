@@ -16,7 +16,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.19.1"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.4.1")
+        // Compiled from revision `d5bd88138610b15f9585fcba696bd1023e716fd8`.
+        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", revision: "5f58e32ffae1b285cae1c01bbf350eaae31ffeb5")
     ],
     targets: [
         .target(
@@ -28,6 +29,7 @@ let package = Package(
             ],
             exclude: [
                 "Modules/Service/GRPC/ProtoBuf/proto/compact_formats.proto",
+                "Modules/Service/GRPC/ProtoBuf/proto/proposal.proto",
                 "Modules/Service/GRPC/ProtoBuf/proto/service.proto",
                 "Error/Sourcery/"
             ],

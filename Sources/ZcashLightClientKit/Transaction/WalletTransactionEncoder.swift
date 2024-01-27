@@ -85,11 +85,17 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
         }
 
-        let txId = try await rustBackend.createToAddress(
-            usk: spendingKey,
+        // TODO: Expose the proposal in a way that enables querying its fee.
+        let proposal = try await rustBackend.proposeTransfer(
+            account: Int32(spendingKey.account),
             to: address,
             value: zatoshi.amount,
             memo: memoBytes
+        )
+
+        let txId = try await rustBackend.createProposedTransaction(
+            proposal: proposal,
+            usk: spendingKey
         )
 
         return txId
@@ -121,13 +127,19 @@ class WalletTransactionEncoder: TransactionEncoder {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw ZcashError.walletTransEncoderShieldFundsMissingSaplingParams
         }
-        
-        let txId = try await rustBackend.shieldFunds(
-            usk: spendingKey,
+
+        // TODO: Expose the proposal in a way that enables querying its fee.
+        let proposal = try await rustBackend.proposeShielding(
+            account: Int32(spendingKey.account),
             memo: memo,
             shieldingThreshold: shieldingThreshold
         )
-                
+
+        let txId = try await rustBackend.createProposedTransaction(
+            proposal: proposal,
+            usk: spendingKey
+        )
+
         return txId
     }
 
