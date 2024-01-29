@@ -4,7 +4,7 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+# 2.0.6 - 2024-01-28
 
 ## Changed
 
@@ -13,6 +13,25 @@ We focused on performance of the synchronization and found out a root cause in p
 
 ### [#1351] Recover from block stream issues
 Async block stream grpc calls sometimes fail with unknown error 14, most of the times represented as `Transport became inactive` or `NIOHTTP2.StreamClosed`. Unless the service is truly down, these errors are usually false positive ones. The SDK was able to recover from this error with the next sync triggered but it takes 10-30s to happen. This delay is unnecessary so we made 2 changes. When these errors are caught the next sync is triggered immediately (at most 3 times) + the error state is not passed to the clients.  
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2332500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2382500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2640000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2690000.json
+````
 
 # 2.0.5 - 2023-12-15
 
