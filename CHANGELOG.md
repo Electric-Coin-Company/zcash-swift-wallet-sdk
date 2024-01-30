@@ -4,6 +4,22 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# 2.0.7 - 2024-01-29
+
+## Added
+- `Model.ScanSummary`
+- `Model.WalletSummary.{PoolBalance, AccountBalance, WalletSummary}`
+-
+
+## Changed
+- The `ZcashError` type has changed.
+  - Added variant `rustGetWalletSummary`
+  - Removed variants:
+    - `rustGetVerifiedBalance` (expect `rustGetWalletSummary` instead)
+    - `rustGetScanProgress` (expect `rustGetWalletSummary` instead)
+    - `rustGetBalance` (expect `rustGetWalletSummary` instead)
+- The performance of `getWalletSummary` and `scanBlocks` have been improved.
+
 # 2.0.6 - 2024-01-28
 
 ## Changed
@@ -12,7 +28,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 We focused on performance of the synchronization and found out a root cause in progress reporting. Simple change reduced the synchronization significantly by reporting less frequently. This affect the UX a bit because the % of the sync is updated only every 500 scanned blocks instead of every 100. Proper solution is going to be handled in #1353.
 
 ### [#1351] Recover from block stream issues
-Async block stream grpc calls sometimes fail with unknown error 14, most of the times represented as `Transport became inactive` or `NIOHTTP2.StreamClosed`. Unless the service is truly down, these errors are usually false positive ones. The SDK was able to recover from this error with the next sync triggered but it takes 10-30s to happen. This delay is unnecessary so we made 2 changes. When these errors are caught the next sync is triggered immediately (at most 3 times) + the error state is not passed to the clients.  
+Async block stream grpc calls sometimes fail with unknown error 14, most of the times represented as `Transport became inactive` or `NIOHTTP2.StreamClosed`. Unless the service is truly down, these errors are usually false positive ones. The SDK was able to recover from this error with the next sync triggered but it takes 10-30s to happen. This delay is unnecessary so we made 2 changes. When these errors are caught the next sync is triggered immediately (at most 3 times) + the error state is not passed to the clients.
 
 ## Checkpoints
 
@@ -38,7 +54,7 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2690000.json
 ## Added
 
 ### [#1336] Tweaks for sdk metrics
-Shielded verified and total balances are logged for every sync of `SDKMetrics`. 
+Shielded verified and total balances are logged for every sync of `SDKMetrics`.
 
 ## Checkpoints
 
@@ -51,12 +67,12 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2630000.json
 # 2.0.4 - 2023-12-12
 
 ## Changed
-The `SDKMetrics` logs data using os_log. The public API `enableMetrics()` and `disableMetrics()` no longer exist. All metrics are automatically logged for every sync run. Extraction of the metrics is up to the client/dev - done by using `OSLogStore`. 
+The `SDKMetrics` logs data using os_log. The public API `enableMetrics()` and `disableMetrics()` no longer exist. All metrics are automatically logged for every sync run. Extraction of the metrics is up to the client/dev - done by using `OSLogStore`.
 
 ## Added
 
 ### [#1325] Log metrics
-The sync process is measured and detailed metrics are logged for every sync run. The data are logged using os_log so any client can export it. Verbose logs are under `sdkLogs_default` category, `default` level. Sync specific logs use `error` level. 
+The sync process is measured and detailed metrics are logged for every sync run. The data are logged using os_log so any client can export it. Verbose logs are under `sdkLogs_default` category, `default` level. Sync specific logs use `error` level.
 
 ## Checkpoints
 
@@ -85,7 +101,7 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2620000.json
 The enhancing of the transactions now processes all the blocks suggested by scan ranges. The issue was that when new scan ranges were suggested the value that drives the enhancing range computation wasn't reset, so when higher ranges were processed, the lower ranges were skipped. This fix ensures all transaction data are properly set, as well as fixing eventStream `.foundTransaction` reporting.
 
 ### Fix incorrect note deduplication in v_transactions (librustzcash)
-This is a fix in the rust layer. The amount sent in the transaction was incorrectly reported even though the actual amount was sent properly. Now clients should see the amount they expect to see in the UI. 
+This is a fix in the rust layer. The amount sent in the transaction was incorrectly reported even though the actual amount was sent properly. Now clients should see the amount they expect to see in the UI.
 
 ## Checkpoints
 
@@ -111,12 +127,12 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2550000.json
 ## Changed
 
 ### [#1303] Don't invalidate the timer with the error
-The SDK has some simple logic of retrying when some erros occurs. There were 5 attempts of retry until the SDK stopped the synchronization process completely. (The timer is not restarted after those). That approach led to some annoying UX issue of manually starting the SDKSynchronizer from the client, shifting the responsibility to the devs/clients. This has been changed, the SDK never stops the timer unless `synchronizer.stop()` is called. 
+The SDK has some simple logic of retrying when some erros occurs. There were 5 attempts of retry until the SDK stopped the synchronization process completely. (The timer is not restarted after those). That approach led to some annoying UX issue of manually starting the SDKSynchronizer from the client, shifting the responsibility to the devs/clients. This has been changed, the SDK never stops the timer unless `synchronizer.stop()` is called.
 
 ## Fixed
 
 ### [#1301] foundTransactions don't emit after rewind
-The `.foundTransactions` observed on eventStream worked well during the sync until the rewind was called. That API missed reset of the ActionContext in the CompactBlockProcesser and that led to never observing the same transactions again. This ticket fixed the problem, reset is called in the rewind and new sync passes the transactions to the stream.  
+The `.foundTransactions` observed on eventStream worked well during the sync until the rewind was called. That API missed reset of the ActionContext in the CompactBlockProcesser and that led to never observing the same transactions again. This ticket fixed the problem, reset is called in the rewind and new sync passes the transactions to the stream.
 
 # 2.0.1 - 2023-10-03
 
@@ -124,9 +140,9 @@ The `.foundTransactions` observed on eventStream worked well during the sync unt
 
 ### [#1294] Remove all uses of the incorrect 1000-ZAT fee
 The 1000 Zatoshi fee proposed in ZIP-313 is deprecated now and so the minimum is 10k Zatoshi, defined in ZIP-317.
-The SDK has been cleaned up from deprecated fee but note, real fee is handled in a rust layer. 
+The SDK has been cleaned up from deprecated fee but note, real fee is handled in a rust layer.
 The public API `NetworkConstants.defaultFee(for: BlockHeight)` has been refactored to `NetworkConstants.defaultFee()`.
- 
+
 # 2.0.0 - 2023-09-25
 
 ## Notable Changes
@@ -136,7 +152,7 @@ synchronization algorithm.
 
 ## Changed
 
-Updated dependencies: 
+Updated dependencies:
 - `zcash-light-client-ffi 0.4.0`
 
 `CompactBlockProcessor` now processes compact blocks from the lightwalletd server with Spend-before-Sync algorithm (i.e. non-linear order). This feature shortens the time after which a wallet's spendable balance can be used.
@@ -170,8 +186,8 @@ so both Height and Time don't make sense anymore.
 ### [#1230] Remove linear sync from the SDK
 
 - `latestScannedHeight` and `latestScannedTime` have been removed from the
-  SynchronizerState. 
-- The concept of pending transaction has changed: `func allPendingTransactions()` 
+  SynchronizerState.
+- The concept of pending transaction has changed: `func allPendingTransactions()`
   is no longer available. Use `public func allTransactions()` instead.
 
 # 0.22.0-beta
