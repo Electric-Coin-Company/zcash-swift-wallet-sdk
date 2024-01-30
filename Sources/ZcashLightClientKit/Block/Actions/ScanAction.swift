@@ -63,7 +63,7 @@ extension ScanAction: Action {
                 let incrementedProcessedHeight = processedHeight + BlockHeight(increment)
                 await context.update(processedHeight: incrementedProcessedHeight)
                 await self?.latestBlocksDataProvider.updateScannedData()
-                
+
                 // ScanAction is controlled locally so it must report back the updated scanned height
                 await context.update(lastScannedHeight: lastScannedHeight)
             }
@@ -74,7 +74,7 @@ extension ScanAction: Action {
             // TODO: [#1353] Advanced progress reporting, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1353
             if progressReportReducer == 0 {
                 // report scan progress only if it's available
-                if let scanProgress = try? await rustBackend.getScanProgress() {
+                if let scanProgress = try? await rustBackend.getWalletSummary()?.scanProgress {
                     let progress = try scanProgress.progress()
                     logger.debug("progress: \(progress)")
                     await didUpdate(.syncProgress(progress))

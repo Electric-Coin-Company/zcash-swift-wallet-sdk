@@ -658,13 +658,8 @@ extension CompactBlockProcessor {
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 
-        let verifiedBalance = Zatoshi((try? await rustBackend.getVerifiedBalance(account: 0)) ?? 0)
-        let totalBalance = Zatoshi((try? await rustBackend.getBalance(account: 0)) ?? 0)
-        let shieldedBalance = WalletBalance(
-            verified: verifiedBalance,
-            total: totalBalance
-        )
-        await metrics.logCBPOverviewReport(logger, shieldedBalance: shieldedBalance)
+        let walletSummary = try? await rustBackend.getWalletSummary()
+        await metrics.logCBPOverviewReport(logger, walletSummary: walletSummary)
 
         // If new blocks were mined during previous sync run the sync process again
         if newerBlocksWereMinedDuringSync {

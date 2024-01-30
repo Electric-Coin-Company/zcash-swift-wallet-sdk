@@ -51,9 +51,12 @@ extension BlockScannerImpl: BlockScanner {
 
             let batchSize = UInt32(config.scanningBatchSize)
 
+            // TODO: [#1355] Do more with ScanSummary
+            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1355
+            let scanSummary: ScanSummary
             let scanStartTime = Date()
             do {
-                try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), limit: batchSize)
+                scanSummary = try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), limit: batchSize)
             } catch {
                 logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error
@@ -61,10 +64,8 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanFinishTime = Date()
 
-            // TODO: [#1259] potential bug when rustBackend.scanBlocks scan less blocks than batchSize,
-            // https://github.com/zcash/ZcashLightClientKit/issues/1259
-            lastScannedHeight = startHeight + Int(batchSize) - 1
-            
+            lastScannedHeight = scanSummary.scannedRange.upperBound - 1
+
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {
                 try await didScan(lastScannedHeight, batchSize)

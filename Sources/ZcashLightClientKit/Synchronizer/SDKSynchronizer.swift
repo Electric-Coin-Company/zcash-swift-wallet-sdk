@@ -414,15 +414,13 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func getShieldedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
-        let balance = try await initializer.rustBackend.getBalance(account: Int32(accountIndex))
-
-        return Zatoshi(balance)
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]?
+            .saplingBalance.total() ?? Zatoshi.zero
     }
 
     public func getShieldedVerifiedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
-        let balance = try await initializer.rustBackend.getVerifiedBalance(account: Int32(accountIndex))
-
-        return Zatoshi(balance)
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]?
+            .saplingBalance.spendableValue ?? Zatoshi.zero
     }
 
     public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
