@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.1.4 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.1.7 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1668,6 +1668,30 @@ class SynchronizerMock: Synchronizer {
             return try await closure(accountIndex)
         } else {
             return getShieldedVerifiedBalanceAccountIndexReturnValue
+        }
+    }
+
+    // MARK: - getAccountBalances
+
+    var getAccountBalancesAccountIndexThrowableError: Error?
+    var getAccountBalancesAccountIndexCallsCount = 0
+    var getAccountBalancesAccountIndexCalled: Bool {
+        return getAccountBalancesAccountIndexCallsCount > 0
+    }
+    var getAccountBalancesAccountIndexReceivedAccountIndex: Int?
+    var getAccountBalancesAccountIndexReturnValue: AccountBalance?
+    var getAccountBalancesAccountIndexClosure: ((Int) async throws -> AccountBalance?)?
+
+    func getAccountBalances(accountIndex: Int) async throws -> AccountBalance? {
+        if let error = getAccountBalancesAccountIndexThrowableError {
+            throw error
+        }
+        getAccountBalancesAccountIndexCallsCount += 1
+        getAccountBalancesAccountIndexReceivedAccountIndex = accountIndex
+        if let closure = getAccountBalancesAccountIndexClosure {
+            return try await closure(accountIndex)
+        } else {
+            return getAccountBalancesAccountIndexReturnValue
         }
     }
 

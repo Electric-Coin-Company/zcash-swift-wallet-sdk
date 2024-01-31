@@ -7,19 +7,23 @@
 
 import Foundation
 
-struct PoolBalance: Equatable {
-    let spendableValue: Zatoshi
-    let changePendingConfirmation: Zatoshi
-    let valuePendingSpendability: Zatoshi
+public struct PoolBalance: Equatable {
+    public let spendableValue: Zatoshi
+    public let changePendingConfirmation: Zatoshi
+    public let valuePendingSpendability: Zatoshi
 
-    func total() -> Zatoshi {
+    static let zero = PoolBalance(spendableValue: .zero, changePendingConfirmation: .zero, valuePendingSpendability: .zero)
+
+    public func total() -> Zatoshi {
         self.spendableValue + self.changePendingConfirmation + self.valuePendingSpendability
     }
 }
 
-struct AccountBalance: Equatable {
-    let saplingBalance: PoolBalance
-    let unshielded: Zatoshi
+public struct AccountBalance: Equatable {
+    public let saplingBalance: PoolBalance
+    public let unshielded: Zatoshi
+    
+    static let zero = AccountBalance(saplingBalance: .zero, unshielded: .zero)
 }
 
 struct ScanProgress: Equatable {

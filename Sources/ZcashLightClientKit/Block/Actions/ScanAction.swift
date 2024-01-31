@@ -17,7 +17,7 @@ final class ScanAction {
     let rustBackend: ZcashRustBackendWelding
     let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
-    var progressReportReducer = Constants.reportDelay
+    var progressReportReducer = 0
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
@@ -99,7 +99,7 @@ extension ScanAction: Action {
     }
 
     func stop() async { 
-        progressReportReducer = Constants.reportDelay
+        progressReportReducer = 0
     }
 }
 
