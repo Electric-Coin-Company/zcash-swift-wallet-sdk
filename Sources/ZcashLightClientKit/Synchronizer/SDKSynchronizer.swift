@@ -164,7 +164,8 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            await updateStatus(.syncing(0))
+            let syncProgress = (try? await initializer.rustBackend.getWalletSummary()?.scanProgress?.progress()) ?? 0
+            await updateStatus(.syncing(syncProgress))
             await blockProcessor.start(retry: retry)
         }
     }
@@ -413,6 +414,10 @@ public class SDKSynchronizer: Synchronizer {
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
 
+    public func getAccountBalances(accountIndex: Int = 0) async throws -> AccountBalance? {
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
+    }
+
     public func getShieldedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]?
             .saplingBalance.total() ?? Zatoshi.zero
@@ -530,12 +535,9 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: notify state
 
     private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
-        return await SynchronizerState(
+        await SynchronizerState(
             syncSessionID: syncSession.value,
-            shieldedBalance: WalletBalance(
-                verified: (try? await getShieldedVerifiedBalance()) ?? .zero,
-                total: (try? await getShieldedBalance()) ?? .zero
-            ),
+            accountBalances: (try? await getAccountBalances()) ?? .zero,
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             internalSyncStatus: status,
             latestBlockHeight: latestBlocksDataProvider.latestBlockHeight

@@ -4,6 +4,13 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+## Changed
+
+### [#1363] Account balances in the SynchronizerState
+`shieldedBalance: WalletBalance` has been replaced with `accountBalances: AccountBalance`. `AccountBalance` provides the same values as `shieldedBalance` but adds up a pending changes. Under the hood this calls rust's `getWalletSummary` which improved also the syncing initial values of % and balances.
+
 # 2.0.8 - 2024-01-30
 
 Adopt `zcash-light-client-ffi 0.5.1`. This fixes a serialization problem 

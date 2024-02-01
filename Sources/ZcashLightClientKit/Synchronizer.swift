@@ -35,8 +35,8 @@ public struct SynchronizerState: Equatable {
     /// given how application lifecycle varies between OS Versions, platforms, etc.
     /// SyncSessionIDs are provided to users
     public var syncSessionID: UUID
-    /// shielded balance known to this synchronizer given the data that has processed locally
-    public var shieldedBalance: WalletBalance
+    /// account (shielded) balances known to this synchronizer given the data that has processed locally
+    public var accountBalances: AccountBalance
     /// transparent balance known to this synchronizer given the data that has processed locally
     public var transparentBalance: WalletBalance
     /// status of the whole sync process
@@ -49,7 +49,7 @@ public struct SynchronizerState: Equatable {
     public static var zero: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            shieldedBalance: .zero,
+            accountBalances: .zero,
             transparentBalance: .zero,
             internalSyncStatus: .unprepared,
             latestBlockHeight: .zero
@@ -58,13 +58,13 @@ public struct SynchronizerState: Equatable {
     
     init(
         syncSessionID: UUID,
-        shieldedBalance: WalletBalance,
+        accountBalances: AccountBalance,
         transparentBalance: WalletBalance,
         internalSyncStatus: InternalSyncStatus,
         latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
-        self.shieldedBalance = shieldedBalance
+        self.accountBalances = accountBalances
         self.transparentBalance = transparentBalance
         self.internalSyncStatus = internalSyncStatus
         self.latestBlockHeight = latestBlockHeight
@@ -248,6 +248,11 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter accountIndex: the index of the account
     /// - Returns: balance in `Zatoshi`
     func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi
+
+    /// get account balances from the given account index
+    /// - Parameter accountIndex: the index of the account
+    /// - Returns: balances
+    func getAccountBalances(accountIndex: Int) async throws -> AccountBalance?
 
     /// Rescans the known blocks with the current keys.
     ///

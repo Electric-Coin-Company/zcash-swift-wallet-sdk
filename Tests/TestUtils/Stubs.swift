@@ -145,7 +145,7 @@ extension SynchronizerState {
     static var mock: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
+            accountBalances: .zero,
             transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
             internalSyncStatus: .syncing(0),
             latestBlockHeight: 222222

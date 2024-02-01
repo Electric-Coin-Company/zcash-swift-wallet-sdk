@@ -472,7 +472,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
     func synchronizerState(for internalSyncStatus: InternalSyncStatus) -> SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            shieldedBalance: .zero,
+            accountBalances: .zero,
             transparentBalance: .zero,
             internalSyncStatus: internalSyncStatus,
             latestBlockHeight: .zero
