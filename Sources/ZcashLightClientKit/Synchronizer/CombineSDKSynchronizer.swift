@@ -140,21 +140,9 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getTransparentBalance(accountIndex: Int) -> SinglePublisher<WalletBalance, Error> {
+    public func getAccountBalance(accountIndex: Int) -> SinglePublisher<AccountBalance?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getTransparentBalance(accountIndex: accountIndex)
-        }
-    }
-
-    public func getShieldedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await synchronizer.getShieldedBalance(accountIndex: accountIndex)
-        }
-    }
-
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
         }
     }
 

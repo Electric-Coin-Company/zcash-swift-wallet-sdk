@@ -263,19 +263,3 @@ public enum Recipient: Equatable, StringEncoded {
         }
     }
 }
-
-public struct WalletBalance: Equatable {
-    public let verified: Zatoshi
-    public let total: Zatoshi
-    
-    public init(verified: Zatoshi, total: Zatoshi) {
-        self.verified = verified
-        self.total = total
-    }
-}
-
-public extension WalletBalance {
-    static var zero: WalletBalance {
-        Self(verified: .zero, total: .zero)
-    }
-}

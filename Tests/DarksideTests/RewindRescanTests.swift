@@ -70,8 +70,9 @@ class RewindRescanTests: ZcashTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
-        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let initialVerifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let initialTotalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
 
@@ -87,8 +88,9 @@ class RewindRescanTests: ZcashTestCase {
         }
 
         await fulfillment(of: [firstSyncExpectation], timeout: 12)
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let verifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let totalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -123,8 +125,9 @@ class RewindRescanTests: ZcashTestCase {
 //        XCTAssertEqual(lastScannedHeight, self.birthday)
         
         // check that the balance is cleared
-        var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        var expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        var expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
+        var expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
         XCTAssertEqual(initialTotalBalance, expectedBalance)
         let secondScanExpectation = XCTestExpectation(description: "rescan")
@@ -143,8 +146,9 @@ class RewindRescanTests: ZcashTestCase {
         await fulfillment(of: [secondScanExpectation], timeout: 12)
         
         // verify that the balance still adds up
-        expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
+        expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(verifiedBalance, expectedVerifiedBalance)
         XCTAssertEqual(totalBalance, expectedBalance)
     }
@@ -161,7 +165,7 @@ class RewindRescanTests: ZcashTestCase {
         let newChaintTip = defaultLatestHeight + 10000
         try coordinator.applyStaged(blockheight: newChaintTip)
         sleep(3)
-        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
         do {
@@ -176,8 +180,9 @@ class RewindRescanTests: ZcashTestCase {
         }
 
         await fulfillment(of: [firstSyncExpectation], timeout: 20)
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let verifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let totalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -216,7 +221,7 @@ class RewindRescanTests: ZcashTestCase {
         await fulfillment(of: [rewindExpectation], timeout: 2)
 
         // check that the balance is cleared
-        var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        var expectedVerifiedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
         XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
 
         let secondScanExpectation = XCTestExpectation(description: "rescan")
@@ -235,8 +240,9 @@ class RewindRescanTests: ZcashTestCase {
         await fulfillment(of: [secondScanExpectation], timeout: 20)
         
         // verify that the balance still adds up
-        expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(verifiedBalance, expectedVerifiedBalance)
         XCTAssertEqual(totalBalance, expectedBalance)
         
@@ -274,8 +280,9 @@ class RewindRescanTests: ZcashTestCase {
         )
         
         await fulfillment(of: [firstSyncExpectation], timeout: 12)
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let verifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let totalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -327,8 +334,9 @@ class RewindRescanTests: ZcashTestCase {
         await fulfillment(of: [secondScanExpectation], timeout: 12)
         
         // verify that the balance still adds up
-        let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(verifiedBalance, expectedVerifiedBalance)
         XCTAssertEqual(totalBalance, expectedBalance)
     }
@@ -363,8 +371,9 @@ class RewindRescanTests: ZcashTestCase {
         await fulfillment(of: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let verifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let totalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
         
@@ -518,8 +527,9 @@ class RewindRescanTests: ZcashTestCase {
 //
 //        XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
 
-        let expectedVerifiedbalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let expectedVerifiedbalance = accountBalance?.saplingBalance.spendableValue ?? .zero
+        let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, .zero)
         XCTAssertEqual(expectedVerifiedbalance, .zero)
     }

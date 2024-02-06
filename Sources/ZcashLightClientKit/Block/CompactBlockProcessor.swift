@@ -845,21 +845,6 @@ extension CompactBlockProcessor {
     func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
         try await getUnifiedAddress(accountIndex: accountIndex).transparentReceiver()
     }
-    
-    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
-        guard accountIndex >= 0 else {
-            throw ZcashError.compactBlockProcessorInvalidAccount
-        }
-
-        return WalletBalance(
-            verified: Zatoshi(
-                try await rustBackend.getVerifiedTransparentBalance(account: Int32(accountIndex))
-            ),
-            total: Zatoshi(
-                try await rustBackend.getTransparentBalance(account: Int32(accountIndex))
-            )
-        )
-    }
 }
 
 extension CompactBlockProcessor {

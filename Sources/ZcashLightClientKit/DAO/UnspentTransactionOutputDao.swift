@@ -183,33 +183,6 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             }
         }
     }
-
-    /// - Throws: `unspentTransactionOutputDAOBalance` if sqlite query fails.
-    func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
-        do {
-            let verified = try dbProvider.connection().scalarLocked(
-                table.select(TableColumns.valueZat.sum)
-                    .filter(TableColumns.address == address)
-                    .filter(TableColumns.height <= latestHeight - ZcashSDK.defaultStaleTolerance)
-            ) ?? 0
-            let total = try dbProvider.connection().scalarLocked(
-                table.select(TableColumns.valueZat.sum)
-                    .filter(TableColumns.address == address)
-            ) ?? 0
-
-            return WalletBalance(
-                verified: Zatoshi(Int64(verified)),
-                total: Zatoshi(Int64(total))
-            )
-        } catch {
-            throw ZcashError.unspentTransactionOutputDAOBalance(error)
-        }
-    }
-}
-
-struct TransparentBalance {
-    var balance: WalletBalance
-    var address: String
 }
 
 enum UTXORepositoryBuilder {

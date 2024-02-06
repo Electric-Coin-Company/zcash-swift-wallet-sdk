@@ -62,7 +62,6 @@ extension UTXOFetcherImpl: UTXOFetcher {
         var refreshed: [UnspentTransactionOutputEntity] = []
         var skipped: [UnspentTransactionOutputEntity] = []
 
-        let startTime = Date()
         let all = Float(utxos.count)
         var counter = Float(0)
         for utxo in utxos {

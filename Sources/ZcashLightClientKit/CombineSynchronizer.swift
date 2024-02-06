@@ -64,9 +64,7 @@ public protocol CombineSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) -> SinglePublisher<RefreshedUTXOs, Error>
 
-    func getTransparentBalance(accountIndex: Int) -> SinglePublisher<WalletBalance, Error>
-    func getShieldedBalance(accountIndex: Int) -> SinglePublisher<Zatoshi, Error>
-    func getShieldedVerifiedBalance(accountIndex: Int) -> SinglePublisher<Zatoshi, Error>
+    func getAccountBalance(accountIndex: Int) -> SinglePublisher<AccountBalance?, Error>
 
     func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error>
     func wipe() -> CompletablePublisher<Error>

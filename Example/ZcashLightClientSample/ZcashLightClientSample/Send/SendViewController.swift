@@ -103,8 +103,8 @@ class SendViewController: UIViewController {
     }
     
     func updateBalance() async {
-        balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
-        verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
+        balanceLabel.text = format(balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.total() ?? .zero)
+        verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero)
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {
@@ -118,7 +118,7 @@ class SendViewController: UIViewController {
     func maxFundsOn() {
         Task { @MainActor in
             let fee = Zatoshi(10000)
-            let max: Zatoshi = ((try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero) - fee
+            let max: Zatoshi = ((try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero) - fee
             amountTextField.text = format(balance: max)
             amountTextField.isEnabled = false
         }
@@ -140,12 +140,12 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() async -> Bool {
-        let balance = (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero
+        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
         return balance > .zero
     }
     
     func isAmountValid() async -> Bool {
-        let balance = (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero
+        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),

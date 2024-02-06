@@ -584,9 +584,6 @@ public enum ZcashError: Equatable, Error {
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     /// ZSYNCO0006
     case synchronizerDisconnected
-    /// The attempt to switch endpoints failed. Check that the hostname and port are correct, and are formatted as <hostname>:<port>.
-    /// ZSYNCO0007
-    case synchronizerServerSwitch
 
     public var message: String {
         switch self {
@@ -757,7 +754,6 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerLatestUTXOsInvalidTAddress: return "LatestUTXOs for the address failed, invalid t-address."
         case .synchronizerRewindUnknownArchorHeight: return "Rewind failed, unknown archor height"
         case .synchronizerDisconnected: return "Indicates that this Synchronizer is disconnected from its lightwalletd server."
-        case .synchronizerServerSwitch: return "The attempt to switch endpoints failed. Check that the hostname and port are correct, and are formatted as <hostname>:<port>."
         }
     }
 
@@ -930,7 +926,6 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerLatestUTXOsInvalidTAddress: return .synchronizerLatestUTXOsInvalidTAddress
         case .synchronizerRewindUnknownArchorHeight: return .synchronizerRewindUnknownArchorHeight
         case .synchronizerDisconnected: return .synchronizerDisconnected
-        case .synchronizerServerSwitch: return .synchronizerServerSwitch
         }
     }
 

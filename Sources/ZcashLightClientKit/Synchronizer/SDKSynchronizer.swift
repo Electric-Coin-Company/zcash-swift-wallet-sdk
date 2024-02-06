@@ -302,10 +302,13 @@ public class SDKSynchronizer: Synchronizer {
 
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
-        let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
+
+        guard let tBalance = try await self.getAccountBalance(accountIndex: accountIndex)?.unshielded else {
+            throw ZcashError.synchronizerSpendingKeyDoesNotBelongToTheWallet
+        }
 
         // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
-        guard tBalance.verified >= self.network.constants.defaultFee() else {
+        guard tBalance >= self.network.constants.defaultFee() else {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
@@ -414,18 +417,8 @@ public class SDKSynchronizer: Synchronizer {
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
 
-    public func getAccountBalances(accountIndex: Int = 0) async throws -> AccountBalance? {
+    public func getAccountBalance(accountIndex: Int = 0) async throws -> AccountBalance? {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
-    }
-
-    public func getShieldedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]?
-            .saplingBalance.total() ?? Zatoshi.zero
-    }
-
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]?
-            .saplingBalance.spendableValue ?? Zatoshi.zero
     }
 
     public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
@@ -438,11 +431,6 @@ public class SDKSynchronizer: Synchronizer {
 
     public func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
         try await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
-    }
-
-    /// Returns the last stored transparent balance
-    public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
-        try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
 
     // MARK: Rewind
@@ -621,8 +609,7 @@ public class SDKSynchronizer: Synchronizer {
     private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
         await SynchronizerState(
             syncSessionID: syncSession.value,
-            accountBalances: (try? await getAccountBalances()) ?? .zero,
-            transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
+            accountBalance: try? await getAccountBalance(),
             internalSyncStatus: status,
             latestBlockHeight: latestBlocksDataProvider.latestBlockHeight
         )

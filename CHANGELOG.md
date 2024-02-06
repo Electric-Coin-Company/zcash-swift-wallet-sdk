@@ -8,6 +8,21 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 
+### [#1369] SynchronizerState refactor and balances cleanup
+`SynchronizerState` cleaned up and changed to provide only `AccountBalance`. This struct holds `saplingBalance: PoolBalance` which represents shielded balance for both total and spendable. Also holds `unshielded: Zatoshi` which represents transparent balance. 
+
+## Removed
+
+### [#1369] SynchronizerState refactor and balances cleanup
+- `WalletBalance` has been removed from the SDK, replaced with `AccountBalance`.
+- `getTransparentBalance(accountIndex: Int)`, use `getAccountBalance(accountIndex: Int = 0)` instead
+- `getShieldedBalance(accountIndex: Int)`, use `getAccountBalance(accountIndex: Int = 0)` instead
+- `getShieldedVerifiedBalance(accountIndex: Int)`, use `getAccountBalance(accountIndex: Int = 0)` instead
+
+# 2.0.9 - 2024-01-31
+
+## Changed
+
 ### [#1363] Account balances in the SynchronizerState
 `shieldedBalance: WalletBalance` has been replaced with `accountBalances: AccountBalance`. `AccountBalance` provides the same values as `shieldedBalance` but adds up a pending changes. Under the hood this calls rust's `getWalletSummary` which improved also the syncing initial values of % and balances.
 
@@ -29,7 +44,6 @@ broke shielding.
 ## Added
 - `Model.ScanSummary`
 - `Model.WalletSummary.{PoolBalance, AccountBalance, WalletSummary}`
--
 
 ## Changed
 - The `ZcashError` type has changed.

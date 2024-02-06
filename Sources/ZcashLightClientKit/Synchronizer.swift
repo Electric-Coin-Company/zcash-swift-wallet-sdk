@@ -35,10 +35,8 @@ public struct SynchronizerState: Equatable {
     /// given how application lifecycle varies between OS Versions, platforms, etc.
     /// SyncSessionIDs are provided to users
     public var syncSessionID: UUID
-    /// account (shielded) balances known to this synchronizer given the data that has processed locally
-    public var accountBalances: AccountBalance
-    /// transparent balance known to this synchronizer given the data that has processed locally
-    public var transparentBalance: WalletBalance
+    /// account balance known to this synchronizer given the data that has processed locally
+    public var accountBalance: AccountBalance?
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
@@ -49,8 +47,7 @@ public struct SynchronizerState: Equatable {
     public static var zero: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalances: .zero,
-            transparentBalance: .zero,
+            accountBalance: .zero,
             internalSyncStatus: .unprepared,
             latestBlockHeight: .zero
         )
@@ -58,14 +55,12 @@ public struct SynchronizerState: Equatable {
     
     init(
         syncSessionID: UUID,
-        accountBalances: AccountBalance,
-        transparentBalance: WalletBalance,
+        accountBalance: AccountBalance?,
         internalSyncStatus: InternalSyncStatus,
         latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
-        self.accountBalances = accountBalances
-        self.transparentBalance = transparentBalance
+        self.accountBalance = accountBalance
         self.internalSyncStatus = internalSyncStatus
         self.latestBlockHeight = latestBlockHeight
         self.syncStatus = internalSyncStatus.mapToSyncStatus()
@@ -236,23 +231,10 @@ public protocol Synchronizer: AnyObject {
     /// `SynchronizerErrors.notPrepared`.
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
-    /// Returns the last stored transparent balance
-    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
-
-    /// get (unverified) balance from the given account index
+    /// Account balances from the given account index
     /// - Parameter accountIndex: the index of the account
-    /// - Returns: balance in `Zatoshi`
-    func getShieldedBalance(accountIndex: Int) async throws -> Zatoshi
-
-    /// get verified balance from the given account index
-    /// - Parameter accountIndex: the index of the account
-    /// - Returns: balance in `Zatoshi`
-    func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi
-
-    /// get account balances from the given account index
-    /// - Parameter accountIndex: the index of the account
-    /// - Returns: balances
-    func getAccountBalances(accountIndex: Int) async throws -> AccountBalance?
+    /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `accountIndex`
+    func getAccountBalance(accountIndex: Int) async throws -> AccountBalance?
 
     /// Rescans the known blocks with the current keys.
     ///

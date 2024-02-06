@@ -190,36 +190,31 @@ class SynchronizerDarksideTests: ZcashTestCase {
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
                 syncSessionID: .nullID,
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .unprepared,
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0),
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0.9),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(1.0),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .synced,
                 latestBlockHeight: 663189
             )
@@ -267,36 +262,31 @@ class SynchronizerDarksideTests: ZcashTestCase {
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
                 syncSessionID: .nullID,
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .unprepared,
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0),
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0.9),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(1.0),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .synced,
                 latestBlockHeight: 663189
             )
@@ -329,29 +319,25 @@ class SynchronizerDarksideTests: ZcashTestCase {
         let secondBatchOfExpectedStates: [SynchronizerState] = [
             SynchronizerState(
                 syncSessionID: uuids[1],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(0.9),
                 latestBlockHeight: 663200
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .syncing(1.0),
                 latestBlockHeight: 663200
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
-                accountBalances: .zero,
-                transparentBalance: .zero,
+                accountBalance: .zero,
                 internalSyncStatus: .synced,
                 latestBlockHeight: 663200
             )

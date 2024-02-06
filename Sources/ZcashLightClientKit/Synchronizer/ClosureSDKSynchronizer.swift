@@ -147,21 +147,9 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getTransparentBalance(accountIndex: Int, completion: @escaping (Result<WalletBalance, Error>) -> Void) {
+    public func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getTransparentBalance(accountIndex: accountIndex)
-        }
-    }
-
-    public func getShieldedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getShieldedBalance(accountIndex: accountIndex)
-        }
-    }
-
-    public func getShieldedVerifiedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
         }
     }
 
