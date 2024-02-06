@@ -40,7 +40,7 @@ actor CompactBlockProcessor {
     private let fileManager: ZcashFileManager
 
     private var retryAttempts: Int = 0
-    private var blockStreamRetryAttempts: Int = 0
+    private var serviceFailureRetryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var consecutiveChainValidationErrors: Int = 0
     
@@ -264,7 +264,7 @@ extension CompactBlockProcessor {
     func start(retry: Bool = false) async {
         if retry {
             self.retryAttempts = 0
-            self.blockStreamRetryAttempts = 0
+            self.serviceFailureRetryAttempts = 0
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
         }
@@ -291,7 +291,7 @@ extension CompactBlockProcessor {
         self.backoffTimer = nil
         await stopAllActions()
         retryAttempts = 0
-        blockStreamRetryAttempts = 0
+        serviceFailureRetryAttempts = 0
     }
 
     func latestHeight() async throws -> BlockHeight {
@@ -579,13 +579,23 @@ extension CompactBlockProcessor {
                 await stopAllActions()
                 logger.error("Sync failed with error: \(error)")
 
-                // catching the block stream error
-                if case ZcashError.serviceBlockStreamFailed = error, self.blockStreamRetryAttempts < ZcashSDK.blockStreamRetries {
-                    // This may be false positive communication error that is usually resolved by retry.
-                    // We will try to reset the sync and continue but this will we done at most `ZcashSDK.blockStreamRetries` times.
-                    logger.error("ZcashError.serviceBlockStreamFailed, retry is available, starting the sync all over again.")
+                // catching the service errors
+                let serviceError: Bool
+                switch error {
+                case ZcashError.serviceGetInfoFailed, ZcashError.serviceLatestBlockFailed,
+                    ZcashError.serviceLatestBlockHeightFailed, ZcashError.serviceBlockRangeFailed,
+                    ZcashError.serviceSubmitFailed, ZcashError.serviceFetchTransactionFailed,
+                    ZcashError.serviceFetchUTXOsFailed, ZcashError.serviceBlockStreamFailed,
+                    ZcashError.serviceSubtreeRootsStreamFailed: serviceError = true
+                default: serviceError = false
+                }
 
-                    self.blockStreamRetryAttempts += 1
+                if serviceError && self.serviceFailureRetryAttempts < ZcashSDK.serviceFailureRetries {
+                    // This may be false positive communication error that is usually resolved by retry.
+                    // We will try to reset the sync and continue but this will we done at most `ZcashSDK.serviceFailureRetries` times.
+                    logger.error("ServiceError: \(error), retry is available, starting the sync all over again.")
+
+                    self.serviceFailureRetryAttempts += 1
                     
                     // Start sync all over again
                     await resetContext()
@@ -694,7 +704,7 @@ extension CompactBlockProcessor {
             latestBlockHeightWhenSyncing > 0 && latestBlockHeightWhenSyncing < latestBlockHeight
 
         retryAttempts = 0
-        blockStreamRetryAttempts = 0
+        serviceFailureRetryAttempts = 0
         consecutiveChainValidationErrors = 0
 
         let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
