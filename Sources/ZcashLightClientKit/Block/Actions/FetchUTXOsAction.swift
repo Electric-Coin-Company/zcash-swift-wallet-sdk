@@ -8,7 +8,7 @@
 import Foundation
 
 final class FetchUTXOsAction {
-    let utxoFetcher: UTXOFetcher
+    var utxoFetcher: UTXOFetcher
     let logger: Logger
 
     init(container: DIContainer) {

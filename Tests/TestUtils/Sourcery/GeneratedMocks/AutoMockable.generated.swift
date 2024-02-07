@@ -1733,6 +1733,25 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - switchTo
+
+    var switchToEndpointThrowableError: Error?
+    var switchToEndpointCallsCount = 0
+    var switchToEndpointCalled: Bool {
+        return switchToEndpointCallsCount > 0
+    }
+    var switchToEndpointReceivedEndpoint: LightWalletEndpoint?
+    var switchToEndpointClosure: ((LightWalletEndpoint) async throws -> Void)?
+
+    func switchTo(endpoint: LightWalletEndpoint) async throws {
+        if let error = switchToEndpointThrowableError {
+            throw error
+        }
+        switchToEndpointCallsCount += 1
+        switchToEndpointReceivedEndpoint = endpoint
+        try await switchToEndpointClosure!(endpoint)
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 

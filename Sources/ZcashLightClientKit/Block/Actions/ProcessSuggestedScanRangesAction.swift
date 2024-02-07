@@ -9,7 +9,7 @@ import Foundation
 
 final class ProcessSuggestedScanRangesAction {
     let rustBackend: ZcashRustBackendWelding
-    let service: LightWalletService
+    var service: LightWalletService
     let logger: Logger
     let metrics: SDKMetrics
     

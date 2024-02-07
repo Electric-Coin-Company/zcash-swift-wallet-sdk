@@ -44,7 +44,7 @@ public class SDKSynchronizer: Synchronizer {
     private let syncSessionIDGenerator: SyncSessionIDGenerator
     private let syncSession: SyncSession
     private let syncSessionTicker: SessionTicker
-    let latestBlocksDataProvider: LatestBlocksDataProvider
+    var latestBlocksDataProvider: LatestBlocksDataProvider
 
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
@@ -532,6 +532,90 @@ public class SDKSynchronizer: Synchronizer {
         return subject.eraseToAnyPublisher()
     }
     
+    // MARK: Server switch
+
+    public func switchTo(endpoint: LightWalletEndpoint) async throws {
+        // Stop synchronization
+        let status = await self.status
+        if status != .stopped && status != .disconnected {
+            await blockProcessor.stop()
+        }
+
+        // Validation of the server is first because any custom endpoint can be passed here
+        // Extra instance of the service is created with lower timeout ofr a single call
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletGRPCService(
+                host: endpoint.host,
+                port: endpoint.port,
+                secure: endpoint.secure,
+                singleCallTimeout: 5000,
+                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
+            )
+        }
+
+        let validateSever = ValidateServerAction(
+            container: initializer.container,
+            configProvider: CompactBlockProcessor.ConfigProvider(config: await blockProcessor.config)
+        )
+ 
+        do {
+            _ = try await validateSever.run(with: ActionContextImpl(state: .idle)) { _ in }
+        } catch {
+            throw ZcashError.synchronizerServerSwitch
+        }
+        
+        // The `ValidateServerAction` confirmed the server is ok and we can continue
+        // final instance of the service will be instantiated and propagated to the all parties
+
+        // SWITCH TO NEW ENDPOINT
+        
+        // LightWalletService dependency update
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletGRPCService(endpoint: endpoint)
+        }
+
+        // DEPENDENCIES
+
+        // BlockDownloaderService dependency update
+        initializer.container.register(type: BlockDownloaderService.self, isSingleton: true) { di in
+            let service = di.resolve(LightWalletService.self)
+            let storage = di.resolve(CompactBlockRepository.self)
+
+            return BlockDownloaderServiceImpl(service: service, storage: storage)
+        }
+
+        // LatestBlocksDataProvider dependency update
+        initializer.container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in
+            let service = di.resolve(LightWalletService.self)
+            let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+
+            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend)
+        }
+        
+        // CompactBlockProcessor dependency update
+        Dependencies.setupCompactBlockProcessor(
+            in: initializer.container,
+            config: await blockProcessor.config,
+            accountRepository: initializer.accountRepository
+        )
+        
+        // INITIALIZER
+        initializer.lightWalletService = initializer.container.resolve(LightWalletService.self)
+        initializer.blockDownloaderService = initializer.container.resolve(BlockDownloaderService.self)
+        initializer.endpoint = endpoint
+
+        // SELF
+        self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
+        
+        // COMPACT BLOCK PROCESSOR
+        await blockProcessor.updateService(initializer.container)
+        
+        // Start synchronization
+        if status != .unprepared {
+            try await start(retry: true)
+        }
+    }
+
     // MARK: notify state
 
     private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {

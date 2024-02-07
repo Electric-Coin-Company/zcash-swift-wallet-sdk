@@ -10,7 +10,7 @@ import Foundation
 final class UpdateSubtreeRootsAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let rustBackend: ZcashRustBackendWelding
-    let service: LightWalletService
+    var service: LightWalletService
     let logger: Logger
     
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {

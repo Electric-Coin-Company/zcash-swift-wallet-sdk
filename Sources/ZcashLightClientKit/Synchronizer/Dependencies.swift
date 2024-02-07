@@ -18,7 +18,7 @@ enum Dependencies {
         enableBackendTracing: Bool = false
     ) {
         container.register(type: CheckpointSource.self, isSingleton: true) { _ in
-            return CheckpointSourceFactory.fromBundle(for: networkType)
+            CheckpointSourceFactory.fromBundle(for: networkType)
         }
 
         container.register(type: Logger.self, isSingleton: true) { _ in
@@ -36,7 +36,7 @@ enum Dependencies {
         }
 
         container.register(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in
-            return ZcashRustBackend(
+            ZcashRustBackend(
                 dbData: urls.dataDbURL,
                 fsBlockDbRoot: urls.fsBlockDbRoot,
                 spendParamsPath: urls.spendParamsURL,
@@ -47,7 +47,7 @@ enum Dependencies {
         }
 
         container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            return LightWalletGRPCService(endpoint: endpoint)
+            LightWalletGRPCService(endpoint: endpoint)
         }
 
         container.register(type: TransactionRepository.self, isSingleton: true) { _ in

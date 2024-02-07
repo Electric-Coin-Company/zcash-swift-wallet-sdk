@@ -15,7 +15,7 @@ final class ScanAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let blockScanner: BlockScanner
     let rustBackend: ZcashRustBackendWelding
-    let latestBlocksDataProvider: LatestBlocksDataProvider
+    var latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
     var progressReportReducer = 0
 
