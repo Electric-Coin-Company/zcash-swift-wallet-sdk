@@ -10,7 +10,7 @@ import Foundation
 final class ValidateServerAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let rustBackend: ZcashRustBackendWelding
-    let service: LightWalletService
+    var service: LightWalletService
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider

@@ -111,18 +111,18 @@ public class Initializer {
 
     let container: DIContainer
     let alias: ZcashSynchronizerAlias
-    let endpoint: LightWalletEndpoint
+    var endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
     let generalStorageURL: URL
     let dataDbURL: URL
     let spendParamsURL: URL
     let outputParamsURL: URL
     let saplingParamsSourceURL: SaplingParamsSourceURL
-    let lightWalletService: LightWalletService
+    var lightWalletService: LightWalletService
     let transactionRepository: TransactionRepository
     let accountRepository: AccountRepository
     let storage: CompactBlockRepository
-    let blockDownloaderService: BlockDownloaderService
+    var blockDownloaderService: BlockDownloaderService
     let network: ZcashNetwork
     let logger: Logger
     let rustBackend: ZcashRustBackendWelding
@@ -284,10 +284,6 @@ public class Initializer {
         self.walletBirthday = container.resolve(CheckpointSource.self).saplingActivation.height
         self.urlsParsingError = urlsParsingError
         self.logger = container.resolve(Logger.self)
-    }
-    
-    private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
-        return LightWalletServiceFactory(endpoint: endpoint)
     }
     
     // swiftlint:disable:next function_parameter_count

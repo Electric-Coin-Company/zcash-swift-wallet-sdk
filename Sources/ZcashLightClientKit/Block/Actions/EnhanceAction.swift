@@ -8,7 +8,7 @@
 import Foundation
 
 final class EnhanceAction {
-    let blockEnhancer: BlockEnhancer
+    var blockEnhancer: BlockEnhancer
     let configProvider: CompactBlockProcessor.ConfigProvider
     let logger: Logger
     

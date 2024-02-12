@@ -9,9 +9,9 @@ import Foundation
 
 final class UpdateChainTipAction {
     let rustBackend: ZcashRustBackendWelding
-    let downloader: BlockDownloader
-    let service: LightWalletService
-    let latestBlocksDataProvider: LatestBlocksDataProvider
+    var downloader: BlockDownloader
+    var service: LightWalletService
+    var latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
     
     init(container: DIContainer) {

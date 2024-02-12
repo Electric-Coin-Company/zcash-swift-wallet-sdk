@@ -29,12 +29,12 @@ actor CompactBlockProcessor {
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
     private let accountRepository: AccountRepository
-    let blockDownloaderService: BlockDownloaderService
-    private let latestBlocksDataProvider: LatestBlocksDataProvider
+    var blockDownloaderService: BlockDownloaderService
+    private var latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
     private let metrics: SDKMetrics
     private let rustBackend: ZcashRustBackendWelding
-    let service: LightWalletService
+    var service: LightWalletService
     let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
     private let fileManager: ZcashFileManager
@@ -409,6 +409,52 @@ extension CompactBlockProcessor {
         guard let cacheDbURL = config.cacheDbURL else { return }
         guard fileManager.isDeletableFile(atPath: cacheDbURL.pathExtension) else { return }
         try? fileManager.removeItem(at: cacheDbURL)
+    }
+}
+
+// MARK: - Switch server
+
+extension CompactBlockProcessor {
+    func updateService(_ container: DIContainer) {
+        // LightWalletGRPCService
+        let updatedLWDService = container.resolve(LightWalletService.self)
+        
+        (actions[.processSuggestedScanRanges] as? ProcessSuggestedScanRangesAction)?.service = updatedLWDService
+        (actions[.updateChainTip] as? UpdateChainTipAction)?.service = updatedLWDService
+        (actions[.updateSubtreeRoots] as? UpdateSubtreeRootsAction)?.service = updatedLWDService
+        (actions[.validateServer] as? ValidateServerAction)?.service = updatedLWDService
+        self.service = updatedLWDService
+        
+        // BlockDownloaderService
+        let updatedDownloaderService = container.resolve(BlockDownloaderService.self)
+
+        (actions[.rewind] as? RewindAction)?.downloaderService = updatedDownloaderService
+        self.blockDownloaderService = updatedDownloaderService
+        
+        // LatestBlocksDataProvider
+        let updatedLBDProvider = container.resolve(LatestBlocksDataProvider.self)
+
+        (actions[.scan] as? ScanAction)?.latestBlocksDataProvider = updatedLBDProvider
+        (actions[.updateChainTip] as? UpdateChainTipAction)?.latestBlocksDataProvider = updatedLBDProvider
+        self.latestBlocksDataProvider = updatedLBDProvider
+        
+        // BlockDownloader
+        let updatedBlockDownloader = container.resolve(BlockDownloader.self)
+
+        (actions[.download] as? DownloadAction)?.downloader = updatedBlockDownloader
+        (actions[.updateChainTip] as? UpdateChainTipAction)?.downloader = updatedBlockDownloader
+        (actions[.rewind] as? RewindAction)?.downloader = updatedBlockDownloader
+        self.blockDownloaderService = updatedDownloaderService
+        
+        // BlockEnhancer
+        let updatedEnhancer = container.resolve(BlockEnhancer.self)
+
+        (actions[.enhance] as? EnhanceAction)?.blockEnhancer = updatedEnhancer
+
+        // UTXOFetcher
+        let updatedUTXOFetcher = container.resolve(UTXOFetcher.self)
+
+        (actions[.fetchUTXO] as? FetchUTXOsAction)?.utxoFetcher = updatedUTXOFetcher
     }
 }
 

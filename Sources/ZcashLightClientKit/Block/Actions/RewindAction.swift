@@ -8,9 +8,9 @@
 import Foundation
 
 final class RewindAction {
-    let downloader: BlockDownloader
+    var downloader: BlockDownloader
     let rustBackend: ZcashRustBackendWelding
-    let downloaderService: BlockDownloaderService
+    var downloaderService: BlockDownloaderService
     let logger: Logger
 
     init(container: DIContainer) {

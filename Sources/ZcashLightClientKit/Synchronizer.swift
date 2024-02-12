@@ -295,6 +295,12 @@ public protocol Synchronizer: AnyObject {
     /// this happens it means that some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance won't do anything.
     /// 
     func wipe() -> AnyPublisher<Void, Error>
+    
+    /// This API stops the synchronization and re-initalizes everything according to the new endpoint provided.
+    /// It can be called anytime.
+    /// - Throws: ZcashError when failures occur and related to `synchronizer.start(retry: Bool)`, it's the only throwing operation
+    /// during the whole endpoint change.
+    func switchTo(endpoint: LightWalletEndpoint) async throws
 }
 
 public enum SyncStatus: Equatable {

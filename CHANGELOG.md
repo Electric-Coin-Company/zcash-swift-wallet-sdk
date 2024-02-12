@@ -11,6 +11,14 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [#1363] Account balances in the SynchronizerState
 `shieldedBalance: WalletBalance` has been replaced with `accountBalances: AccountBalance`. `AccountBalance` provides the same values as `shieldedBalance` but adds up a pending changes. Under the hood this calls rust's `getWalletSummary` which improved also the syncing initial values of % and balances.
 
+## Added
+
+### [#1153] Allow runtime switch of lightwalletd servers
+New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`. 
+Possible errors:
+- `ZcashError.synchronizerServerSwitch`: endpoint fails, check the address, port and format address:port,
+- Some `ZcashError` related to `synchronizer.Start()`: the switch calls `start()` at the end and that is the only throwing function except the validation.
+
 # 2.0.8 - 2024-01-30
 
 Adopt `zcash-light-client-ffi 0.5.1`. This fixes a serialization problem 
