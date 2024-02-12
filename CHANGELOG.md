@@ -11,7 +11,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [#1153] Allow runtime switch of lightwalletd servers
 New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`. 
 Possible errors:
-- `ZcashError.synchronizerServerSwitch`: endpoint fails, check the address, port and format address:port,
+- `ZcashError.synchronizerServerSwitch` will perform a check to ensure that it's possible to communicate with the specified lightwalletd server, which may result in an an error. If this check fails, the user should be prompted to check the address, port and verify that the `address:port` format is respected.
 - Switching endpoints causes a call to `synchronizer.Start()`, which may throw a `ZcashError`.
 
 ## Changed
