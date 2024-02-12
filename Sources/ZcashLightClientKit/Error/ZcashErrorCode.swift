@@ -343,4 +343,8 @@ public enum ZcashErrorCode: String {
     case synchronizerRewindUnknownArchorHeight = "ZSYNCO0005"
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     case synchronizerDisconnected = "ZSYNCO0006"
+    /// The attempt to switch endpoints failed. Check that the hostname and port are correct, and are formatted as <hostname>:<port>.
+    case synchronizerServerSwitch = "ZSYNCO0007"
+    /// The spending key does not belong to the wallet.
+    case synchronizerSpendingKeyDoesNotBelongToTheWallet = "ZSYNCO0008"
 }
