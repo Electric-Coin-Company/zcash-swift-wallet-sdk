@@ -99,7 +99,7 @@ class ShieldFundsTests: ZcashTestCase {
         var initialTotalBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
 
-        var initialTransparentBalance: WalletBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        var initialTransparentBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
 
         let utxo = try GetAddressUtxosReply(jsonString:
             """
@@ -121,8 +121,8 @@ class ShieldFundsTests: ZcashTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    initialVerifiedBalance = try await synchronizer.getShieldedVerifiedBalance()
-                    initialTotalBalance = try await synchronizer.getShieldedBalance()
+                    initialVerifiedBalance = try await synchronizer.getAccountBalance(accountIndex: 0)?.saplingBalance.spendableValue ?? .zero
+                    initialTotalBalance = try await synchronizer.getAccountBalance(accountIndex: 0)?.saplingBalance.total() ?? .zero
                     preTxExpectation.fulfill()
                     shouldContinue = true
                 },
@@ -142,10 +142,9 @@ class ShieldFundsTests: ZcashTestCase {
         // at this point the balance should be all zeroes for transparent and shielded funds
         XCTAssertEqual(initialTotalBalance, Zatoshi.zero)
         XCTAssertEqual(initialVerifiedBalance, Zatoshi.zero)
-        initialTransparentBalance = (try? await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)) ?? .zero
+        initialTransparentBalance = (try? await coordinator.synchronizer.getAccountBalance(accountIndex: 0))?.unshielded ?? .zero
 
-        XCTAssertEqual(initialTransparentBalance.total, .zero)
-        XCTAssertEqual(initialTransparentBalance.verified, .zero)
+        XCTAssertEqual(initialTransparentBalance, .zero)
 
         // 4. Add the UTXO to darksidewalletd fake chain
         try coordinator.service.addUTXO(utxo)
@@ -176,10 +175,9 @@ class ShieldFundsTests: ZcashTestCase {
 
         // at this point the balance should be zero for shielded, then zero verified transparent funds
         // and 10000 zatoshi of total (not verified) transparent funds.
-        let tFundsDetectedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let tFundsDetectedBalance = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
 
-        XCTAssertEqual(tFundsDetectedBalance.total, Zatoshi(10000))
-        XCTAssertEqual(tFundsDetectedBalance.verified, .zero)
+        XCTAssertEqual(tFundsDetectedBalance, Zatoshi(10000))
 
         let tFundsConfirmationSyncExpectation = XCTestExpectation(description: "t funds confirmation")
 
@@ -206,10 +204,9 @@ class ShieldFundsTests: ZcashTestCase {
         await fulfillment(of: [tFundsConfirmationSyncExpectation], timeout: 5)
 
         // the transparent funds should be 10000 zatoshis both total and verified
-        let confirmedTFundsBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let confirmedTFundsBalance = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
 
-        XCTAssertEqual(confirmedTFundsBalance.total, Zatoshi(10000))
-        XCTAssertEqual(confirmedTFundsBalance.verified, Zatoshi(10000))
+        XCTAssertEqual(confirmedTFundsBalance, Zatoshi(10000))
 
         // 9. shield the funds
         let shieldFundsExpectation = XCTestExpectation(description: "shield funds")
@@ -238,15 +235,13 @@ class ShieldFundsTests: ZcashTestCase {
 
         guard shouldContinue else { return }
 
-        let postShieldingBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let postShieldingBalance = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
         // when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
         // now balance should be zero shielded, zero transaparent.
         // verify that the balance has been marked as spent regardless of confirmation
         // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
-        XCTAssertEqual(postShieldingBalance.verified, Zatoshi(10000))
-        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
-        XCTAssertEqual(postShieldingBalance.total, Zatoshi(10000))
-        var expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(postShieldingBalance, Zatoshi(10000))
+        var expectedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, .zero)
 
         // 10. clear the UTXO from darksidewalletd's cache
@@ -293,13 +288,11 @@ class ShieldFundsTests: ZcashTestCase {
 
         // Now it should verify that the balance has been shielded. The resulting balance should be zero
         // transparent funds and `10000 - fee` total shielded funds,  zero verified shielded funds.
-        let postShieldingShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let postShieldingShieldedBalance = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
 
-        XCTAssertEqual(postShieldingShieldedBalance.total, .zero)
-        
-        XCTAssertEqual(postShieldingShieldedBalance.verified, .zero)
+        XCTAssertEqual(postShieldingShieldedBalance, .zero)
 
-        expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        expectedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, Zatoshi(9000))
 
         // 14. proceed confirm the shielded funds by staging ten more blocks
@@ -335,11 +328,10 @@ class ShieldFundsTests: ZcashTestCase {
 
         XCTAssertNotNil(clearedTransaction)
 
-        expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        expectedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, Zatoshi(9000))
-        let postShieldingConfirmationShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
-        XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, .zero)
-        XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, .zero)
+        let postShieldingConfirmationShieldedBalance = try await coordinator.synchronizer.getAccountBalance(accountIndex: 0)?.unshielded ?? .zero
+        XCTAssertEqual(postShieldingConfirmationShieldedBalance, .zero)
     }
 
     func handleError(_ error: Error?) async {

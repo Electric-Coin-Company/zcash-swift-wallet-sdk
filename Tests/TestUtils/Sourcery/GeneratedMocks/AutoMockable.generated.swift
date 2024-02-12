@@ -1599,99 +1599,27 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - getTransparentBalance
+    // MARK: - getAccountBalance
 
-    var getTransparentBalanceAccountIndexThrowableError: Error?
-    var getTransparentBalanceAccountIndexCallsCount = 0
-    var getTransparentBalanceAccountIndexCalled: Bool {
-        return getTransparentBalanceAccountIndexCallsCount > 0
+    var getAccountBalanceAccountIndexThrowableError: Error?
+    var getAccountBalanceAccountIndexCallsCount = 0
+    var getAccountBalanceAccountIndexCalled: Bool {
+        return getAccountBalanceAccountIndexCallsCount > 0
     }
-    var getTransparentBalanceAccountIndexReceivedAccountIndex: Int?
-    var getTransparentBalanceAccountIndexReturnValue: WalletBalance!
-    var getTransparentBalanceAccountIndexClosure: ((Int) async throws -> WalletBalance)?
+    var getAccountBalanceAccountIndexReceivedAccountIndex: Int?
+    var getAccountBalanceAccountIndexReturnValue: AccountBalance?
+    var getAccountBalanceAccountIndexClosure: ((Int) async throws -> AccountBalance?)?
 
-    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
-        if let error = getTransparentBalanceAccountIndexThrowableError {
+    func getAccountBalance(accountIndex: Int) async throws -> AccountBalance? {
+        if let error = getAccountBalanceAccountIndexThrowableError {
             throw error
         }
-        getTransparentBalanceAccountIndexCallsCount += 1
-        getTransparentBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getTransparentBalanceAccountIndexClosure {
+        getAccountBalanceAccountIndexCallsCount += 1
+        getAccountBalanceAccountIndexReceivedAccountIndex = accountIndex
+        if let closure = getAccountBalanceAccountIndexClosure {
             return try await closure(accountIndex)
         } else {
-            return getTransparentBalanceAccountIndexReturnValue
-        }
-    }
-
-    // MARK: - getShieldedBalance
-
-    var getShieldedBalanceAccountIndexThrowableError: Error?
-    var getShieldedBalanceAccountIndexCallsCount = 0
-    var getShieldedBalanceAccountIndexCalled: Bool {
-        return getShieldedBalanceAccountIndexCallsCount > 0
-    }
-    var getShieldedBalanceAccountIndexReceivedAccountIndex: Int?
-    var getShieldedBalanceAccountIndexReturnValue: Zatoshi!
-    var getShieldedBalanceAccountIndexClosure: ((Int) async throws -> Zatoshi)?
-
-    func getShieldedBalance(accountIndex: Int) async throws -> Zatoshi {
-        if let error = getShieldedBalanceAccountIndexThrowableError {
-            throw error
-        }
-        getShieldedBalanceAccountIndexCallsCount += 1
-        getShieldedBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getShieldedBalanceAccountIndexClosure {
-            return try await closure(accountIndex)
-        } else {
-            return getShieldedBalanceAccountIndexReturnValue
-        }
-    }
-
-    // MARK: - getShieldedVerifiedBalance
-
-    var getShieldedVerifiedBalanceAccountIndexThrowableError: Error?
-    var getShieldedVerifiedBalanceAccountIndexCallsCount = 0
-    var getShieldedVerifiedBalanceAccountIndexCalled: Bool {
-        return getShieldedVerifiedBalanceAccountIndexCallsCount > 0
-    }
-    var getShieldedVerifiedBalanceAccountIndexReceivedAccountIndex: Int?
-    var getShieldedVerifiedBalanceAccountIndexReturnValue: Zatoshi!
-    var getShieldedVerifiedBalanceAccountIndexClosure: ((Int) async throws -> Zatoshi)?
-
-    func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi {
-        if let error = getShieldedVerifiedBalanceAccountIndexThrowableError {
-            throw error
-        }
-        getShieldedVerifiedBalanceAccountIndexCallsCount += 1
-        getShieldedVerifiedBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getShieldedVerifiedBalanceAccountIndexClosure {
-            return try await closure(accountIndex)
-        } else {
-            return getShieldedVerifiedBalanceAccountIndexReturnValue
-        }
-    }
-
-    // MARK: - getAccountBalances
-
-    var getAccountBalancesAccountIndexThrowableError: Error?
-    var getAccountBalancesAccountIndexCallsCount = 0
-    var getAccountBalancesAccountIndexCalled: Bool {
-        return getAccountBalancesAccountIndexCallsCount > 0
-    }
-    var getAccountBalancesAccountIndexReceivedAccountIndex: Int?
-    var getAccountBalancesAccountIndexReturnValue: AccountBalance?
-    var getAccountBalancesAccountIndexClosure: ((Int) async throws -> AccountBalance?)?
-
-    func getAccountBalances(accountIndex: Int) async throws -> AccountBalance? {
-        if let error = getAccountBalancesAccountIndexThrowableError {
-            throw error
-        }
-        getAccountBalancesAccountIndexCallsCount += 1
-        getAccountBalancesAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getAccountBalancesAccountIndexClosure {
-            return try await closure(accountIndex)
-        } else {
-            return getAccountBalancesAccountIndexReturnValue
+            return getAccountBalanceAccountIndexReturnValue
         }
     }
 

@@ -195,23 +195,15 @@ actor BlockDownloaderImpl {
         var buffer: [ZcashCompactBlock] = []
         logger.debug("Downloading blocks in range: \(range.lowerBound)...\(range.upperBound)")
 
-        var startTime = Date()
-        var lastDownloadedBlockHeight = -1
-
         for _ in stride(from: range.lowerBound, to: range.upperBound + 1, by: 1) {
             try Task.checkCancellation()
             guard let block = try await stream.nextBlock() else { break }
 
-            lastDownloadedBlockHeight = block.height
-
             buffer.append(block)
             if buffer.count >= maxBlockBufferSize {
-                let finishTime = Date()
                 try await storage.write(blocks: buffer)
                 try await blocksBufferWritten(buffer)
                 buffer.removeAll(keepingCapacity: true)
-
-                startTime = finishTime
             }
         }
 

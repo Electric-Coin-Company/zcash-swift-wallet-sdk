@@ -258,8 +258,8 @@ final class SynchronizerTests: ZcashTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
 
         try coordinator.applyStaged(blockheight: 663200)
-        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
 
@@ -276,8 +276,8 @@ final class SynchronizerTests: ZcashTestCase {
 
         await fulfillment(of: [firstSyncExpectation], timeout: 12)
 
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+        let totalBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee())
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -332,8 +332,8 @@ final class SynchronizerTests: ZcashTestCase {
 //        XCTAssertEqual(lastScannedHeight, self.birthday)
 
         // check that the balance is cleared
-        let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        let expectedVerifiedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+        let expectedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
         XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
         XCTAssertEqual(initialTotalBalance, expectedBalance)
     }

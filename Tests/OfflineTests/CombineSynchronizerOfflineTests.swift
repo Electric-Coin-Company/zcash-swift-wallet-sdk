@@ -748,16 +748,16 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceSucceed() {
-        let expectedWalletBalance = WalletBalance(verified: Zatoshi(100), total: Zatoshi(200))
+        let expectedBalance = AccountBalance(saplingBalance: .zero, unshielded: Zatoshi(100))
 
-        synchronizerMock.getTransparentBalanceAccountIndexClosure = { receivedAccountIndex in
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
             XCTAssertEqual(receivedAccountIndex, 3)
-            return expectedWalletBalance
+            return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -768,7 +768,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value, expectedWalletBalance)
+                    XCTAssertEqual(value, expectedBalance)
                 }
             )
             .store(in: &cancellables)
@@ -777,13 +777,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        synchronizerMock.getTransparentBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -803,14 +803,23 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceSucceed() {
-        synchronizerMock.getShieldedBalanceAccountIndexClosure = { receivedAccountIndex in
+        let expectedBalance = AccountBalance(
+            saplingBalance:
+                PoolBalance(
+                    spendableValue: .zero,
+                    changePendingConfirmation: Zatoshi(333),
+                    valuePendingSpendability: .zero),
+            unshielded: .zero
+        )
+        
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
             XCTAssertEqual(receivedAccountIndex, 3)
-            return Zatoshi(333)
+            return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getShieldedBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -821,7 +830,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value, Zatoshi(333))
+                    XCTAssertEqual(value, expectedBalance)
                 }
             )
             .store(in: &cancellables)
@@ -830,13 +839,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceThrowsError() {
-        synchronizerMock.getShieldedBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getShieldedBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -856,14 +865,23 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {
-        synchronizerMock.getShieldedVerifiedBalanceAccountIndexClosure = { receivedAccountIndex in
+        let expectedBalance = AccountBalance(
+            saplingBalance:
+                PoolBalance(
+                    spendableValue: Zatoshi(333),
+                    changePendingConfirmation: .zero,
+                    valuePendingSpendability: .zero),
+            unshielded: .zero
+        )
+        
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
             XCTAssertEqual(receivedAccountIndex, 3)
-            return Zatoshi(333)
+            return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getShieldedVerifiedBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -874,7 +892,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value, Zatoshi(333))
+                    XCTAssertEqual(value, expectedBalance)
                 }
             )
             .store(in: &cancellables)
@@ -883,13 +901,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceThrowsError() {
-        synchronizerMock.getShieldedVerifiedBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getShieldedVerifiedBalance(accountIndex: 3)
+        synchronizer.getAccountBalance(accountIndex: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
