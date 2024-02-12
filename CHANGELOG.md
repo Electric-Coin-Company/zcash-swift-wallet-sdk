@@ -4,7 +4,15 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+# 2.0.10 - 2024-02-12
+
+## Added
+
+### [#1153] Allow runtime switch of lightwalletd servers
+New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`. 
+Possible errors:
+- `ZcashError.synchronizerServerSwitch`: endpoint fails, check the address, port and format address:port,
+- Some `ZcashError` related to `synchronizer.Start()`: the switch calls `start()` at the end and that is the only throwing function except the validation.
 
 ## Changed
 
