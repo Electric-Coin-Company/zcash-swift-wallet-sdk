@@ -46,6 +46,19 @@ The old `Synchronizer.sendToAddress` and `Synchronizer.shieldFunds` APIs have be
 deprecated, and will be removed in 2.1.0 (which will create multiple transactions
 at once for some recipients).
 
+### [#1379] Fulfill Payment from a valid ZIP-321 request
+New API implemented that allows clients to use a ZIP-321 Payment URI to create transaction.
+```
+func fulfillPaymentURI(
+        _ uri: String,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> ZcashTransaction.Overview
+```
+
+Possible errors:
+- `ZcashError.rustProposeTransferFromURI`
+- Other errors that `sentToAddress` can throw
+
 # 2.0.10 - 2024-02-12
 
 ## Added

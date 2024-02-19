@@ -2,7 +2,7 @@
 //  ZcashRustBackendWelding.swift
 //  ZcashLightClientKit
 //
-//  Created by Francisco Gindre on 12/09/2019.
+//  Created by Francisco 'Pacu' Gindre on 2019-12-09.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
@@ -206,6 +206,21 @@ protocol ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?
+    ) async throws -> FfiProposal
+
+    /// Select transaction inputs, compute fees, and construct a proposal for a transaction
+    /// that can then be authorized and made ready for submission to the network with
+    /// `createProposedTransaction` from a valid [ZIP-321](https://zips.z.cash/zip-0321) Payment Request UR
+    ///
+    /// - parameter uri: the URI String that the proposal will be made from.
+    /// - parameter account: index of the given account
+    /// - Parameter to: recipient address
+    /// - Parameter value: transaction amount in Zatoshi
+    /// - Parameter memo: the `MemoBytes` for this transaction. pass `nil` when sending to transparent receivers
+    /// - Throws: `rustCreateToAddress`.
+    func proposeTransferFromURI(
+        _ uri: String,
+        account: Int32
     ) async throws -> FfiProposal
 
     /// Constructs a transaction proposal to shield all found UTXOs in data db for the given account,

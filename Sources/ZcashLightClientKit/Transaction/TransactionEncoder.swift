@@ -72,6 +72,21 @@ protocol TransactionEncoder {
         spendingKey: UnifiedSpendingKey
     ) async throws -> [ZcashTransaction.Overview]
 
+       /// Creates a transaction to fulfill a [ZIP-321](https://zips.z.cash/zip-0321), throwing an exception whenever things are missing. When the provided wallet implementation
+    /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
+    /// double-bangs for things).
+    ///
+    /// - Parameters:
+    /// - Parameter uri: a valid ZIP-321 payment URI.
+    /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
+    /// - Throws:
+    ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
+    ///     - Some `ZcashError.rust*` if the creation of transaction fails.
+    func createTransactionFromPaymentURI(
+        _ uri: String,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> ZcashTransaction.Overview
+
     /// submits a transaction to the Zcash peer-to-peer network.
     /// - Parameter transaction: a transaction overview
     func submit(transaction: EncodedTransaction) async throws

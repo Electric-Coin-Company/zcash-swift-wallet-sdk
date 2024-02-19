@@ -112,6 +112,34 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         ))
     }
 
+    func proposeTransferFromURI(
+        _ uri: String,
+        account: Int32
+    ) async throws -> FfiProposal {
+        globalDBLock.lock()
+        let proposal = zcashlc_propose_transfer_from_uri(
+            dbData.0,
+            dbData.1,
+            account,
+            [CChar](uri.utf8CString),
+            networkType.networkId,
+            minimumConfirmations,
+            useZIP317Fees
+        )
+        globalDBLock.unlock()
+
+        guard let proposal else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`proposeTransfer` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(proposal) }
+
+        return try FfiProposal(contiguousBytes: Data(
+            bytes: proposal.pointee.ptr,
+            count: Int(proposal.pointee.len)
+        ))
+    }
+
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
         globalDBLock.lock()
         let result = zcashlc_decrypt_and_store_transaction(

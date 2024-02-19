@@ -12,6 +12,7 @@ import Combine
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+    
     public var alias: ZcashSynchronizerAlias { initializer.alias }
 
     private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
@@ -340,6 +341,25 @@ public class SDKSynchronizer: Synchronizer {
                     return TransactionSubmitResult.submitFailure(txId: transaction.rawID, code: code, description: message)
                 }
             }
+        }
+    }
+
+    public func fulfillPaymentURI(_ uri: String, spendingKey: UnifiedSpendingKey) async throws -> ZcashTransaction.Overview {
+        do {
+            let transaction = try await transactionEncoder.createTransactionFromPaymentURI(
+                uri,
+                spendingKey: spendingKey
+            )
+
+            let encodedTransaction = try transaction.encodedTransaction()
+
+            try await transactionEncoder.submit(transaction: encodedTransaction)
+
+            return transaction
+        } catch ZcashError.rustCreateToAddress(let e) {
+            throw ZcashError.rustProposeTransferFromURI(e)
+        } catch {
+            throw error
         }
     }
 

@@ -87,6 +87,41 @@ class WalletTransactionEncoder: TransactionEncoder {
         return Proposal(inner: proposal)
     }
 
+     func createTransactionFromPaymentURI(
+        _ uri: String,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> ZcashTransaction.Overview {
+        let txId = try await createSpendFromPaymentURI(
+            uri,
+            spendingKey: spendingKey
+        )
+
+        logger.debug("transaction id: \(txId)")
+        return try await repository.find(rawID: txId)
+    }
+
+    func createSpendFromPaymentURI(
+        _ uri: String,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> Data {
+        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
+            throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
+        }
+
+        // TODO: Expose the proposal in a way that enables querying its fee.
+        let proposal = try await rustBackend.proposeTransferFromURI(
+            uri,
+            account: Int32(spendingKey.account)
+        )
+
+        let txId = try await rustBackend.createProposedTransaction(
+            proposal: proposal,
+            usk: spendingKey
+        )
+
+        return txId
+    }
+
     func createProposedTransactions(
         proposal: Proposal,
         spendingKey: UnifiedSpendingKey
