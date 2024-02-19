@@ -2,7 +2,7 @@
 //  TransactionEncoder.swift
 //  ZcashLightClientKit
 //
-//  Created by Francisco Gindre on 11/20/19.
+//  Created by Francisco Gindre on 2019-11-20.
 //
 
 import Foundation
@@ -71,6 +71,21 @@ protocol TransactionEncoder {
         proposal: Proposal,
         spendingKey: UnifiedSpendingKey
     ) async throws -> [ZcashTransaction.Overview]
+
+    /// Creates a transaction proposal to fulfill a [ZIP-321](https://zips.z.cash/zip-0321), throwing an exception whenever things are missing. When the provided wallet implementation
+    /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
+    /// double-bangs for things).
+    ///
+    /// - Parameters:
+    /// - Parameter uri: a valid ZIP-321 payment URI.
+    /// - Parameter accountIndex: the index of the account the proposal should be made from.
+    /// - Throws:
+    ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
+    ///     - Some `ZcashError.rust*` if the creation of transaction fails.
+    func proposeFulfillingPaymentFromURI(
+        _ uri: String,
+        accountIndex: Int
+    ) async throws -> Proposal
 
     /// submits a transaction to the Zcash peer-to-peer network.
     /// - Parameter transaction: a transaction overview

@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 # Unreleased
+### [#1379] Fulfill Payment from a valid ZIP-321 request
+New API implemented that allows clients to use a ZIP-321 Payment URI to create transaction.
+```
+func fulfillPaymentURI(
+        _ uri: String,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> ZcashTransaction.Overview
+```
+
+Possible errors:
+- `ZcashError.rustProposeTransferFromURI`
+- Other errors that `sentToAddress` can throw
 
 # 2.0.11 - 2024-03-08
 

@@ -96,13 +96,18 @@ public protocol CombineSynchronizer {
         toAddress: Recipient,
         memo: Memo?
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
-
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
+    
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead")
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
+
+    func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) -> SinglePublisher<Proposal, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
