@@ -69,6 +69,36 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?
+    ) -> SinglePublisher<Proposal, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+        }
+    }
+
+    public func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo
+    ) -> SinglePublisher<Proposal, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.proposeShielding(accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo)
+        }
+    }
+
+    public func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey
+    ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.createProposedTransactions(proposal: proposal, spendingKey: spendingKey)
+        }
+    }
+
     public func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,

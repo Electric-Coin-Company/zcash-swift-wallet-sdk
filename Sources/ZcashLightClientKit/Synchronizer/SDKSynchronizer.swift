@@ -265,6 +265,78 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Synchronizer methods
 
+    public func proposeTransfer(accountIndex: Int, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
+        try throwIfUnprepared()
+
+        if case Recipient.transparent = recipient, memo != nil {
+            throw ZcashError.synchronizerSendMemoToTransparentAddress
+        }
+
+        let proposal = try await transactionEncoder.proposeTransfer(
+            accountIndex: accountIndex,
+            recipient: recipient.stringEncoded,
+            amount: amount,
+            memoBytes: memo?.asMemoBytes()
+        )
+
+        return proposal
+    }
+
+    public func proposeShielding(accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo) async throws -> Proposal {
+        try throwIfUnprepared()
+
+        let proposal = try await transactionEncoder.proposeShielding(
+            accountIndex: accountIndex,
+            shieldingThreshold: shieldingThreshold,
+            memoBytes: memo.asMemoBytes()
+        )
+
+        return proposal
+    }
+
+    public func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+        try throwIfUnprepared()
+
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: initializer.spendParamsURL,
+            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: initializer.outputParamsURL,
+            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
+        )
+
+        let transactions = try await transactionEncoder.createProposedTransactions(
+            proposal: proposal,
+            spendingKey: spendingKey
+        )
+        var iterator = transactions.makeIterator()
+        var submitFailed = false
+
+        return AsyncThrowingStream() {
+            guard let transaction = iterator.next() else { return nil }
+
+            if submitFailed {
+                return .notAttempted(txId: transaction.rawID)
+            } else {
+                let encodedTransaction = try transaction.encodedTransaction()
+
+                do {
+                    try await self.transactionEncoder.submit(transaction: encodedTransaction)
+                    return TransactionSubmitResult.success(txId: transaction.rawID)
+                } catch ZcashError.serviceSubmitFailed(let error) {
+                    submitFailed = true
+                    return TransactionSubmitResult.grpcFailure(txId: transaction.rawID, error: error)
+                } catch TransactionEncoderError.submitError(let code, let message) {
+                    submitFailed = true
+                    return TransactionSubmitResult.submitFailure(txId: transaction.rawID, code: code, description: message)
+                }
+            }
+        }
+    }
+
     public func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -312,12 +384,19 @@ public class SDKSynchronizer: Synchronizer {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
-        let transaction = try await transactionEncoder.createShieldingTransaction(
-            spendingKey: spendingKey,
+        let proposal = try await transactionEncoder.proposeShielding(
+            accountIndex: Int(spendingKey.account),
             shieldingThreshold: shieldingThreshold,
-            memoBytes: memo.asMemoBytes(),
-            from: Int(spendingKey.account)
+            memoBytes: memo.asMemoBytes()
         )
+
+        let transactions = try await transactionEncoder.createProposedTransactions(
+            proposal: proposal,
+            spendingKey: spendingKey
+        )
+
+        assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
+        let transaction = transactions[0]
 
         let encodedTx = try transaction.encodedTransaction()
 
@@ -339,13 +418,20 @@ public class SDKSynchronizer: Synchronizer {
                 throw ZcashError.synchronizerSendMemoToTransparentAddress
             }
 
-            let transaction = try await transactionEncoder.createTransaction(
-                spendingKey: spendingKey,
-                zatoshi: zatoshi,
-                to: recipient.stringEncoded,
-                memoBytes: memo?.asMemoBytes(),
-                from: Int(spendingKey.account)
+            let proposal = try await transactionEncoder.proposeTransfer(
+                accountIndex: Int(spendingKey.account),
+                recipient: recipient.stringEncoded,
+                amount: zatoshi,
+                memoBytes: memo?.asMemoBytes()
             )
+
+            let transactions = try await transactionEncoder.createProposedTransactions(
+                proposal: proposal,
+                spendingKey: spendingKey
+            )
+
+            assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
+            let transaction = transactions[0]
 
             let encodedTransaction = try transaction.encodedTransaction()
 

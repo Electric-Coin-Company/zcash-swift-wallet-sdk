@@ -70,6 +70,39 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?,
+        completion: @escaping (Result<Proposal, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+        }
+    }
+
+    public func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo,
+        completion: @escaping (Result<Proposal, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.proposeShielding(accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo)
+        }
+    }
+
+    public func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey,
+        completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.createProposedTransactions(proposal: proposal, spendingKey: spendingKey)
+        }
+    }
+
     public func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
