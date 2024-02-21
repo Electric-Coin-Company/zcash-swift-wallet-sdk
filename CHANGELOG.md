@@ -4,6 +4,16 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Unreleased
+
+## Added
+
+### [#1204] Expose APIs for working with transaction proposals
+New `Synchronizer` APIs that enable constructing a proposal for transferring or
+shielding funds, and then creating transactions from a proposal. The intermediate
+proposal can be used to determine the required fee, before committing to producing
+transactions.
+
 # 2.0.10 - 2024-02-12
 
 ## Added

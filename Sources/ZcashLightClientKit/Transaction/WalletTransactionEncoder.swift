@@ -54,93 +54,52 @@ class WalletTransactionEncoder: TransactionEncoder {
             logger: initializer.logger
         )
     }
-    
-    func createTransaction(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        to address: String,
-        memoBytes: MemoBytes?,
-        from accountIndex: Int
-    ) async throws -> ZcashTransaction.Overview {
-        let txId = try await createSpend(
-            spendingKey: spendingKey,
-            zatoshi: zatoshi,
-            to: address,
-            memoBytes: memoBytes,
-            from: accountIndex
+
+    func proposeTransfer(
+        accountIndex: Int,
+        recipient: String,
+        amount: Zatoshi,
+        memoBytes: MemoBytes?
+    ) async throws -> Proposal {
+        let proposal = try await rustBackend.proposeTransfer(
+            account: Int32(accountIndex),
+            to: recipient,
+            value: amount.amount,
+            memo: memoBytes
         )
 
-        logger.debug("transaction id: \(txId)")
-        return try await repository.find(rawID: txId)
+        return Proposal(inner: proposal)
     }
-    
-    func createSpend(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        to address: String,
-        memoBytes: MemoBytes?,
-        from accountIndex: Int
-    ) async throws -> Data {
+
+    func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memoBytes: MemoBytes?
+    ) async throws -> Proposal {
+        let proposal = try await rustBackend.proposeShielding(
+            account: Int32(accountIndex),
+            memo: memoBytes,
+            shieldingThreshold: shieldingThreshold
+        )
+
+        return Proposal(inner: proposal)
+    }
+
+    func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> [ZcashTransaction.Overview] {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
         }
 
-        // TODO: Expose the proposal in a way that enables querying its fee.
-        let proposal = try await rustBackend.proposeTransfer(
-            account: Int32(spendingKey.account),
-            to: address,
-            value: zatoshi.amount,
-            memo: memoBytes
-        )
-
         let txId = try await rustBackend.createProposedTransaction(
-            proposal: proposal,
+            proposal: proposal.inner,
             usk: spendingKey
         )
 
-        return txId
-    }
-    
-    func createShieldingTransaction(
-        spendingKey: UnifiedSpendingKey,
-        shieldingThreshold: Zatoshi,
-        memoBytes: MemoBytes?,
-        from accountIndex: Int
-    ) async throws -> ZcashTransaction.Overview {
-        let txId = try await createShieldingSpend(
-            spendingKey: spendingKey,
-            shieldingThreshold: shieldingThreshold,
-            memo: memoBytes,
-            accountIndex: accountIndex
-        )
-        
         logger.debug("transaction id: \(txId)")
-        return try await repository.find(rawID: txId)
-    }
-
-    func createShieldingSpend(
-        spendingKey: UnifiedSpendingKey,
-        shieldingThreshold: Zatoshi,
-        memo: MemoBytes?,
-        accountIndex: Int
-    ) async throws -> Data {
-        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
-            throw ZcashError.walletTransEncoderShieldFundsMissingSaplingParams
-        }
-
-        // TODO: Expose the proposal in a way that enables querying its fee.
-        let proposal = try await rustBackend.proposeShielding(
-            account: Int32(spendingKey.account),
-            memo: memo,
-            shieldingThreshold: shieldingThreshold
-        )
-
-        let txId = try await rustBackend.createProposedTransaction(
-            proposal: proposal,
-            usk: spendingKey
-        )
-
-        return txId
+        return [try await repository.find(rawID: txId)]
     }
 
     func submit(

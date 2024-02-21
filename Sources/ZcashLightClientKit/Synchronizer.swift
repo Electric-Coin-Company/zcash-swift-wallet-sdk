@@ -154,7 +154,53 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress
-    
+
+    /// Creates a proposal for transferring funds to the given recipient.
+    ///
+    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter recipient: the recipient's address.
+    /// - Parameter amount: the amount to send in Zatoshi.
+    /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?
+    ) async throws -> Proposal
+
+    /// Creates a proposal for shielding any transparent funds received by the given account.
+    ///
+    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
+    /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo
+    ) async throws -> Proposal
+
+    /// Creates the transactions in the given proposal.
+    ///
+    /// - Parameter proposal: the proposal for which to create transactions.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` associated with the account for which the proposal was created.
+    ///
+    /// Returns a stream of objects for the transactions that were created as part of the
+    /// proposal, indicating whether they were submitted to the network or if an error
+    /// occurred.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance
+    /// or since the last wipe then this method throws `SynchronizerErrors.notPrepared`.
+    func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey
+    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
+
     /// Sends zatoshi.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
@@ -431,6 +477,19 @@ public enum RewindPolicy {
     case height(blockheight: BlockHeight)
     case transaction(_ transaction: ZcashTransaction.Overview)
     case quick
+}
+
+/// The result of submitting a transaction to the network.
+///
+/// - success: the transaction was successfully submitted to the mempool.
+/// - grpcFailure: the transaction failed to reach the lightwalletd server.
+/// - submitFailure: the transaction reached the lightwalletd server but failed to enter the mempool.
+/// - notAttempted: the transaction was created and is in the local wallet, but was not submitted to the network.
+public enum TransactionSubmitResult {
+    case success(txId: Data)
+    case grpcFailure(txId: Data, error: LightWalletServiceError)
+    case submitFailure(txId: Data, code: Int, description: String)
+    case notAttempted(txId: Data)
 }
 
 extension InternalSyncStatus {
