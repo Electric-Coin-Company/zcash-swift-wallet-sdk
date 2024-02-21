@@ -103,6 +103,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     public func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -115,6 +116,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     public func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,

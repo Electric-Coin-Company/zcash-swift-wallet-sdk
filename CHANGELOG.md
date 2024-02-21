@@ -14,6 +14,10 @@ shielding funds, and then creating transactions from a proposal. The intermediat
 proposal can be used to determine the required fee, before committing to producing
 transactions.
 
+The old `Synchronizer.sendToAddress` and `Synchronizer.shieldFunds` APIs have been
+deprecated, and will be removed in 2.1.0 (which will create multiple transactions
+at once for some recipients).
+
 # 2.0.10 - 2024-02-12
 
 ## Added
