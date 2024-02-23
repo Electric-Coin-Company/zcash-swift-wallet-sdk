@@ -35,18 +35,38 @@ public protocol CombineSynchronizer {
     func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error>
     func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error>
 
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeTransfer` instead")
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
-
+    
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead")
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
+
+    func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?
+    ) -> SinglePublisher<Proposal, Error>
+
+    func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo
+    ) -> SinglePublisher<Proposal, Error>
+
+    func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) -> SinglePublisher<Proposal, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

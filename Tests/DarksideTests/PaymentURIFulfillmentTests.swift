@@ -101,7 +101,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         sleep(1)
 
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var pendingEntity: ZcashTransaction.Overview?
+        var proposal: ZcashTransaction.Overview?
 
         /*
         2. send transaction to recipient address
@@ -111,24 +111,38 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         let paymentURI = "zcash:\(Environment.testRecipientAddress)?amount=0.0002&memo=\(memo)&message=Thank%20you%20for%20your%20purchase&label=Your%20Purchase"
 
         do {
-            let pendingTx = try await coordinator.synchronizer.fulfillPaymentURI(
+            let proposal = try await coordinator.synchronizer.proposefulfillingPaymentURI(
                 paymentURI,
-                spendingKey: self.coordinator.spendingKey
+                accountIndex: 0
             )
 
-            pendingEntity = pendingTx
+            let transactions = try await coordinator.synchronizer.createProposedTransactions(
+                proposal: proposal,
+                spendingKey: coordinator.spendingKey
+            )
+
+            for try await tx in transactions {
+                switch tx {
+                case .grpcFailure(_, let error):
+                    XCTFail("transaction failed to submit with error:\(error.localizedDescription)")
+                    return
+                case .success(txId: let txId):
+                    continue
+                case .submitFailure(txId: let txId, code: let code, description: let description):
+                    XCTFail("transaction failed to submit with code: \(code) - description: \(description)")
+                    return
+                case .notAttempted(txId: let txId):
+                    XCTFail("transaction not attempted")
+                    return
+                }
+            }
             sendExpectation.fulfill()
         } catch {
             await handleError(error)
         }
 
-        await fulfillment(of: [sendExpectation], timeout: 11)
+        await fulfillment(of: [sendExpectation], timeout: 13)
 
-        guard pendingEntity != nil else {
-            XCTFail("no pending transaction after sending")
-            try await coordinator.stop()
-            return
-        }
 
         /**
         3. getIncomingTransaction
@@ -304,13 +318,13 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         let paymentURI = "zcash:zecIsGreat17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a?amount=0.0002&memo=\(memo)&message=Thank%20you%20for%20your%20purchase&label=Your%20Purchase"
 
         do {
-            let _ = try await coordinator.synchronizer.fulfillPaymentURI(
+            let _ = try await coordinator.synchronizer.proposefulfillingPaymentURI(
                 paymentURI,
-                spendingKey: self.coordinator.spendingKey
+                accountIndex: 0
             )
 
             XCTFail("`fulfillPaymentURI` should have failed")
-        } catch ZcashError.rustCreateToAddress {
+        } catch ZcashError.rustProposeTransferFromURI {
             XCTAssertTrue(true)
         } catch {
             XCTFail("Expected ZcashError.rustCreateToAddress but got \(error.localizedDescription)")

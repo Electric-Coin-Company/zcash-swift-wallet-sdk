@@ -1493,27 +1493,27 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - fulfillPaymentURI
+    // MARK: - proposefulfillingPaymentURI
 
-    var fulfillPaymentURISpendingKeyThrowableError: Error?
-    var fulfillPaymentURISpendingKeyCallsCount = 0
-    var fulfillPaymentURISpendingKeyCalled: Bool {
-        return fulfillPaymentURISpendingKeyCallsCount > 0
+    var proposefulfillingPaymentURIAccountIndexThrowableError: Error?
+    var proposefulfillingPaymentURIAccountIndexCallsCount = 0
+    var proposefulfillingPaymentURIAccountIndexCalled: Bool {
+        return proposefulfillingPaymentURIAccountIndexCallsCount > 0
     }
-    var fulfillPaymentURISpendingKeyReceivedArguments: (uri: String, spendingKey: UnifiedSpendingKey)?
-    var fulfillPaymentURISpendingKeyReturnValue: ZcashTransaction.Overview!
-    var fulfillPaymentURISpendingKeyClosure: ((String, UnifiedSpendingKey) async throws -> ZcashTransaction.Overview)?
+    var proposefulfillingPaymentURIAccountIndexReceivedArguments: (uri: String, accountIndex: Int)?
+    var proposefulfillingPaymentURIAccountIndexReturnValue: Proposal!
+    var proposefulfillingPaymentURIAccountIndexClosure: ((String, Int) async throws -> Proposal)?
 
-    func fulfillPaymentURI(_ uri: String, spendingKey: UnifiedSpendingKey) async throws -> ZcashTransaction.Overview {
-        if let error = fulfillPaymentURISpendingKeyThrowableError {
+    func proposefulfillingPaymentURI(_ uri: String, accountIndex: Int) async throws -> Proposal {
+        if let error = proposefulfillingPaymentURIAccountIndexThrowableError {
             throw error
         }
-        fulfillPaymentURISpendingKeyCallsCount += 1
-        fulfillPaymentURISpendingKeyReceivedArguments = (uri: uri, spendingKey: spendingKey)
-        if let closure = fulfillPaymentURISpendingKeyClosure {
-            return try await closure(uri, spendingKey)
+        proposefulfillingPaymentURIAccountIndexCallsCount += 1
+        proposefulfillingPaymentURIAccountIndexReceivedArguments = (uri: uri, accountIndex: accountIndex)
+        if let closure = proposefulfillingPaymentURIAccountIndexClosure {
+            return try await closure(uri, accountIndex)
         } else {
-            return fulfillPaymentURISpendingKeyReturnValue
+            return proposefulfillingPaymentURIAccountIndexReturnValue
         }
     }
 

@@ -90,6 +90,18 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) -> SinglePublisher<Proposal, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.proposefulfillingPaymentURI(
+                uri,
+                accountIndex: accountIndex
+            )
+        }
+    }
+
     public func createProposedTransactions(
         proposal: Proposal,
         spendingKey: UnifiedSpendingKey
