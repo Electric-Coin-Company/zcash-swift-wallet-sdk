@@ -176,14 +176,22 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter accountIndex: the account for which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
+    /// - Parameter transparentReceiver: a specific transparent receiver within the account
+    ///             that should be the source of transparent funds. Default is `nil` which
+    ///             will select whichever of the account's transparent receivers has funds
+    ///             to shield.
+    ///
+    /// Returns the proposal, or `nil` if the transparent balance that would be shielded
+    /// is zero or below `shieldingThreshold`.
     ///
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
         accountIndex: Int,
         shieldingThreshold: Zatoshi,
-        memo: Memo
-    ) async throws -> Proposal
+        memo: Memo,
+        transparentReceiver: TransparentAddress?
+    ) async throws -> Proposal?
 
     /// Creates the transactions in the given proposal.
     ///

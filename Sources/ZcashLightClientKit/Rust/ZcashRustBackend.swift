@@ -619,8 +619,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     func proposeShielding(
         account: Int32,
         memo: MemoBytes?,
-        shieldingThreshold: Zatoshi
-    ) async throws -> FfiProposal {
+        shieldingThreshold: Zatoshi,
+        transparentReceiver: String?
+    ) async throws -> FfiProposal? {
+        if transparentReceiver != nil {
+            throw ZcashError.rustScanBlocks("TODO: Implement transparentReceiver support in FFI")
+        }
+
         globalDBLock.lock()
         let proposal = zcashlc_propose_shielding(
             dbData.0,

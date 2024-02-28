@@ -1423,25 +1423,25 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountIndexShieldingThresholdMemoThrowableError: Error?
-    var proposeShieldingAccountIndexShieldingThresholdMemoCallsCount = 0
-    var proposeShieldingAccountIndexShieldingThresholdMemoCalled: Bool {
-        return proposeShieldingAccountIndexShieldingThresholdMemoCallsCount > 0
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError: Error?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount > 0
     }
-    var proposeShieldingAccountIndexShieldingThresholdMemoReceivedArguments: (accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo)?
-    var proposeShieldingAccountIndexShieldingThresholdMemoReturnValue: Proposal!
-    var proposeShieldingAccountIndexShieldingThresholdMemoClosure: ((Int, Zatoshi, Memo) async throws -> Proposal)?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments: (accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?)?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue: Proposal?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure: ((Int, Zatoshi, Memo, TransparentAddress?) async throws -> Proposal?)?
 
-    func proposeShielding(accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo) async throws -> Proposal {
-        if let error = proposeShieldingAccountIndexShieldingThresholdMemoThrowableError {
+    func proposeShielding(accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?) async throws -> Proposal? {
+        if let error = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError {
             throw error
         }
-        proposeShieldingAccountIndexShieldingThresholdMemoCallsCount += 1
-        proposeShieldingAccountIndexShieldingThresholdMemoReceivedArguments = (accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo)
-        if let closure = proposeShieldingAccountIndexShieldingThresholdMemoClosure {
-            return try await closure(accountIndex, shieldingThreshold, memo)
+        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount += 1
+        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments = (accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure {
+            return try await closure(accountIndex, shieldingThreshold, memo, transparentReceiver)
         } else {
-            return proposeShieldingAccountIndexShieldingThresholdMemoReturnValue
+            return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue
         }
     }
 
@@ -2828,34 +2828,34 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountMemoShieldingThresholdThrowableError: Error?
-    func setProposeShieldingAccountMemoShieldingThresholdThrowableError(_ param: Error?) async {
-        proposeShieldingAccountMemoShieldingThresholdThrowableError = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError: Error?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError(_ param: Error?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError = param
     }
-    var proposeShieldingAccountMemoShieldingThresholdCallsCount = 0
-    var proposeShieldingAccountMemoShieldingThresholdCalled: Bool {
-        return proposeShieldingAccountMemoShieldingThresholdCallsCount > 0
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount > 0
     }
-    var proposeShieldingAccountMemoShieldingThresholdReceivedArguments: (account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
-    var proposeShieldingAccountMemoShieldingThresholdReturnValue: FfiProposal!
-    func setProposeShieldingAccountMemoShieldingThresholdReturnValue(_ param: FfiProposal) async {
-        proposeShieldingAccountMemoShieldingThresholdReturnValue = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReceivedArguments: (account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?)?
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue: FfiProposal?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue(_ param: FfiProposal?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue = param
     }
-    var proposeShieldingAccountMemoShieldingThresholdClosure: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?
-    func setProposeShieldingAccountMemoShieldingThresholdClosure(_ param: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?) async {
-        proposeShieldingAccountMemoShieldingThresholdClosure = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure: ((Int32, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure(_ param: ((Int32, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure = param
     }
 
-    func proposeShielding(account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> FfiProposal {
-        if let error = proposeShieldingAccountMemoShieldingThresholdThrowableError {
+    func proposeShielding(account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?) async throws -> FfiProposal? {
+        if let error = proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError {
             throw error
         }
-        proposeShieldingAccountMemoShieldingThresholdCallsCount += 1
-        proposeShieldingAccountMemoShieldingThresholdReceivedArguments = (account: account, memo: memo, shieldingThreshold: shieldingThreshold)
-        if let closure = proposeShieldingAccountMemoShieldingThresholdClosure {
-            return try await closure(account, memo, shieldingThreshold)
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount += 1
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReceivedArguments = (account: account, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure {
+            return try await closure(account, memo, shieldingThreshold, transparentReceiver)
         } else {
-            return proposeShieldingAccountMemoShieldingThresholdReturnValue
+            return proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue
         }
     }
 

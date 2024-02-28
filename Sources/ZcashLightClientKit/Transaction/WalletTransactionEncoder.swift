@@ -74,13 +74,15 @@ class WalletTransactionEncoder: TransactionEncoder {
     func proposeShielding(
         accountIndex: Int,
         shieldingThreshold: Zatoshi,
-        memoBytes: MemoBytes?
-    ) async throws -> Proposal {
-        let proposal = try await rustBackend.proposeShielding(
+        memoBytes: MemoBytes?,
+        transparentReceiver: String? = nil
+    ) async throws -> Proposal? {
+        guard let proposal = try await rustBackend.proposeShielding(
             account: Int32(accountIndex),
             memo: memoBytes,
-            shieldingThreshold: shieldingThreshold
-        )
+            shieldingThreshold: shieldingThreshold,
+            transparentReceiver: transparentReceiver
+        ) else { return nil }
 
         return Proposal(inner: proposal)
     }

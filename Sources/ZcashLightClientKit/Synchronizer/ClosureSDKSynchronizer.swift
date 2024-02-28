@@ -86,10 +86,16 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         accountIndex: Int,
         shieldingThreshold: Zatoshi,
         memo: Memo,
-        completion: @escaping (Result<Proposal, Error>) -> Void
+        transparentReceiver: TransparentAddress? = nil,
+        completion: @escaping (Result<Proposal?, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.proposeShielding(accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo)
+            try await self.synchronizer.proposeShielding(
+                accountIndex: accountIndex,
+                shieldingThreshold: shieldingThreshold,
+                memo: memo,
+                transparentReceiver: transparentReceiver
+            )
         }
     }
 
