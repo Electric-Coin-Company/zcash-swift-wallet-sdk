@@ -282,13 +282,19 @@ public class SDKSynchronizer: Synchronizer {
         return proposal
     }
 
-    public func proposeShielding(accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo) async throws -> Proposal {
+    public func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo,
+        transparentReceiver: TransparentAddress? = nil
+    ) async throws -> Proposal? {
         try throwIfUnprepared()
 
         let proposal = try await transactionEncoder.proposeShielding(
             accountIndex: accountIndex,
             shieldingThreshold: shieldingThreshold,
-            memoBytes: memo.asMemoBytes()
+            memoBytes: memo.asMemoBytes(),
+            transparentReceiver: transparentReceiver?.stringEncoded
         )
 
         return proposal
@@ -384,11 +390,12 @@ public class SDKSynchronizer: Synchronizer {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
-        let proposal = try await transactionEncoder.proposeShielding(
+        guard let proposal = try await transactionEncoder.proposeShielding(
             accountIndex: Int(spendingKey.account),
             shieldingThreshold: shieldingThreshold,
-            memoBytes: memo.asMemoBytes()
-        )
+            memoBytes: memo.asMemoBytes(),
+            transparentReceiver: nil
+        ) else { throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds }
 
         let transactions = try await transactionEncoder.createProposedTransactions(
             proposal: proposal,

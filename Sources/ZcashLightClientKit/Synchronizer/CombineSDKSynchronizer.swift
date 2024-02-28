@@ -83,10 +83,16 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
     public func proposeShielding(
         accountIndex: Int,
         shieldingThreshold: Zatoshi,
-        memo: Memo
-    ) -> SinglePublisher<Proposal, Error> {
+        memo: Memo,
+        transparentReceiver: TransparentAddress? = nil
+    ) -> SinglePublisher<Proposal?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.proposeShielding(accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo)
+            try await self.synchronizer.proposeShielding(
+                accountIndex: accountIndex,
+                shieldingThreshold: shieldingThreshold,
+                memo: memo,
+                transparentReceiver: transparentReceiver
+            )
         }
     }
 
