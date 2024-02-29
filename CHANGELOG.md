@@ -9,7 +9,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Changed
 
 ### [#1186] Enable ZIP 317 fees
-- The `useZIP317Fees` has been enabled. The 1000 Zatoshi fee proposed in ZIP-313 is no longer valid as well as 10k Zatoshi for the fee. Use `Proposal` for the dynamic fees. 
+- The SDK now generates transactions using [ZIP 317](https://zips.z.cash/zip-0317) fees,
+  instead of a fixed fee of 10,000 Zatoshi. Use `Proposal.totalFeeRequired` to check the
+  total fee for a transfer before creating it.
 
 ## Added
 
