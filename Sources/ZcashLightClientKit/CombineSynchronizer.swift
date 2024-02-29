@@ -61,7 +61,7 @@ public protocol CombineSynchronizer {
         accountIndex: Int,
         shieldingThreshold: Zatoshi,
         memo: Memo
-    ) -> SinglePublisher<Proposal, Error>
+    ) -> SinglePublisher<Proposal?, Error>
 
     func proposefulfillingPaymentURI(
         _ uri: String,
