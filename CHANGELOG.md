@@ -6,6 +6,13 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+
+### [#1186] Enable ZIP 317 fees
+- The SDK now generates transactions using [ZIP 317](https://zips.z.cash/zip-0317) fees,
+  instead of a fixed fee of 10,000 Zatoshi. Use `Proposal.totalFeeRequired` to check the
+  total fee for a transfer before creating it.
+
 ## Added
 
 ### [#1204] Expose APIs for working with transaction proposals
