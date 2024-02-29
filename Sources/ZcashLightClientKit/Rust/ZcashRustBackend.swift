@@ -13,7 +13,7 @@ let globalDBLock = NSLock()
 
 actor ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
-    let useZIP317Fees = false
+    let useZIP317Fees = true
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
