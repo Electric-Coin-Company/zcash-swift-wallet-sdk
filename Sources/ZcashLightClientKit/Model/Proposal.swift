@@ -18,8 +18,10 @@ public struct Proposal: Equatable {
 }
 
 public extension Proposal {
-    /// IMPORTANT: Use of this function is for testing purposes only, not recommended to use in production.
-    /// The instance of `Proposal` should never be created on client's side.
+    /// IMPORTANT: This function is for testing purposes only. It produces fake invalid
+    /// data that can be used to check UI elements, but will always produce an error when
+    /// passed to `Synchronizer.createProposedTransactions`. It should never be called in
+    /// production code.
     static func testOnlyFakeProposal(totalFee: UInt64) -> Self {
         var ffiProposal = FfiProposal()
         var balance = FfiTransactionBalance()
