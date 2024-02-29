@@ -8,11 +8,26 @@
 import Foundation
 
 /// A data structure that describes a series of transactions to be created.
-public struct Proposal {
+public struct Proposal: Equatable {
     let inner: FfiProposal
 
     /// Returns the total fee to be paid across all proposed transactions, in zatoshis.
     public func totalFeeRequired() -> Zatoshi {
-        return Zatoshi(Int64(inner.balance.feeRequired))
+        Zatoshi(Int64(inner.balance.feeRequired))
+    }
+}
+
+public extension Proposal {
+    /// IMPORTANT: This function is for testing purposes only. It produces fake invalid
+    /// data that can be used to check UI elements, but will always produce an error when
+    /// passed to `Synchronizer.createProposedTransactions`. It should never be called in
+    /// production code.
+    static func testOnlyFakeProposal(totalFee: UInt64) -> Self {
+        var ffiProposal = FfiProposal()
+        var balance = FfiTransactionBalance()
+        
+        balance.feeRequired = totalFee
+        
+        return Self(inner: ffiProposal)
     }
 }
