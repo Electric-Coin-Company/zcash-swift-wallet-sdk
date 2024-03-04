@@ -496,7 +496,7 @@ public enum RewindPolicy {
 /// - grpcFailure: the transaction failed to reach the lightwalletd server.
 /// - submitFailure: the transaction reached the lightwalletd server but failed to enter the mempool.
 /// - notAttempted: the transaction was created and is in the local wallet, but was not submitted to the network.
-public enum TransactionSubmitResult {
+public enum TransactionSubmitResult: Equatable {
     case success(txId: Data)
     case grpcFailure(txId: Data, error: LightWalletServiceError)
     case submitFailure(txId: Data, code: Int, description: String)
