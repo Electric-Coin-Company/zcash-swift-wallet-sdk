@@ -622,10 +622,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
     ) async throws -> FfiProposal? {
-        if transparentReceiver != nil {
-            throw ZcashError.rustScanBlocks("TODO: Implement transparentReceiver support in FFI")
-        }
-
         globalDBLock.lock()
         let proposal = zcashlc_propose_shielding(
             dbData.0,
@@ -633,6 +629,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             account,
             memo?.bytes,
             UInt64(shieldingThreshold.amount),
+            transparentReceiver.map { [CChar]($0.utf8CString) },
             networkType.networkId,
             minimumConfirmations,
             useZIP317Fees
@@ -651,44 +648,46 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         ))
     }
 
-    func createProposedTransaction(
+    func createProposedTransactions(
         proposal: FfiProposal,
         usk: UnifiedSpendingKey
-    ) async throws -> Data {
-        var contiguousTxIdBytes = ContiguousArray<UInt8>([UInt8](repeating: 0x0, count: 32))
-
+    ) async throws -> [Data] {
         let proposalBytes = try proposal.serializedData(partial: false).bytes
 
         globalDBLock.lock()
-        let success = contiguousTxIdBytes.withUnsafeMutableBufferPointer { txIdBytePtr in
-            proposalBytes.withUnsafeBufferPointer { proposalPtr in
-                usk.bytes.withUnsafeBufferPointer { uskPtr in
-                    zcashlc_create_proposed_transaction(
-                        dbData.0,
-                        dbData.1,
-                        proposalPtr.baseAddress,
-                        UInt(proposalBytes.count),
-                        uskPtr.baseAddress,
-                        UInt(usk.bytes.count),
-                        spendParamsPath.0,
-                        spendParamsPath.1,
-                        outputParamsPath.0,
-                        outputParamsPath.1,
-                        networkType.networkId,
-                        txIdBytePtr.baseAddress
-                    )
-                }
+        let txIdsPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
+            usk.bytes.withUnsafeBufferPointer { uskPtr in
+                zcashlc_create_proposed_transactions(
+                    dbData.0,
+                    dbData.1,
+                    proposalPtr.baseAddress,
+                    UInt(proposalBytes.count),
+                    uskPtr.baseAddress,
+                    UInt(usk.bytes.count),
+                    spendParamsPath.0,
+                    spendParamsPath.1,
+                    outputParamsPath.0,
+                    outputParamsPath.1,
+                    networkType.networkId
+                )
             }
         }
         globalDBLock.unlock()
 
-        guard success else {
+        guard let txIdsPtr else {
             throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))
         }
 
-        return contiguousTxIdBytes.withUnsafeBufferPointer { txIdBytePtr in
-            Data(txIdBytePtr)
+        defer { zcashlc_free_txids(txIdsPtr) }
+
+        var txIds: [Data] = []
+
+        for i in (0 ..< Int(txIdsPtr.pointee.len)) {
+            let txId = FfiTxId(tuple: txIdsPtr.pointee.ptr.advanced(by: i).pointee)
+            txIds.append(Data(txId.array))
         }
+
+        return txIds
     }
 
     nonisolated func consensusBranchIdFor(height: Int32) throws -> Int32 {
@@ -826,5 +825,14 @@ extension FfiScanProgress {
             numerator: self.numerator,
             denominator: self.denominator
         )
+    }
+}
+
+struct FfiTxId {
+    var tuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
+    var array: [UInt8] {
+        withUnsafeBytes(of: self.tuple) { buf in
+            [UInt8](buf)
+        }
     }
 }

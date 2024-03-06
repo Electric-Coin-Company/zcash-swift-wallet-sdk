@@ -85,7 +85,7 @@ class RustBackendMockHelper {
         await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
         await rustBackendMock.setProposeTransferAccountToValueMemoThrowableError(ZcashError.rustCreateToAddress("mocked error"))
         await rustBackendMock.setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError(ZcashError.rustShieldFunds("mocked error"))
-        await rustBackendMock.setCreateProposedTransactionProposalUskThrowableError(ZcashError.rustCreateToAddress("mocked error"))
+        await rustBackendMock.setCreateProposedTransactionsProposalUskThrowableError(ZcashError.rustCreateToAddress("mocked error"))
         await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(ZcashError.rustDecryptAndStoreTransaction("mock fail"))
 
         await rustBackendMock.setInitDataDbSeedClosure() { seed in

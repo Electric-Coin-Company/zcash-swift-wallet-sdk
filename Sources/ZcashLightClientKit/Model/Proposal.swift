@@ -13,7 +13,9 @@ public struct Proposal: Equatable {
 
     /// Returns the total fee to be paid across all proposed transactions, in zatoshis.
     public func totalFeeRequired() -> Zatoshi {
-        Zatoshi(Int64(inner.balance.feeRequired))
+        inner.steps.reduce(Zatoshi.zero) { acc, step in
+            acc + Zatoshi(Int64(step.balance.feeRequired))
+        }
     }
 }
 

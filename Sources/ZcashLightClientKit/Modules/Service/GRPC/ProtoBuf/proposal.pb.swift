@@ -143,17 +143,45 @@ extension FfiFeeRule: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-/// A data structure that describes the inputs to be consumed and outputs to
-/// be produced in a proposed transaction.
+/// A data structure that describes a series of transactions to be created.
 struct FfiProposal {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// The version of this serialization format.
   var protoVersion: UInt32 = 0
+
+  /// The fee rule used in constructing this proposal
+  var feeRule: FfiFeeRule = .notSpecified
+
+  /// The target height for which the proposal was constructed
+  ///
+  /// The chain must contain at least this many blocks in order for the proposal to
+  /// be executed.
+  var minTargetHeight: UInt32 = 0
+
+  /// The series of transactions to be created.
+  var steps: [FfiProposalStep] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// A data structure that describes the inputs to be consumed and outputs to
+/// be produced in a proposed transaction.
+struct FfiProposalStep {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
 
   /// ZIP 321 serialized transaction request
   var transactionRequest: String = String()
+
+  /// The vector of selected payment index / output pool mappings. Payment index
+  /// 0 corresponds to the payment with no explicit index.
+  var paymentOutputPools: [FfiPaymentOutputPool] = []
 
   /// The anchor height to be used in creating the transaction, if any.
   /// Setting the anchor height to zero will disallow the use of any shielded
@@ -174,16 +202,7 @@ struct FfiProposal {
   /// Clears the value of `balance`. Subsequent reads from it will return its default value.
   mutating func clearBalance() {self._balance = nil}
 
-  /// The fee rule used in constructing this proposal
-  var feeRule: FfiFeeRule = .notSpecified
-
-  /// The target height for which the proposal was constructed
-  ///
-  /// The chain must contain at least this many blocks in order for the proposal to
-  /// be executed.
-  var minTargetHeight: UInt32 = 0
-
-  /// A flag indicating whether the proposal is for a shielding transaction,
+  /// A flag indicating whether the step is for a shielding transaction,
   /// used for determining which OVK to select for wallet-internal outputs.
   var isShielding: Bool = false
 
@@ -194,8 +213,26 @@ struct FfiProposal {
   fileprivate var _balance: FfiTransactionBalance? = nil
 }
 
-/// The unique identifier and value for each proposed input.
-struct FfiProposedInput {
+/// A mapping from ZIP 321 payment index to the output pool that has been chosen
+/// for that payment, based upon the payment address and the selected inputs to
+/// the transaction.
+struct FfiPaymentOutputPool {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var paymentIndex: UInt32 = 0
+
+  var valuePool: FfiValuePool = .poolNotSpecified
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// The unique identifier and value for each proposed input that does not
+/// require a back-reference to a prior step of the proposal.
+struct FfiReceivedOutput {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -213,14 +250,113 @@ struct FfiProposedInput {
   init() {}
 }
 
+/// A reference a payment in a prior step of the proposal. This payment must
+/// belong to the wallet.
+struct FfiPriorStepOutput {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var stepIndex: UInt32 = 0
+
+  var paymentIndex: UInt32 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// A reference a change output from a prior step of the proposal.
+struct FfiPriorStepChange {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var stepIndex: UInt32 = 0
+
+  var changeIndex: UInt32 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// The unique identifier and value for an input to be used in the transaction.
+struct FfiProposedInput {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var value: FfiProposedInput.OneOf_Value? = nil
+
+  var receivedOutput: FfiReceivedOutput {
+    get {
+      if case .receivedOutput(let v)? = value {return v}
+      return FfiReceivedOutput()
+    }
+    set {value = .receivedOutput(newValue)}
+  }
+
+  var priorStepOutput: FfiPriorStepOutput {
+    get {
+      if case .priorStepOutput(let v)? = value {return v}
+      return FfiPriorStepOutput()
+    }
+    set {value = .priorStepOutput(newValue)}
+  }
+
+  var priorStepChange: FfiPriorStepChange {
+    get {
+      if case .priorStepChange(let v)? = value {return v}
+      return FfiPriorStepChange()
+    }
+    set {value = .priorStepChange(newValue)}
+  }
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  enum OneOf_Value: Equatable {
+    case receivedOutput(FfiReceivedOutput)
+    case priorStepOutput(FfiPriorStepOutput)
+    case priorStepChange(FfiPriorStepChange)
+
+  #if !swift(>=4.1)
+    static func ==(lhs: FfiProposedInput.OneOf_Value, rhs: FfiProposedInput.OneOf_Value) -> Bool {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch (lhs, rhs) {
+      case (.receivedOutput, .receivedOutput): return {
+        guard case .receivedOutput(let l) = lhs, case .receivedOutput(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.priorStepOutput, .priorStepOutput): return {
+        guard case .priorStepOutput(let l) = lhs, case .priorStepOutput(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.priorStepChange, .priorStepChange): return {
+        guard case .priorStepChange(let l) = lhs, case .priorStepChange(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      default: return false
+      }
+    }
+  #endif
+  }
+
+  init() {}
+}
+
 /// The proposed change outputs and fee value.
 struct FfiTransactionBalance {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// A list of change output values.
   var proposedChange: [FfiChangeValue] = []
 
+  /// The fee to be paid by the proposed transaction, in zatoshis.
   var feeRequired: UInt64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -235,10 +371,14 @@ struct FfiChangeValue {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// The value of a change output to be created, in zatoshis.
   var value: UInt64 = 0
 
+  /// The value pool in which the change output should be created.
   var valuePool: FfiValuePool = .poolNotSpecified
 
+  /// The optional memo that should be associated with the newly created change output.
+  /// Memos must not be present for transparent change outputs.
   var memo: FfiMemoBytes {
     get {return _memo ?? FfiMemoBytes()}
     set {_memo = newValue}
@@ -273,7 +413,13 @@ struct FfiMemoBytes {
 extension FfiValuePool: @unchecked Sendable {}
 extension FfiFeeRule: @unchecked Sendable {}
 extension FfiProposal: @unchecked Sendable {}
+extension FfiProposalStep: @unchecked Sendable {}
+extension FfiPaymentOutputPool: @unchecked Sendable {}
+extension FfiReceivedOutput: @unchecked Sendable {}
+extension FfiPriorStepOutput: @unchecked Sendable {}
+extension FfiPriorStepChange: @unchecked Sendable {}
 extension FfiProposedInput: @unchecked Sendable {}
+extension FfiProposedInput.OneOf_Value: @unchecked Sendable {}
 extension FfiTransactionBalance: @unchecked Sendable {}
 extension FfiChangeValue: @unchecked Sendable {}
 extension FfiMemoBytes: @unchecked Sendable {}
@@ -305,13 +451,9 @@ extension FfiProposal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
   static let protoMessageName: String = _protobuf_package + ".Proposal"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "protoVersion"),
-    2: .same(proto: "transactionRequest"),
-    3: .same(proto: "anchorHeight"),
-    4: .same(proto: "inputs"),
-    5: .same(proto: "balance"),
-    6: .same(proto: "feeRule"),
-    7: .same(proto: "minTargetHeight"),
-    8: .same(proto: "isShielding"),
+    2: .same(proto: "feeRule"),
+    3: .same(proto: "minTargetHeight"),
+    4: .same(proto: "steps"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -321,13 +463,63 @@ extension FfiProposal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularUInt32Field(value: &self.protoVersion) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.transactionRequest) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.feeRule) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.minTargetHeight) }()
+      case 4: try { try decoder.decodeRepeatedMessageField(value: &self.steps) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.protoVersion != 0 {
+      try visitor.visitSingularUInt32Field(value: self.protoVersion, fieldNumber: 1)
+    }
+    if self.feeRule != .notSpecified {
+      try visitor.visitSingularEnumField(value: self.feeRule, fieldNumber: 2)
+    }
+    if self.minTargetHeight != 0 {
+      try visitor.visitSingularUInt32Field(value: self.minTargetHeight, fieldNumber: 3)
+    }
+    if !self.steps.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.steps, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FfiProposal, rhs: FfiProposal) -> Bool {
+    if lhs.protoVersion != rhs.protoVersion {return false}
+    if lhs.feeRule != rhs.feeRule {return false}
+    if lhs.minTargetHeight != rhs.minTargetHeight {return false}
+    if lhs.steps != rhs.steps {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FfiProposalStep: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ProposalStep"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "transactionRequest"),
+    2: .same(proto: "paymentOutputPools"),
+    3: .same(proto: "anchorHeight"),
+    4: .same(proto: "inputs"),
+    5: .same(proto: "balance"),
+    6: .same(proto: "isShielding"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.transactionRequest) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.paymentOutputPools) }()
       case 3: try { try decoder.decodeSingularUInt32Field(value: &self.anchorHeight) }()
       case 4: try { try decoder.decodeRepeatedMessageField(value: &self.inputs) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._balance) }()
-      case 6: try { try decoder.decodeSingularEnumField(value: &self.feeRule) }()
-      case 7: try { try decoder.decodeSingularUInt32Field(value: &self.minTargetHeight) }()
-      case 8: try { try decoder.decodeSingularBoolField(value: &self.isShielding) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self.isShielding) }()
       default: break
       }
     }
@@ -338,11 +530,11 @@ extension FfiProposal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    if self.protoVersion != 0 {
-      try visitor.visitSingularUInt32Field(value: self.protoVersion, fieldNumber: 1)
-    }
     if !self.transactionRequest.isEmpty {
-      try visitor.visitSingularStringField(value: self.transactionRequest, fieldNumber: 2)
+      try visitor.visitSingularStringField(value: self.transactionRequest, fieldNumber: 1)
+    }
+    if !self.paymentOutputPools.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.paymentOutputPools, fieldNumber: 2)
     }
     if self.anchorHeight != 0 {
       try visitor.visitSingularUInt32Field(value: self.anchorHeight, fieldNumber: 3)
@@ -353,34 +545,64 @@ extension FfiProposal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     try { if let v = self._balance {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     } }()
-    if self.feeRule != .notSpecified {
-      try visitor.visitSingularEnumField(value: self.feeRule, fieldNumber: 6)
-    }
-    if self.minTargetHeight != 0 {
-      try visitor.visitSingularUInt32Field(value: self.minTargetHeight, fieldNumber: 7)
-    }
     if self.isShielding != false {
-      try visitor.visitSingularBoolField(value: self.isShielding, fieldNumber: 8)
+      try visitor.visitSingularBoolField(value: self.isShielding, fieldNumber: 6)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: FfiProposal, rhs: FfiProposal) -> Bool {
-    if lhs.protoVersion != rhs.protoVersion {return false}
+  static func ==(lhs: FfiProposalStep, rhs: FfiProposalStep) -> Bool {
     if lhs.transactionRequest != rhs.transactionRequest {return false}
+    if lhs.paymentOutputPools != rhs.paymentOutputPools {return false}
     if lhs.anchorHeight != rhs.anchorHeight {return false}
     if lhs.inputs != rhs.inputs {return false}
     if lhs._balance != rhs._balance {return false}
-    if lhs.feeRule != rhs.feeRule {return false}
-    if lhs.minTargetHeight != rhs.minTargetHeight {return false}
     if lhs.isShielding != rhs.isShielding {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension FfiProposedInput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".ProposedInput"
+extension FfiPaymentOutputPool: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PaymentOutputPool"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "paymentIndex"),
+    2: .same(proto: "valuePool"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.paymentIndex) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.valuePool) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.paymentIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.paymentIndex, fieldNumber: 1)
+    }
+    if self.valuePool != .poolNotSpecified {
+      try visitor.visitSingularEnumField(value: self.valuePool, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FfiPaymentOutputPool, rhs: FfiPaymentOutputPool) -> Bool {
+    if lhs.paymentIndex != rhs.paymentIndex {return false}
+    if lhs.valuePool != rhs.valuePool {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FfiReceivedOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ReceivedOutput"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "txid"),
     2: .same(proto: "valuePool"),
@@ -419,10 +641,174 @@ extension FfiProposedInput: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: FfiProposedInput, rhs: FfiProposedInput) -> Bool {
+  static func ==(lhs: FfiReceivedOutput, rhs: FfiReceivedOutput) -> Bool {
     if lhs.txid != rhs.txid {return false}
     if lhs.valuePool != rhs.valuePool {return false}
     if lhs.index != rhs.index {return false}
+    if lhs.value != rhs.value {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FfiPriorStepOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PriorStepOutput"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "stepIndex"),
+    2: .same(proto: "paymentIndex"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.stepIndex) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.paymentIndex) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.stepIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.stepIndex, fieldNumber: 1)
+    }
+    if self.paymentIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.paymentIndex, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FfiPriorStepOutput, rhs: FfiPriorStepOutput) -> Bool {
+    if lhs.stepIndex != rhs.stepIndex {return false}
+    if lhs.paymentIndex != rhs.paymentIndex {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FfiPriorStepChange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PriorStepChange"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "stepIndex"),
+    2: .same(proto: "changeIndex"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.stepIndex) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.changeIndex) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.stepIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.stepIndex, fieldNumber: 1)
+    }
+    if self.changeIndex != 0 {
+      try visitor.visitSingularUInt32Field(value: self.changeIndex, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FfiPriorStepChange, rhs: FfiPriorStepChange) -> Bool {
+    if lhs.stepIndex != rhs.stepIndex {return false}
+    if lhs.changeIndex != rhs.changeIndex {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FfiProposedInput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ProposedInput"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "receivedOutput"),
+    2: .same(proto: "priorStepOutput"),
+    3: .same(proto: "priorStepChange"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: FfiReceivedOutput?
+        var hadOneofValue = false
+        if let current = self.value {
+          hadOneofValue = true
+          if case .receivedOutput(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.value = .receivedOutput(v)
+        }
+      }()
+      case 2: try {
+        var v: FfiPriorStepOutput?
+        var hadOneofValue = false
+        if let current = self.value {
+          hadOneofValue = true
+          if case .priorStepOutput(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.value = .priorStepOutput(v)
+        }
+      }()
+      case 3: try {
+        var v: FfiPriorStepChange?
+        var hadOneofValue = false
+        if let current = self.value {
+          hadOneofValue = true
+          if case .priorStepChange(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.value = .priorStepChange(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.value {
+    case .receivedOutput?: try {
+      guard case .receivedOutput(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .priorStepOutput?: try {
+      guard case .priorStepOutput(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case .priorStepChange?: try {
+      guard case .priorStepChange(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FfiProposedInput, rhs: FfiProposedInput) -> Bool {
     if lhs.value != rhs.value {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

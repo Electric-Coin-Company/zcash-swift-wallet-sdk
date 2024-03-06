@@ -2859,36 +2859,36 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - createProposedTransaction
+    // MARK: - createProposedTransactions
 
-    var createProposedTransactionProposalUskThrowableError: Error?
-    func setCreateProposedTransactionProposalUskThrowableError(_ param: Error?) async {
-        createProposedTransactionProposalUskThrowableError = param
+    var createProposedTransactionsProposalUskThrowableError: Error?
+    func setCreateProposedTransactionsProposalUskThrowableError(_ param: Error?) async {
+        createProposedTransactionsProposalUskThrowableError = param
     }
-    var createProposedTransactionProposalUskCallsCount = 0
-    var createProposedTransactionProposalUskCalled: Bool {
-        return createProposedTransactionProposalUskCallsCount > 0
+    var createProposedTransactionsProposalUskCallsCount = 0
+    var createProposedTransactionsProposalUskCalled: Bool {
+        return createProposedTransactionsProposalUskCallsCount > 0
     }
-    var createProposedTransactionProposalUskReceivedArguments: (proposal: FfiProposal, usk: UnifiedSpendingKey)?
-    var createProposedTransactionProposalUskReturnValue: Data!
-    func setCreateProposedTransactionProposalUskReturnValue(_ param: Data) async {
-        createProposedTransactionProposalUskReturnValue = param
+    var createProposedTransactionsProposalUskReceivedArguments: (proposal: FfiProposal, usk: UnifiedSpendingKey)?
+    var createProposedTransactionsProposalUskReturnValue: [Data]!
+    func setCreateProposedTransactionsProposalUskReturnValue(_ param: [Data]) async {
+        createProposedTransactionsProposalUskReturnValue = param
     }
-    var createProposedTransactionProposalUskClosure: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?
-    func setCreateProposedTransactionProposalUskClosure(_ param: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?) async {
-        createProposedTransactionProposalUskClosure = param
+    var createProposedTransactionsProposalUskClosure: ((FfiProposal, UnifiedSpendingKey) async throws -> [Data])?
+    func setCreateProposedTransactionsProposalUskClosure(_ param: ((FfiProposal, UnifiedSpendingKey) async throws -> [Data])?) async {
+        createProposedTransactionsProposalUskClosure = param
     }
 
-    func createProposedTransaction(proposal: FfiProposal, usk: UnifiedSpendingKey) async throws -> Data {
-        if let error = createProposedTransactionProposalUskThrowableError {
+    func createProposedTransactions(proposal: FfiProposal, usk: UnifiedSpendingKey) async throws -> [Data] {
+        if let error = createProposedTransactionsProposalUskThrowableError {
             throw error
         }
-        createProposedTransactionProposalUskCallsCount += 1
-        createProposedTransactionProposalUskReceivedArguments = (proposal: proposal, usk: usk)
-        if let closure = createProposedTransactionProposalUskClosure {
+        createProposedTransactionsProposalUskCallsCount += 1
+        createProposedTransactionsProposalUskReceivedArguments = (proposal: proposal, usk: usk)
+        if let closure = createProposedTransactionsProposalUskClosure {
             return try await closure(proposal, usk)
         } else {
-            return createProposedTransactionProposalUskReturnValue
+            return createProposedTransactionsProposalUskReturnValue
         }
     }
 

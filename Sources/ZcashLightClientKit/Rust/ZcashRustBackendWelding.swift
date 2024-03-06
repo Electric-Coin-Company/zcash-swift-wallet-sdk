@@ -233,10 +233,10 @@ protocol ZcashRustBackendWelding {
     /// - Parameter proposal: the transaction proposal.
     /// - Parameter usk: `UnifiedSpendingKey` for the account that controls the funds to be spent.
     /// - Throws: `rustCreateToAddress`.
-    func createProposedTransaction(
+    func createProposedTransactions(
         proposal: FfiProposal,
         usk: UnifiedSpendingKey
-    ) async throws -> Data
+    ) async throws -> [Data]
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
