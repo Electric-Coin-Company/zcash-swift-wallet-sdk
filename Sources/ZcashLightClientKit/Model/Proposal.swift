@@ -11,6 +11,16 @@ import Foundation
 public struct Proposal: Equatable {
     let inner: FfiProposal
 
+    /// Returns the number of transactions that this proposal will create.
+    ///
+    /// This is equal to the number of `TransactionSubmitResult`s that will be returned
+    /// from `Synchronizer.createProposedTransactions`.
+    ///
+    /// Proposals always create at least one transaction.
+    public func transactionCount() -> Int {
+        inner.steps.count
+    }
+
     /// Returns the total fee to be paid across all proposed transactions, in zatoshis.
     public func totalFeeRequired() -> Zatoshi {
         inner.steps.reduce(Zatoshi.zero) { acc, step in
