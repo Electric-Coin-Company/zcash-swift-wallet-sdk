@@ -35,6 +35,61 @@ public protocol CombineSynchronizer {
     func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error>
     func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error>
 
+    /// Creates a proposal for transferring funds to the given recipient.
+    ///
+    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter recipient: the recipient's address.
+    /// - Parameter amount: the amount to send in Zatoshi.
+    /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?
+    ) -> SinglePublisher<Proposal, Error>
+
+    /// Creates a proposal for shielding any transparent funds received by the given account.
+    ///
+    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
+    /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
+    /// - Parameter transparentReceiver: a specific transparent receiver within the account
+    ///             that should be the source of transparent funds. Default is `nil` which
+    ///             will select whichever of the account's transparent receivers has funds
+    ///             to shield.
+    ///
+    /// Returns the proposal, or `nil` if the transparent balance that would be shielded
+    /// is zero or below `shieldingThreshold`.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo,
+        transparentReceiver: TransparentAddress?
+    ) -> SinglePublisher<Proposal?, Error>
+
+    /// Creates the transactions in the given proposal.
+    ///
+    /// - Parameter proposal: the proposal for which to create transactions.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` associated with the account for which the proposal was created.
+    ///
+    /// Returns a stream of objects for the transactions that were created as part of the
+    /// proposal, indicating whether they were submitted to the network or if an error
+    /// occurred.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance
+    /// or since the last wipe then this method throws `SynchronizerErrors.notPrepared`.
+    func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey
+    ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
+
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -42,6 +97,7 @@ public protocol CombineSynchronizer {
         memo: Memo?
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
 
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,

@@ -4,6 +4,28 @@ All notable changes to this library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Unreleased
+
+## Changed
+- Migrated to `zcash-light-client-ffi 0.6.0`.
+
+### [#1186] Enable ZIP 317 fees
+- The SDK now generates transactions using [ZIP 317](https://zips.z.cash/zip-0317) fees,
+  instead of a fixed fee of 10,000 Zatoshi. Use `Proposal.totalFeeRequired` to check the
+  total fee for a transfer before creating it.
+
+## Added
+
+### [#1204] Expose APIs for working with transaction proposals
+New `Synchronizer` APIs that enable constructing a proposal for transferring or
+shielding funds, and then creating transactions from a proposal. The intermediate
+proposal can be used to determine the required fee, before committing to producing
+transactions.
+
+The old `Synchronizer.sendToAddress` and `Synchronizer.shieldFunds` APIs have been
+deprecated, and will be removed in 2.1.0 (which will create multiple transactions
+at once for some recipients).
+
 # 2.0.10 - 2024-02-12
 
 ## Added

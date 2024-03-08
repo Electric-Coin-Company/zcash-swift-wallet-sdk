@@ -1397,6 +1397,78 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - proposeTransfer
+
+    var proposeTransferAccountIndexRecipientAmountMemoThrowableError: Error?
+    var proposeTransferAccountIndexRecipientAmountMemoCallsCount = 0
+    var proposeTransferAccountIndexRecipientAmountMemoCalled: Bool {
+        return proposeTransferAccountIndexRecipientAmountMemoCallsCount > 0
+    }
+    var proposeTransferAccountIndexRecipientAmountMemoReceivedArguments: (accountIndex: Int, recipient: Recipient, amount: Zatoshi, memo: Memo?)?
+    var proposeTransferAccountIndexRecipientAmountMemoReturnValue: Proposal!
+    var proposeTransferAccountIndexRecipientAmountMemoClosure: ((Int, Recipient, Zatoshi, Memo?) async throws -> Proposal)?
+
+    func proposeTransfer(accountIndex: Int, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
+        if let error = proposeTransferAccountIndexRecipientAmountMemoThrowableError {
+            throw error
+        }
+        proposeTransferAccountIndexRecipientAmountMemoCallsCount += 1
+        proposeTransferAccountIndexRecipientAmountMemoReceivedArguments = (accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+        if let closure = proposeTransferAccountIndexRecipientAmountMemoClosure {
+            return try await closure(accountIndex, recipient, amount, memo)
+        } else {
+            return proposeTransferAccountIndexRecipientAmountMemoReturnValue
+        }
+    }
+
+    // MARK: - proposeShielding
+
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError: Error?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount > 0
+    }
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments: (accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?)?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue: Proposal?
+    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure: ((Int, Zatoshi, Memo, TransparentAddress?) async throws -> Proposal?)?
+
+    func proposeShielding(accountIndex: Int, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?) async throws -> Proposal? {
+        if let error = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError {
+            throw error
+        }
+        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount += 1
+        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments = (accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure {
+            return try await closure(accountIndex, shieldingThreshold, memo, transparentReceiver)
+        } else {
+            return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue
+        }
+    }
+
+    // MARK: - createProposedTransactions
+
+    var createProposedTransactionsProposalSpendingKeyThrowableError: Error?
+    var createProposedTransactionsProposalSpendingKeyCallsCount = 0
+    var createProposedTransactionsProposalSpendingKeyCalled: Bool {
+        return createProposedTransactionsProposalSpendingKeyCallsCount > 0
+    }
+    var createProposedTransactionsProposalSpendingKeyReceivedArguments: (proposal: Proposal, spendingKey: UnifiedSpendingKey)?
+    var createProposedTransactionsProposalSpendingKeyReturnValue: AsyncThrowingStream<TransactionSubmitResult, Error>!
+    var createProposedTransactionsProposalSpendingKeyClosure: ((Proposal, UnifiedSpendingKey) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>)?
+
+    func createProposedTransactions(proposal: Proposal, spendingKey: UnifiedSpendingKey) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+        if let error = createProposedTransactionsProposalSpendingKeyThrowableError {
+            throw error
+        }
+        createProposedTransactionsProposalSpendingKeyCallsCount += 1
+        createProposedTransactionsProposalSpendingKeyReceivedArguments = (proposal: proposal, spendingKey: spendingKey)
+        if let closure = createProposedTransactionsProposalSpendingKeyClosure {
+            return try await closure(proposal, spendingKey)
+        } else {
+            return createProposedTransactionsProposalSpendingKeyReturnValue
+        }
+    }
+
     // MARK: - sendToAddress
 
     var sendToAddressSpendingKeyZatoshiToAddressMemoThrowableError: Error?
@@ -2756,67 +2828,67 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountMemoShieldingThresholdThrowableError: Error?
-    func setProposeShieldingAccountMemoShieldingThresholdThrowableError(_ param: Error?) async {
-        proposeShieldingAccountMemoShieldingThresholdThrowableError = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError: Error?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError(_ param: Error?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError = param
     }
-    var proposeShieldingAccountMemoShieldingThresholdCallsCount = 0
-    var proposeShieldingAccountMemoShieldingThresholdCalled: Bool {
-        return proposeShieldingAccountMemoShieldingThresholdCallsCount > 0
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount > 0
     }
-    var proposeShieldingAccountMemoShieldingThresholdReceivedArguments: (account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
-    var proposeShieldingAccountMemoShieldingThresholdReturnValue: FfiProposal!
-    func setProposeShieldingAccountMemoShieldingThresholdReturnValue(_ param: FfiProposal) async {
-        proposeShieldingAccountMemoShieldingThresholdReturnValue = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReceivedArguments: (account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?)?
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue: FfiProposal?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue(_ param: FfiProposal?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue = param
     }
-    var proposeShieldingAccountMemoShieldingThresholdClosure: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?
-    func setProposeShieldingAccountMemoShieldingThresholdClosure(_ param: ((Int32, MemoBytes?, Zatoshi) async throws -> FfiProposal)?) async {
-        proposeShieldingAccountMemoShieldingThresholdClosure = param
+    var proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure: ((Int32, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?
+    func setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure(_ param: ((Int32, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?) async {
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure = param
     }
 
-    func proposeShielding(account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> FfiProposal {
-        if let error = proposeShieldingAccountMemoShieldingThresholdThrowableError {
+    func proposeShielding(account: Int32, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?) async throws -> FfiProposal? {
+        if let error = proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError {
             throw error
         }
-        proposeShieldingAccountMemoShieldingThresholdCallsCount += 1
-        proposeShieldingAccountMemoShieldingThresholdReceivedArguments = (account: account, memo: memo, shieldingThreshold: shieldingThreshold)
-        if let closure = proposeShieldingAccountMemoShieldingThresholdClosure {
-            return try await closure(account, memo, shieldingThreshold)
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverCallsCount += 1
+        proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReceivedArguments = (account: account, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountMemoShieldingThresholdTransparentReceiverClosure {
+            return try await closure(account, memo, shieldingThreshold, transparentReceiver)
         } else {
-            return proposeShieldingAccountMemoShieldingThresholdReturnValue
+            return proposeShieldingAccountMemoShieldingThresholdTransparentReceiverReturnValue
         }
     }
 
-    // MARK: - createProposedTransaction
+    // MARK: - createProposedTransactions
 
-    var createProposedTransactionProposalUskThrowableError: Error?
-    func setCreateProposedTransactionProposalUskThrowableError(_ param: Error?) async {
-        createProposedTransactionProposalUskThrowableError = param
+    var createProposedTransactionsProposalUskThrowableError: Error?
+    func setCreateProposedTransactionsProposalUskThrowableError(_ param: Error?) async {
+        createProposedTransactionsProposalUskThrowableError = param
     }
-    var createProposedTransactionProposalUskCallsCount = 0
-    var createProposedTransactionProposalUskCalled: Bool {
-        return createProposedTransactionProposalUskCallsCount > 0
+    var createProposedTransactionsProposalUskCallsCount = 0
+    var createProposedTransactionsProposalUskCalled: Bool {
+        return createProposedTransactionsProposalUskCallsCount > 0
     }
-    var createProposedTransactionProposalUskReceivedArguments: (proposal: FfiProposal, usk: UnifiedSpendingKey)?
-    var createProposedTransactionProposalUskReturnValue: Data!
-    func setCreateProposedTransactionProposalUskReturnValue(_ param: Data) async {
-        createProposedTransactionProposalUskReturnValue = param
+    var createProposedTransactionsProposalUskReceivedArguments: (proposal: FfiProposal, usk: UnifiedSpendingKey)?
+    var createProposedTransactionsProposalUskReturnValue: [Data]!
+    func setCreateProposedTransactionsProposalUskReturnValue(_ param: [Data]) async {
+        createProposedTransactionsProposalUskReturnValue = param
     }
-    var createProposedTransactionProposalUskClosure: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?
-    func setCreateProposedTransactionProposalUskClosure(_ param: ((FfiProposal, UnifiedSpendingKey) async throws -> Data)?) async {
-        createProposedTransactionProposalUskClosure = param
+    var createProposedTransactionsProposalUskClosure: ((FfiProposal, UnifiedSpendingKey) async throws -> [Data])?
+    func setCreateProposedTransactionsProposalUskClosure(_ param: ((FfiProposal, UnifiedSpendingKey) async throws -> [Data])?) async {
+        createProposedTransactionsProposalUskClosure = param
     }
 
-    func createProposedTransaction(proposal: FfiProposal, usk: UnifiedSpendingKey) async throws -> Data {
-        if let error = createProposedTransactionProposalUskThrowableError {
+    func createProposedTransactions(proposal: FfiProposal, usk: UnifiedSpendingKey) async throws -> [Data] {
+        if let error = createProposedTransactionsProposalUskThrowableError {
             throw error
         }
-        createProposedTransactionProposalUskCallsCount += 1
-        createProposedTransactionProposalUskReceivedArguments = (proposal: proposal, usk: usk)
-        if let closure = createProposedTransactionProposalUskClosure {
+        createProposedTransactionsProposalUskCallsCount += 1
+        createProposedTransactionsProposalUskReceivedArguments = (proposal: proposal, usk: usk)
+        if let closure = createProposedTransactionsProposalUskClosure {
             return try await closure(proposal, usk)
         } else {
-            return createProposedTransactionProposalUskReturnValue
+            return createProposedTransactionsProposalUskReturnValue
         }
     }
 

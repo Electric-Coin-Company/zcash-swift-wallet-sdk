@@ -70,6 +70,46 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func proposeTransfer(
+        accountIndex: Int,
+        recipient: Recipient,
+        amount: Zatoshi,
+        memo: Memo?,
+        completion: @escaping (Result<Proposal, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+        }
+    }
+
+    public func proposeShielding(
+        accountIndex: Int,
+        shieldingThreshold: Zatoshi,
+        memo: Memo,
+        transparentReceiver: TransparentAddress? = nil,
+        completion: @escaping (Result<Proposal?, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.proposeShielding(
+                accountIndex: accountIndex,
+                shieldingThreshold: shieldingThreshold,
+                memo: memo,
+                transparentReceiver: transparentReceiver
+            )
+        }
+    }
+
+    public func createProposedTransactions(
+        proposal: Proposal,
+        spendingKey: UnifiedSpendingKey,
+        completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.createProposedTransactions(proposal: proposal, spendingKey: spendingKey)
+        }
+    }
+
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     public func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -82,6 +122,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     public func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,

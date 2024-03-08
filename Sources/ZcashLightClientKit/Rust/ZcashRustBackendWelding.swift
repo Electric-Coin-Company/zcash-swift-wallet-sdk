@@ -212,23 +212,31 @@ protocol ZcashRustBackendWelding {
     /// that can then be authorized and made ready for submission to the network with
     /// `createProposedTransaction`.
     ///
+    /// Returns the proposal, or `nil` if the transparent balance that would be shielded
+    /// is zero or below `shieldingThreshold`.
+    ///
     /// - parameter account: index of the given account
     /// - Parameter memo: the `Memo` for this transaction
+    /// - Parameter transparentReceiver: a specific transparent receiver within the account
+    ///             that should be the source of transparent funds. Default is `nil` which
+    ///             will select whichever of the account's transparent receivers has funds
+    ///             to shield.
     /// - Throws: `rustShieldFunds` if rust layer returns error.
     func proposeShielding(
         account: Int32,
         memo: MemoBytes?,
-        shieldingThreshold: Zatoshi
-    ) async throws -> FfiProposal
+        shieldingThreshold: Zatoshi,
+        transparentReceiver: String?
+    ) async throws -> FfiProposal?
 
     /// Creates a transaction from the given proposal.
     /// - Parameter proposal: the transaction proposal.
     /// - Parameter usk: `UnifiedSpendingKey` for the account that controls the funds to be spent.
     /// - Throws: `rustCreateToAddress`.
-    func createProposedTransaction(
+    func createProposedTransactions(
         proposal: FfiProposal,
         usk: UnifiedSpendingKey
-    ) async throws -> Data
+    ) async throws -> [Data]
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
