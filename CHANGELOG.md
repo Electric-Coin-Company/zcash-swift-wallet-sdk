@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.0.11 - 2024-03-08
+
 ## Changed
 - Migrated to `zcash-light-client-ffi 0.6.0`.
 
@@ -25,6 +27,25 @@ transactions.
 The old `Synchronizer.sendToAddress` and `Synchronizer.shieldFunds` APIs have been
 deprecated, and will be removed in 2.1.0 (which will create multiple transactions
 at once for some recipients).
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2402500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2427500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2690000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2740000.json
+````
 
 # 2.0.10 - 2024-02-12
 
