@@ -7,6 +7,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 ## Changed
+- Migrated to `zcash-light-client-ffi 0.6.0`.
 
 ### [#1186] Enable ZIP 317 fees
 - The SDK now generates transactions using [ZIP 317](https://zips.z.cash/zip-0317) fees,
