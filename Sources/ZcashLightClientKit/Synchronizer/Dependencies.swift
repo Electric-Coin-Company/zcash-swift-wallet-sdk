@@ -100,8 +100,7 @@ enum Dependencies {
     
     static func setupCompactBlockProcessor(
         in container: DIContainer,
-        config: CompactBlockProcessor.Configuration,
-        accountRepository: AccountRepository
+        config: CompactBlockProcessor.Configuration
     ) {
         container.register(type: BlockDownloader.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
@@ -163,7 +162,6 @@ enum Dependencies {
             let logger = di.resolve(Logger.self)
             
             return UTXOFetcherImpl(
-                accountRepository: accountRepository,
                 blockDownloaderService: blockDownloaderService,
                 config: utxoFetcherConfig,
                 rustBackend: rustBackend,

@@ -20,6 +20,9 @@ public enum DbInitResult {
 
 // sourcery: mockActor
 protocol ZcashRustBackendWelding {
+    /// Returns a list of the accounts in the wallet.
+    func listAccounts() async throws -> [Int32]
+
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
     ///

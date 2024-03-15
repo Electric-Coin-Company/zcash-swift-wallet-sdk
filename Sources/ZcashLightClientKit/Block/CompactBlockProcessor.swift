@@ -28,7 +28,6 @@ actor CompactBlockProcessor {
     private let configProvider: ConfigProvider
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
-    private let accountRepository: AccountRepository
     var blockDownloaderService: BlockDownloaderService
     private var latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
@@ -142,20 +141,6 @@ actor CompactBlockProcessor {
         }
     }
 
-    /// Initializes a CompactBlockProcessor instance
-    /// - Parameters:
-    ///  - service: concrete implementation of `LightWalletService` protocol
-    ///  - storage: concrete implementation of `CompactBlockRepository` protocol
-    ///  - backend: a class that complies to `ZcashRustBackendWelding`
-    ///  - config: `Configuration` struct for this processor
-    init(container: DIContainer, config: Configuration) {
-        self.init(
-            container: container,
-            config: config,
-            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: container.resolve(Logger.self))
-        )
-    }
-
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
@@ -171,20 +156,23 @@ actor CompactBlockProcessor {
                 saplingParamsSourceURL: initializer.saplingParamsSourceURL,
                 walletBirthdayProvider: walletBirthdayProvider,
                 network: initializer.network
-            ),
-            accountRepository: initializer.accountRepository
+            )
         )
     }
 
+    /// Initializes a CompactBlockProcessor instance
+    /// - Parameters:
+    ///  - service: concrete implementation of `LightWalletService` protocol
+    ///  - storage: concrete implementation of `CompactBlockRepository` protocol
+    ///  - backend: a class that complies to `ZcashRustBackendWelding`
+    ///  - config: `Configuration` struct for this processor
     init(
         container: DIContainer,
-        config: Configuration,
-        accountRepository: AccountRepository
+        config: Configuration
     ) {
         Dependencies.setupCompactBlockProcessor(
             in: container,
-            config: config,
-            accountRepository: accountRepository
+            config: config
         )
 
         let configProvider = ConfigProvider(config: config)
@@ -200,7 +188,6 @@ actor CompactBlockProcessor {
         self.storage = container.resolve(CompactBlockRepository.self)
         self.config = config
         self.transactionRepository = container.resolve(TransactionRepository.self)
-        self.accountRepository = accountRepository
         self.fileManager = container.resolve(ZcashFileManager.self)
         self.configProvider = configProvider
     }

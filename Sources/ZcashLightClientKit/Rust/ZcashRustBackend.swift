@@ -49,6 +49,31 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    func listAccounts() async throws -> [Int32] {
+        globalDBLock.lock()
+        let accountsPtr = zcashlc_list_accounts(
+            dbData.0,
+            dbData.1,
+            networkType.networkId
+        )
+        globalDBLock.unlock()
+
+        guard let accountsPtr else {
+            throw ZcashError.rustListAccounts(lastErrorMessage(fallback: "`listAccounts` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_accounts(accountsPtr) }
+
+        var accounts: [Int32] = []
+
+        for i in (0 ..< Int(accountsPtr.pointee.len)) {
+            let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
+            accounts.append(Int32(account.account_index))
+        }
+
+        return accounts
+    }
+
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         

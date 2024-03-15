@@ -667,8 +667,7 @@ public class SDKSynchronizer: Synchronizer {
         // CompactBlockProcessor dependency update
         Dependencies.setupCompactBlockProcessor(
             in: initializer.container,
-            config: await blockProcessor.config,
-            accountRepository: initializer.accountRepository
+            config: await blockProcessor.config
         )
         
         // INITIALIZER

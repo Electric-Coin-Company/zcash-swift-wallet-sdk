@@ -120,7 +120,6 @@ public class Initializer {
     let saplingParamsSourceURL: SaplingParamsSourceURL
     var lightWalletService: LightWalletService
     let transactionRepository: TransactionRepository
-    let accountRepository: AccountRepository
     let storage: CompactBlockRepository
     var blockDownloaderService: BlockDownloaderService
     let network: ZcashNetwork
@@ -272,12 +271,6 @@ public class Initializer {
         self.alias = alias
         self.lightWalletService = container.resolve(LightWalletService.self)
         self.transactionRepository = container.resolve(TransactionRepository.self)
-        self.accountRepository = AccountRepositoryBuilder.build(
-            dataDbURL: urls.dataDbURL,
-            readOnly: true,
-            caching: true,
-            logger: container.resolve(Logger.self)
-        )
         self.storage = container.resolve(CompactBlockRepository.self)
         self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
         self.network = network
@@ -419,7 +412,7 @@ public class Initializer {
         self.walletBirthday = checkpoint.height
 
         // If there are no accounts it must be created, the default amount of accounts is 1
-        if let seed, try accountRepository.getAll().isEmpty {
+        if let seed, try await rustBackend.listAccounts().isEmpty {
             var chainTip: UInt32?
             
             if walletMode == .restoreWallet {

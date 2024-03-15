@@ -2213,6 +2213,37 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         self.consensusBranchIdForHeightClosure = consensusBranchIdForHeightClosure
     }
 
+    // MARK: - listAccounts
+
+    var listAccountsThrowableError: Error?
+    func setListAccountsThrowableError(_ param: Error?) async {
+        listAccountsThrowableError = param
+    }
+    var listAccountsCallsCount = 0
+    var listAccountsCalled: Bool {
+        return listAccountsCallsCount > 0
+    }
+    var listAccountsReturnValue: [Int32]!
+    func setListAccountsReturnValue(_ param: [Int32]) async {
+        listAccountsReturnValue = param
+    }
+    var listAccountsClosure: (() async throws -> [Int32])?
+    func setListAccountsClosure(_ param: (() async throws -> [Int32])?) async {
+        listAccountsClosure = param
+    }
+
+    func listAccounts() async throws -> [Int32] {
+        if let error = listAccountsThrowableError {
+            throw error
+        }
+        listAccountsCallsCount += 1
+        if let closure = listAccountsClosure {
+            return try await closure()
+        } else {
+            return listAccountsReturnValue
+        }
+    }
+
     // MARK: - createAccount
 
     var createAccountSeedTreeStateRecoverUntilThrowableError: Error?
