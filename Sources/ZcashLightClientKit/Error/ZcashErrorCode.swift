@@ -175,6 +175,8 @@ public enum ZcashErrorCode: String {
     case rustScanProgressOutOfRange = "ZRUST0055"
     /// Error from rust layer when calling ZcashRustBackend.getWalletSummary
     case rustGetWalletSummary = "ZRUST0056"
+    /// Error from rust layer when calling ZcashRustBackend.isSeedRelevantToWallet
+    case rustIsSeedRelevantToWallet = "ZRUST0057"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
