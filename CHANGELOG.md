@@ -18,6 +18,10 @@ Possible errors:
 - `ZcashError.rustProposeTransferFromURI`
 - Other errors that `sentToAddress` can throw
 
+## Removed
+
+- `SDKSynchronizer.latestUTXOs`
+
 # 2.0.11 - 2024-03-08
 
 ## Changed
