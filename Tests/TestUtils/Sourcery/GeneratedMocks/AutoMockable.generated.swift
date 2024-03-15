@@ -1493,6 +1493,30 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - proposefulfillingPaymentURI
+
+    var proposefulfillingPaymentURIAccountIndexThrowableError: Error?
+    var proposefulfillingPaymentURIAccountIndexCallsCount = 0
+    var proposefulfillingPaymentURIAccountIndexCalled: Bool {
+        return proposefulfillingPaymentURIAccountIndexCallsCount > 0
+    }
+    var proposefulfillingPaymentURIAccountIndexReceivedArguments: (uri: String, accountIndex: Int)?
+    var proposefulfillingPaymentURIAccountIndexReturnValue: Proposal!
+    var proposefulfillingPaymentURIAccountIndexClosure: ((String, Int) async throws -> Proposal)?
+
+    func proposefulfillingPaymentURI(_ uri: String, accountIndex: Int) async throws -> Proposal {
+        if let error = proposefulfillingPaymentURIAccountIndexThrowableError {
+            throw error
+        }
+        proposefulfillingPaymentURIAccountIndexCallsCount += 1
+        proposefulfillingPaymentURIAccountIndexReceivedArguments = (uri: uri, accountIndex: accountIndex)
+        if let closure = proposefulfillingPaymentURIAccountIndexClosure {
+            return try await closure(uri, accountIndex)
+        } else {
+            return proposefulfillingPaymentURIAccountIndexReturnValue
+        }
+    }
+
     // MARK: - shieldFunds
 
     var shieldFundsSpendingKeyMemoShieldingThresholdThrowableError: Error?
@@ -2823,6 +2847,39 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(account, address, value, memo)
         } else {
             return proposeTransferAccountToValueMemoReturnValue
+        }
+    }
+
+    // MARK: - proposeTransferFromURI
+
+    var proposeTransferFromURIAccountThrowableError: Error?
+    func setProposeTransferFromURIAccountThrowableError(_ param: Error?) async {
+        proposeTransferFromURIAccountThrowableError = param
+    }
+    var proposeTransferFromURIAccountCallsCount = 0
+    var proposeTransferFromURIAccountCalled: Bool {
+        return proposeTransferFromURIAccountCallsCount > 0
+    }
+    var proposeTransferFromURIAccountReceivedArguments: (uri: String, account: Int32)?
+    var proposeTransferFromURIAccountReturnValue: FfiProposal!
+    func setProposeTransferFromURIAccountReturnValue(_ param: FfiProposal) async {
+        proposeTransferFromURIAccountReturnValue = param
+    }
+    var proposeTransferFromURIAccountClosure: ((String, Int32) async throws -> FfiProposal)?
+    func setProposeTransferFromURIAccountClosure(_ param: ((String, Int32) async throws -> FfiProposal)?) async {
+        proposeTransferFromURIAccountClosure = param
+    }
+
+    func proposeTransferFromURI(_ uri: String, account: Int32) async throws -> FfiProposal {
+        if let error = proposeTransferFromURIAccountThrowableError {
+            throw error
+        }
+        proposeTransferFromURIAccountCallsCount += 1
+        proposeTransferFromURIAccountReceivedArguments = (uri: uri, account: account)
+        if let closure = proposeTransferFromURIAccountClosure {
+            return try await closure(uri, account)
+        } else {
+            return proposeTransferFromURIAccountReturnValue
         }
     }
 

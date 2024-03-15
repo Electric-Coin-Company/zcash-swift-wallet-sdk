@@ -80,6 +80,18 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+     public func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) -> SinglePublisher<Proposal, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.proposefulfillingPaymentURI(
+                uri,
+                accountIndex: accountIndex
+            )
+        }
+    }
+
     public func proposeShielding(
         accountIndex: Int,
         shieldingThreshold: Zatoshi,

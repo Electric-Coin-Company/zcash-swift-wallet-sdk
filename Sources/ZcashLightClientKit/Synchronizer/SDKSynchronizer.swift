@@ -12,6 +12,7 @@ import Combine
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+    
     public var alias: ZcashSynchronizerAlias { initializer.alias }
 
     private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
@@ -290,14 +291,29 @@ public class SDKSynchronizer: Synchronizer {
     ) async throws -> Proposal? {
         try throwIfUnprepared()
 
-        let proposal = try await transactionEncoder.proposeShielding(
+        return try await transactionEncoder.proposeShielding(
             accountIndex: accountIndex,
             shieldingThreshold: shieldingThreshold,
             memoBytes: memo.asMemoBytes(),
             transparentReceiver: transparentReceiver?.stringEncoded
         )
+    }
 
-        return proposal
+    public func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) async throws -> Proposal {
+        do {
+            try throwIfUnprepared()
+            return try await transactionEncoder.proposeFulfillingPaymentFromURI(
+               uri,
+               accountIndex: accountIndex
+           )
+        } catch ZcashError.rustCreateToAddress(let e) {
+            throw ZcashError.rustProposeTransferFromURI(e)
+        } catch {
+            throw error
+        }
     }
 
     public func createProposedTransactions(

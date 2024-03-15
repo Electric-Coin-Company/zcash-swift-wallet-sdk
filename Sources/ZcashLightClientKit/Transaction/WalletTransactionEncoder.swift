@@ -87,6 +87,17 @@ class WalletTransactionEncoder: TransactionEncoder {
         return Proposal(inner: proposal)
     }
 
+    func proposeFulfillingPaymentFromURI(
+        _ uri: String,
+        accountIndex: Int
+    ) async throws -> Proposal {
+        let proposal = try await rustBackend.proposeTransferFromURI(
+            uri,
+            account: Int32(accountIndex)
+        )
+        return Proposal(inner: proposal)
+    }
+
     func createProposedTransactions(
         proposal: Proposal,
         spendingKey: UnifiedSpendingKey

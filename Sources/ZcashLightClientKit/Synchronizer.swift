@@ -215,7 +215,7 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
     ///
-    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     func sendToAddress(
@@ -225,12 +225,23 @@ public protocol Synchronizer: AnyObject {
         memo: Memo?
     ) async throws -> ZcashTransaction.Overview
 
+    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI using the given `accountIndex`
+    ///  - Parameter uri: a valid ZIP-321 payment URI
+    ///  - Parameter accountIndex: the account index that allows spends to occur.
+    ///
+    /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposefulfillingPaymentURI(
+        _ uri: String,
+        accountIndex: Int
+    ) async throws -> Proposal
+
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a transaction will be created.
     ///
-    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// - Note: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
     func shieldFunds(
