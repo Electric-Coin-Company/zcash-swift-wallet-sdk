@@ -44,6 +44,11 @@ protocol ZcashRustBackendWelding {
     /// - Throws: `rustCreateAccount`.
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
 
+    /// Checks whether the given seed is relevant to any of the accounts in the wallet.
+    ///
+    /// - parameter seed: byte array of the seed
+    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool
+
     /// Scans a transaction for any information that can be decrypted by the accounts in the wallet, and saves it to the wallet.
     /// - parameter tx:     the transaction to decrypt
     /// - parameter minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
@@ -176,9 +181,10 @@ protocol ZcashRustBackendWelding {
     /// cache, an error will be signalled.
     ///
     /// - parameter fromHeight: scan starting from the given height.
+    /// - parameter fromState: The TreeState Protobuf object for the height prior to `fromHeight`
     /// - parameter limit: scan up to limit blocks.
     /// - Throws: `rustScanBlocks` if rust layer returns error.
-    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws -> ScanSummary
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32) async throws -> ScanSummary
 
     /// Upserts a UTXO into the data db database
     /// - parameter txid: the txid bytes for the UTXO

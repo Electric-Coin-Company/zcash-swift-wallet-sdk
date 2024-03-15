@@ -179,6 +179,8 @@ public enum ZcashErrorCode: String {
     case rustProposeTransferFromURI = "ZRUST0057"
     /// Error from rust layer when calling ZcashRustBackend.
     case rustListAccounts = "ZRUST0058"
+    /// Error from rust layer when calling ZcashRustBackend.isSeedRelevantToWallet
+    case rustIsSeedRelevantToWallet = "ZRUST0059"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

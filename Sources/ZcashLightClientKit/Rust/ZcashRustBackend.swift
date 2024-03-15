@@ -105,6 +105,26 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return ffiBinaryKeyPtr.pointee.unsafeToUnifiedSpendingKey(network: networkType)
     }
 
+    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
+        globalDBLock.lock()
+        let result = zcashlc_is_seed_relevant_to_wallet(
+            dbData.0,
+            dbData.1,
+            seed,
+            UInt(seed.count),
+            networkType.networkId
+        )
+        globalDBLock.unlock()
+
+        // -1 is the error sentinel.
+        guard result >= 0 else {
+            throw ZcashError.rustIsSeedRelevantToWallet(lastErrorMessage(fallback: "`isSeedRelevantToWallet` failed with unknown error"))
+        }
+
+        // 0 is false, 1 is true.
+        return result != 0
+    }
+
     func proposeTransfer(
         account: Int32,
         to address: String,
@@ -648,9 +668,20 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return scanRanges
     }
 
-    func scanBlocks(fromHeight: Int32, limit: UInt32 = 0) async throws -> ScanSummary {
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32 = 0) async throws -> ScanSummary {
+        let fromStateBytes = try fromState.serializedData(partial: false).bytes
+
         globalDBLock.lock()
-        let summaryPtr = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, fromHeight, limit, networkType.networkId)
+        let summaryPtr = zcashlc_scan_blocks(
+            fsBlockDbRoot.0,
+            fsBlockDbRoot.1,
+            dbData.0,
+            dbData.1,
+            fromHeight,
+            fromStateBytes,
+            UInt(fromStateBytes.count),
+            limit,
+            networkType.networkId)
         globalDBLock.unlock()
 
         guard let summaryPtr else {
@@ -881,6 +912,7 @@ extension FfiScanProgress {
     }
 }
 
+// swiftlint:disable large_tuple line_length
 struct FfiTxId {
     var tuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
     var array: [UInt8] {

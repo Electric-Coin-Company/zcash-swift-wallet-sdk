@@ -963,6 +963,30 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getTreeState
+
+    var getTreeStateThrowableError: Error?
+    var getTreeStateCallsCount = 0
+    var getTreeStateCalled: Bool {
+        return getTreeStateCallsCount > 0
+    }
+    var getTreeStateReceivedId: BlockID?
+    var getTreeStateReturnValue: TreeState!
+    var getTreeStateClosure: ((BlockID) async throws -> TreeState)?
+
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        if let error = getTreeStateThrowableError {
+            throw error
+        }
+        getTreeStateCallsCount += 1
+        getTreeStateReceivedId = id
+        if let closure = getTreeStateClosure {
+            return try await closure(id)
+        } else {
+            return getTreeStateReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -2277,6 +2301,39 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
+    // MARK: - isSeedRelevantToWallet
+
+    var isSeedRelevantToWalletSeedThrowableError: Error?
+    func setIsSeedRelevantToWalletSeedThrowableError(_ param: Error?) async {
+        isSeedRelevantToWalletSeedThrowableError = param
+    }
+    var isSeedRelevantToWalletSeedCallsCount = 0
+    var isSeedRelevantToWalletSeedCalled: Bool {
+        return isSeedRelevantToWalletSeedCallsCount > 0
+    }
+    var isSeedRelevantToWalletSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToWalletSeedReturnValue: Bool!
+    func setIsSeedRelevantToWalletSeedReturnValue(_ param: Bool) async {
+        isSeedRelevantToWalletSeedReturnValue = param
+    }
+    var isSeedRelevantToWalletSeedClosure: (([UInt8]) async throws -> Bool)?
+    func setIsSeedRelevantToWalletSeedClosure(_ param: (([UInt8]) async throws -> Bool)?) async {
+        isSeedRelevantToWalletSeedClosure = param
+    }
+
+    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToWalletSeedThrowableError {
+            throw error
+        }
+        isSeedRelevantToWalletSeedCallsCount += 1
+        isSeedRelevantToWalletSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToWalletSeedClosure {
+            return try await closure(seed)
+        } else {
+            return isSeedRelevantToWalletSeedReturnValue
+        }
+    }
+
     // MARK: - decryptAndStoreTransaction
 
     var decryptAndStoreTransactionTxBytesMinedHeightThrowableError: Error?
@@ -2792,34 +2849,34 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - scanBlocks
 
-    var scanBlocksFromHeightLimitThrowableError: Error?
-    func setScanBlocksFromHeightLimitThrowableError(_ param: Error?) async {
-        scanBlocksFromHeightLimitThrowableError = param
+    var scanBlocksFromHeightFromStateLimitThrowableError: Error?
+    func setScanBlocksFromHeightFromStateLimitThrowableError(_ param: Error?) async {
+        scanBlocksFromHeightFromStateLimitThrowableError = param
     }
-    var scanBlocksFromHeightLimitCallsCount = 0
-    var scanBlocksFromHeightLimitCalled: Bool {
-        return scanBlocksFromHeightLimitCallsCount > 0
+    var scanBlocksFromHeightFromStateLimitCallsCount = 0
+    var scanBlocksFromHeightFromStateLimitCalled: Bool {
+        return scanBlocksFromHeightFromStateLimitCallsCount > 0
     }
-    var scanBlocksFromHeightLimitReceivedArguments: (fromHeight: Int32, limit: UInt32)?
-    var scanBlocksFromHeightLimitReturnValue: ScanSummary!
-    func setScanBlocksFromHeightLimitReturnValue(_ param: ScanSummary) async {
-        scanBlocksFromHeightLimitReturnValue = param
+    var scanBlocksFromHeightFromStateLimitReceivedArguments: (fromHeight: Int32, fromState: TreeState, limit: UInt32)?
+    var scanBlocksFromHeightFromStateLimitReturnValue: ScanSummary!
+    func setScanBlocksFromHeightFromStateLimitReturnValue(_ param: ScanSummary) async {
+        scanBlocksFromHeightFromStateLimitReturnValue = param
     }
-    var scanBlocksFromHeightLimitClosure: ((Int32, UInt32) async throws -> ScanSummary)?
-    func setScanBlocksFromHeightLimitClosure(_ param: ((Int32, UInt32) async throws -> ScanSummary)?) async {
-        scanBlocksFromHeightLimitClosure = param
+    var scanBlocksFromHeightFromStateLimitClosure: ((Int32, TreeState, UInt32) async throws -> ScanSummary)?
+    func setScanBlocksFromHeightFromStateLimitClosure(_ param: ((Int32, TreeState, UInt32) async throws -> ScanSummary)?) async {
+        scanBlocksFromHeightFromStateLimitClosure = param
     }
 
-    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws -> ScanSummary {
-        if let error = scanBlocksFromHeightLimitThrowableError {
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32) async throws -> ScanSummary {
+        if let error = scanBlocksFromHeightFromStateLimitThrowableError {
             throw error
         }
-        scanBlocksFromHeightLimitCallsCount += 1
-        scanBlocksFromHeightLimitReceivedArguments = (fromHeight: fromHeight, limit: limit)
-        if let closure = scanBlocksFromHeightLimitClosure {
-            return try await closure(fromHeight, limit)
+        scanBlocksFromHeightFromStateLimitCallsCount += 1
+        scanBlocksFromHeightFromStateLimitReceivedArguments = (fromHeight: fromHeight, fromState: fromState, limit: limit)
+        if let closure = scanBlocksFromHeightFromStateLimitClosure {
+            return try await closure(fromHeight, fromState, limit)
         } else {
-            return scanBlocksFromHeightLimitReturnValue
+            return scanBlocksFromHeightFromStateLimitReturnValue
         }
     }
 

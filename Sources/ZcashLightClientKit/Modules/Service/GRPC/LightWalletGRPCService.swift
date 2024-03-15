@@ -276,6 +276,10 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
 
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        try await compactTxStreamer.getTreeState(id)
+    }
+
     func closeConnection() {
         _ = channel.close()
     }
