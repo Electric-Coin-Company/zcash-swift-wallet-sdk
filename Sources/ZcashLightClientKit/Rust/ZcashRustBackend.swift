@@ -859,6 +859,7 @@ extension FfiScanProgress {
     }
 }
 
+// swiftlint:disable large_tuple line_length
 struct FfiTxId {
     var tuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
     var array: [UInt8] {

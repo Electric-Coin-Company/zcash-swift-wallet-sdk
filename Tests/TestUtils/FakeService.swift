@@ -82,4 +82,8 @@ class MockLightWalletService: LightWalletService {
     func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
         service.getSubtreeRoots(request)
     }
+    
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        try await service.getTreeState(id)
+    }
 }

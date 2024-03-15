@@ -963,6 +963,30 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getTreeState
+
+    var getTreeStateThrowableError: Error?
+    var getTreeStateCallsCount = 0
+    var getTreeStateCalled: Bool {
+        return getTreeStateCallsCount > 0
+    }
+    var getTreeStateReceivedId: BlockID?
+    var getTreeStateReturnValue: TreeState!
+    var getTreeStateClosure: ((BlockID) async throws -> TreeState)?
+
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        if let error = getTreeStateThrowableError {
+            throw error
+        }
+        getTreeStateCallsCount += 1
+        getTreeStateReceivedId = id
+        if let closure = getTreeStateClosure {
+            return try await closure(id)
+        } else {
+            return getTreeStateReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 

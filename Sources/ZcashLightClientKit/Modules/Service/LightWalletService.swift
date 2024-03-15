@@ -196,4 +196,6 @@ protocol LightWalletService: AnyObject {
     /// - Parameters:
     ///   - request: Request to send to GetSubtreeRoots.
     func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
+    
+    func getTreeState(_ id: BlockID) async throws -> TreeState
 }
