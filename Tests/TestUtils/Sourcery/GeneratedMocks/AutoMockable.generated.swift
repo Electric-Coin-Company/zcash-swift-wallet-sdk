@@ -1800,6 +1800,30 @@ class SynchronizerMock: Synchronizer {
         try await switchToEndpointClosure!(endpoint)
     }
 
+    // MARK: - isSeedRelevantToWallet
+
+    var isSeedRelevantToWalletSeedThrowableError: Error?
+    var isSeedRelevantToWalletSeedCallsCount = 0
+    var isSeedRelevantToWalletSeedCalled: Bool {
+        return isSeedRelevantToWalletSeedCallsCount > 0
+    }
+    var isSeedRelevantToWalletSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToWalletSeedReturnValue: Bool!
+    var isSeedRelevantToWalletSeedClosure: (([UInt8]) async throws -> Bool)?
+
+    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToWalletSeedThrowableError {
+            throw error
+        }
+        isSeedRelevantToWalletSeedCallsCount += 1
+        isSeedRelevantToWalletSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToWalletSeedClosure {
+            return try await closure(seed)
+        } else {
+            return isSeedRelevantToWalletSeedReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 

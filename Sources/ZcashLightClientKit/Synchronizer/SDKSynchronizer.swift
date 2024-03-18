@@ -303,8 +303,8 @@ public class SDKSynchronizer: Synchronizer {
                uri,
                accountIndex: accountIndex
            )
-        } catch ZcashError.rustCreateToAddress(let e) {
-            throw ZcashError.rustProposeTransferFromURI(e)
+        } catch ZcashError.rustCreateToAddress(let error) {
+            throw ZcashError.rustProposeTransferFromURI(error)
         } catch {
             throw error
         }
@@ -602,6 +602,10 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         return subject.eraseToAnyPublisher()
+    }
+    
+    public func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
+        try await initializer.rustBackend.isSeedRelevantToWallet(seed: seed)
     }
     
     // MARK: Server switch
