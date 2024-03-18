@@ -351,6 +351,11 @@ public protocol Synchronizer: AnyObject {
     /// - Throws: ZcashError when failures occur and related to `synchronizer.start(retry: Bool)`, it's the only throwing operation
     /// during the whole endpoint change.
     func switchTo(endpoint: LightWalletEndpoint) async throws
+    
+    /// Checks whether the given seed is relevant to any of the accounts in the wallet.
+    ///
+    /// - parameter seed: byte array of the seed
+    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool
 }
 
 public enum SyncStatus: Equatable {
