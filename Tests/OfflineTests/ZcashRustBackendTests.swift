@@ -126,6 +126,11 @@ class ZcashRustBackendTests: XCTestCase {
             XCTFail("not enough transparent receivers")
             return
         }
+
+        // The first address in the wallet is created when the account is created, using
+        // the default receivers specified inside `zcash_client_sqlite`. The remaining
+        // addresses are generated here, using the receivers specified in the Swift SDK's
+        // FFI backend.
         var uAddresses: [UnifiedAddress] = []
         for i in 0...2 {
             uAddresses.append(
