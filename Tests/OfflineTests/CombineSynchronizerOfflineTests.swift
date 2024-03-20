@@ -748,7 +748,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceSucceed() {
-        let expectedBalance = AccountBalance(saplingBalance: .zero, unshielded: Zatoshi(100))
+        let expectedBalance = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(100))
 
         synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
             XCTAssertEqual(receivedAccountIndex, 3)
@@ -805,6 +805,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     func testGetShieldedBalanceSucceed() {
         let expectedBalance = AccountBalance(
             saplingBalance:
+                PoolBalance(
+                    spendableValue: .zero,
+                    changePendingConfirmation: Zatoshi(333),
+                    valuePendingSpendability: .zero),
+            orchardBalance:
                 PoolBalance(
                     spendableValue: .zero,
                     changePendingConfirmation: Zatoshi(333),
@@ -867,6 +872,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     func testGetShieldedVerifiedBalanceSucceed() {
         let expectedBalance = AccountBalance(
             saplingBalance:
+                PoolBalance(
+                    spendableValue: Zatoshi(333),
+                    changePendingConfirmation: .zero,
+                    valuePendingSpendability: .zero),
+            orchardBalance:
                 PoolBalance(
                     spendableValue: Zatoshi(333),
                     changePendingConfirmation: .zero,

@@ -11,11 +11,14 @@ import Foundation
 enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
-/// Enumeration of potential return states for database initialization. If `seedRequired`
-/// is returned, the caller must re-attempt initialization providing the seed
+
+/// Enumeration of potential return states for database initialization.
+///
+/// If `seedRequired` is returned, the caller must re-attempt initialization providing the seed.
 public enum DbInitResult {
     case success
     case seedRequired
+    case seedNotRelevant
 }
 
 // sourcery: mockActor
@@ -44,10 +47,10 @@ protocol ZcashRustBackendWelding {
     /// - Throws: `rustCreateAccount`.
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
 
-    /// Checks whether the given seed is relevant to any of the accounts in the wallet.
+    /// Checks whether the given seed is relevant to any of the derived accounts in the wallet.
     ///
     /// - parameter seed: byte array of the seed
-    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
 
     /// Scans a transaction for any information that can be decrypted by the accounts in the wallet, and saves it to the wallet.
     /// - parameter tx:     the transaction to decrypt

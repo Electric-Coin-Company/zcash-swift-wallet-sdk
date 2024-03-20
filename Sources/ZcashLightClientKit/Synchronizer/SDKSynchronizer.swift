@@ -603,11 +603,11 @@ public class SDKSynchronizer: Synchronizer {
 
         return subject.eraseToAnyPublisher()
     }
-    
-    public func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
-        try await initializer.rustBackend.isSeedRelevantToWallet(seed: seed)
+
+    public func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        try await initializer.rustBackend.isSeedRelevantToAnyDerivedAccount(seed: seed)
     }
-    
+
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {

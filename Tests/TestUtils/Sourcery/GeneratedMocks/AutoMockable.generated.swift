@@ -1800,27 +1800,27 @@ class SynchronizerMock: Synchronizer {
         try await switchToEndpointClosure!(endpoint)
     }
 
-    // MARK: - isSeedRelevantToWallet
+    // MARK: - isSeedRelevantToAnyDerivedAccount
 
-    var isSeedRelevantToWalletSeedThrowableError: Error?
-    var isSeedRelevantToWalletSeedCallsCount = 0
-    var isSeedRelevantToWalletSeedCalled: Bool {
-        return isSeedRelevantToWalletSeedCallsCount > 0
+    var isSeedRelevantToAnyDerivedAccountSeedThrowableError: Error?
+    var isSeedRelevantToAnyDerivedAccountSeedCallsCount = 0
+    var isSeedRelevantToAnyDerivedAccountSeedCalled: Bool {
+        return isSeedRelevantToAnyDerivedAccountSeedCallsCount > 0
     }
-    var isSeedRelevantToWalletSeedReceivedSeed: [UInt8]?
-    var isSeedRelevantToWalletSeedReturnValue: Bool!
-    var isSeedRelevantToWalletSeedClosure: (([UInt8]) async throws -> Bool)?
+    var isSeedRelevantToAnyDerivedAccountSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToAnyDerivedAccountSeedReturnValue: Bool!
+    var isSeedRelevantToAnyDerivedAccountSeedClosure: (([UInt8]) async throws -> Bool)?
 
-    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
-        if let error = isSeedRelevantToWalletSeedThrowableError {
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToAnyDerivedAccountSeedThrowableError {
             throw error
         }
-        isSeedRelevantToWalletSeedCallsCount += 1
-        isSeedRelevantToWalletSeedReceivedSeed = seed
-        if let closure = isSeedRelevantToWalletSeedClosure {
+        isSeedRelevantToAnyDerivedAccountSeedCallsCount += 1
+        isSeedRelevantToAnyDerivedAccountSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToAnyDerivedAccountSeedClosure {
             return try await closure(seed)
         } else {
-            return isSeedRelevantToWalletSeedReturnValue
+            return isSeedRelevantToAnyDerivedAccountSeedReturnValue
         }
     }
 
@@ -2325,36 +2325,36 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - isSeedRelevantToWallet
+    // MARK: - isSeedRelevantToAnyDerivedAccount
 
-    var isSeedRelevantToWalletSeedThrowableError: Error?
-    func setIsSeedRelevantToWalletSeedThrowableError(_ param: Error?) async {
-        isSeedRelevantToWalletSeedThrowableError = param
+    var isSeedRelevantToAnyDerivedAccountSeedThrowableError: Error?
+    func setIsSeedRelevantToAnyDerivedAccountSeedThrowableError(_ param: Error?) async {
+        isSeedRelevantToAnyDerivedAccountSeedThrowableError = param
     }
-    var isSeedRelevantToWalletSeedCallsCount = 0
-    var isSeedRelevantToWalletSeedCalled: Bool {
-        return isSeedRelevantToWalletSeedCallsCount > 0
+    var isSeedRelevantToAnyDerivedAccountSeedCallsCount = 0
+    var isSeedRelevantToAnyDerivedAccountSeedCalled: Bool {
+        return isSeedRelevantToAnyDerivedAccountSeedCallsCount > 0
     }
-    var isSeedRelevantToWalletSeedReceivedSeed: [UInt8]?
-    var isSeedRelevantToWalletSeedReturnValue: Bool!
-    func setIsSeedRelevantToWalletSeedReturnValue(_ param: Bool) async {
-        isSeedRelevantToWalletSeedReturnValue = param
+    var isSeedRelevantToAnyDerivedAccountSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToAnyDerivedAccountSeedReturnValue: Bool!
+    func setIsSeedRelevantToAnyDerivedAccountSeedReturnValue(_ param: Bool) async {
+        isSeedRelevantToAnyDerivedAccountSeedReturnValue = param
     }
-    var isSeedRelevantToWalletSeedClosure: (([UInt8]) async throws -> Bool)?
-    func setIsSeedRelevantToWalletSeedClosure(_ param: (([UInt8]) async throws -> Bool)?) async {
-        isSeedRelevantToWalletSeedClosure = param
+    var isSeedRelevantToAnyDerivedAccountSeedClosure: (([UInt8]) async throws -> Bool)?
+    func setIsSeedRelevantToAnyDerivedAccountSeedClosure(_ param: (([UInt8]) async throws -> Bool)?) async {
+        isSeedRelevantToAnyDerivedAccountSeedClosure = param
     }
 
-    func isSeedRelevantToWallet(seed: [UInt8]) async throws -> Bool {
-        if let error = isSeedRelevantToWalletSeedThrowableError {
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToAnyDerivedAccountSeedThrowableError {
             throw error
         }
-        isSeedRelevantToWalletSeedCallsCount += 1
-        isSeedRelevantToWalletSeedReceivedSeed = seed
-        if let closure = isSeedRelevantToWalletSeedClosure {
+        isSeedRelevantToAnyDerivedAccountSeedCallsCount += 1
+        isSeedRelevantToAnyDerivedAccountSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToAnyDerivedAccountSeedClosure {
             return try await closure(seed)
         } else {
-            return isSeedRelevantToWalletSeedReturnValue
+            return isSeedRelevantToAnyDerivedAccountSeedReturnValue
         }
     }
 

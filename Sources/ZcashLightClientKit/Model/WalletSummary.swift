@@ -21,9 +21,10 @@ public struct PoolBalance: Equatable {
 
 public struct AccountBalance: Equatable {
     public let saplingBalance: PoolBalance
+    public let orchardBalance: PoolBalance
     public let unshielded: Zatoshi
     
-    static let zero = AccountBalance(saplingBalance: .zero, unshielded: .zero)
+    static let zero = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: .zero)
 }
 
 struct ScanProgress: Equatable {
@@ -53,4 +54,5 @@ struct WalletSummary: Equatable {
     let fullyScannedHeight: BlockHeight
     let scanProgress: ScanProgress?
     let nextSaplingSubtreeIndex: UInt32
+    let nextOrchardSubtreeIndex: UInt32
 }
