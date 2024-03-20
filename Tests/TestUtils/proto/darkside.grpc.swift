@@ -89,6 +89,11 @@ internal protocol DarksideStreamerClientProtocol: GRPCClient {
     _ request: Empty,
     callOptions: CallOptions?
   ) -> UnaryCall<Empty, Empty>
+
+  func setSubtreeRoots(
+    _ request: DarksideSubtreeRoots,
+    callOptions: CallOptions?
+  ) -> UnaryCall<DarksideSubtreeRoots, Empty>
 }
 
 extension DarksideStreamerClientProtocol {
@@ -391,6 +396,25 @@ extension DarksideStreamerClientProtocol {
       interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? []
     )
   }
+
+  /// Sets the subtree roots cache (for GetSubtreeRoots),
+  /// replacing any existing entries
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to SetSubtreeRoots.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func setSubtreeRoots(
+    _ request: DarksideSubtreeRoots,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<DarksideSubtreeRoots, Empty> {
+    return self.makeUnaryCall(
+      path: DarksideStreamerClientMetadata.Methods.setSubtreeRoots.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSetSubtreeRootsInterceptors() ?? []
+    )
+  }
 }
 
 @available(*, deprecated)
@@ -526,6 +550,11 @@ internal protocol DarksideStreamerAsyncClientProtocol: GRPCClient {
     _ request: Empty,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Empty, Empty>
+
+  func makeSetSubtreeRootsCall(
+    _ request: DarksideSubtreeRoots,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<DarksideSubtreeRoots, Empty>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -699,6 +728,18 @@ extension DarksideStreamerAsyncClientProtocol {
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? []
+    )
+  }
+
+  internal func makeSetSubtreeRootsCall(
+    _ request: DarksideSubtreeRoots,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<DarksideSubtreeRoots, Empty> {
+    return self.makeAsyncUnaryCall(
+      path: DarksideStreamerClientMetadata.Methods.setSubtreeRoots.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSetSubtreeRootsInterceptors() ?? []
     )
   }
 }
@@ -896,6 +937,18 @@ extension DarksideStreamerAsyncClientProtocol {
       interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? []
     )
   }
+
+  internal func setSubtreeRoots(
+    _ request: DarksideSubtreeRoots,
+    callOptions: CallOptions? = nil
+  ) async throws -> Empty {
+    return try await self.performAsyncUnaryCall(
+      path: DarksideStreamerClientMetadata.Methods.setSubtreeRoots.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSetSubtreeRootsInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -958,6 +1011,9 @@ internal protocol DarksideStreamerClientInterceptorFactoryProtocol: Sendable {
 
   /// - Returns: Interceptors to use when invoking 'clearAllTreeStates'.
   func makeClearAllTreeStatesInterceptors() -> [ClientInterceptor<Empty, Empty>]
+
+  /// - Returns: Interceptors to use when invoking 'setSubtreeRoots'.
+  func makeSetSubtreeRootsInterceptors() -> [ClientInterceptor<DarksideSubtreeRoots, Empty>]
 }
 
 internal enum DarksideStreamerClientMetadata {
@@ -979,6 +1035,7 @@ internal enum DarksideStreamerClientMetadata {
       DarksideStreamerClientMetadata.Methods.addTreeState,
       DarksideStreamerClientMetadata.Methods.removeTreeState,
       DarksideStreamerClientMetadata.Methods.clearAllTreeStates,
+      DarksideStreamerClientMetadata.Methods.setSubtreeRoots,
     ]
   )
 
@@ -1064,6 +1121,12 @@ internal enum DarksideStreamerClientMetadata {
     internal static let clearAllTreeStates = GRPCMethodDescriptor(
       name: "ClearAllTreeStates",
       path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearAllTreeStates",
+      type: GRPCCallType.unary
+    )
+
+    internal static let setSubtreeRoots = GRPCMethodDescriptor(
+      name: "SetSubtreeRoots",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetSubtreeRoots",
       type: GRPCCallType.unary
     )
   }
@@ -1160,6 +1223,10 @@ internal protocol DarksideStreamerProvider: CallHandlerProvider {
 
   /// Clear the list of GetTreeStates entries (can't fail)
   func clearAllTreeStates(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Sets the subtree roots cache (for GetSubtreeRoots),
+  /// replacing any existing entries
+  func setSubtreeRoots(request: DarksideSubtreeRoots, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
 }
 
 extension DarksideStreamerProvider {
@@ -1298,6 +1365,15 @@ extension DarksideStreamerProvider {
         responseSerializer: ProtobufSerializer<Empty>(),
         interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? [],
         userFunction: self.clearAllTreeStates(request:context:)
+      )
+
+    case "SetSubtreeRoots":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideSubtreeRoots>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeSetSubtreeRootsInterceptors() ?? [],
+        userFunction: self.setSubtreeRoots(request:context:)
       )
 
     default:
@@ -1440,6 +1516,13 @@ internal protocol DarksideStreamerAsyncProvider: CallHandlerProvider, Sendable {
   /// Clear the list of GetTreeStates entries (can't fail)
   func clearAllTreeStates(
     request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Sets the subtree roots cache (for GetSubtreeRoots),
+  /// replacing any existing entries
+  func setSubtreeRoots(
+    request: DarksideSubtreeRoots,
     context: GRPCAsyncServerCallContext
   ) async throws -> Empty
 }
@@ -1589,6 +1672,15 @@ extension DarksideStreamerAsyncProvider {
         wrapping: { try await self.clearAllTreeStates(request: $0, context: $1) }
       )
 
+    case "SetSubtreeRoots":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideSubtreeRoots>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeSetSubtreeRootsInterceptors() ?? [],
+        wrapping: { try await self.setSubtreeRoots(request: $0, context: $1) }
+      )
+
     default:
       return nil
     }
@@ -1652,6 +1744,10 @@ internal protocol DarksideStreamerServerInterceptorFactoryProtocol: Sendable {
   /// - Returns: Interceptors to use when handling 'clearAllTreeStates'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makeClearAllTreeStatesInterceptors() -> [ServerInterceptor<Empty, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'setSubtreeRoots'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeSetSubtreeRootsInterceptors() -> [ServerInterceptor<DarksideSubtreeRoots, Empty>]
 }
 
 internal enum DarksideStreamerServerMetadata {
@@ -1673,6 +1769,7 @@ internal enum DarksideStreamerServerMetadata {
       DarksideStreamerServerMetadata.Methods.addTreeState,
       DarksideStreamerServerMetadata.Methods.removeTreeState,
       DarksideStreamerServerMetadata.Methods.clearAllTreeStates,
+      DarksideStreamerServerMetadata.Methods.setSubtreeRoots,
     ]
   )
 
@@ -1758,6 +1855,12 @@ internal enum DarksideStreamerServerMetadata {
     internal static let clearAllTreeStates = GRPCMethodDescriptor(
       name: "ClearAllTreeStates",
       path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearAllTreeStates",
+      type: GRPCCallType.unary
+    )
+
+    internal static let setSubtreeRoots = GRPCMethodDescriptor(
+      name: "SetSubtreeRoots",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetSubtreeRoots",
       type: GRPCCallType.unary
     )
   }
