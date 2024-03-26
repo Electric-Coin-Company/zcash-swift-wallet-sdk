@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 # Unreleased
+
+# 2.1.0 - 2024-03-26
+
 ### [#1379] Fulfill Payment from a valid ZIP-321 request
 New API implemented that allows clients to use a ZIP-321 Payment URI to create transaction.
 ```
