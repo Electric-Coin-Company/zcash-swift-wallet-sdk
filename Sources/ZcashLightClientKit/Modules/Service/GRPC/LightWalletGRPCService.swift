@@ -223,14 +223,12 @@ extension LightWalletGRPCService: LightWalletService {
             do {
                 guard let reply = try await iterator.next() else { return nil }
                 return UTXO(
-                    id: nil,
                     address: reply.address,
                     prevoutTxId: reply.txid,
                     prevoutIndex: Int(reply.index),
                     script: reply.script,
                     valueZat: Int(reply.valueZat),
-                    height: Int(reply.height),
-                    spentInTx: nil
+                    height: Int(reply.height)
                 )
             } catch {
                 let serviceError = error.mapToServiceError()
@@ -276,6 +274,10 @@ extension LightWalletGRPCService: LightWalletService {
                 throw ZcashError.serviceSubtreeRootsStreamFailed(serviceError)
             }
         }
+    }
+
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        try await compactTxStreamer.getTreeState(id)
     }
 
     func closeConnection() {

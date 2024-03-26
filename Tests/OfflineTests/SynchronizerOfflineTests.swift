@@ -29,10 +29,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testCallPrepareWithAlreadyUsedAliasThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let firstTestCoordinator = try await TestCoordinator(
             alias: .custom("alias"),
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -40,7 +43,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         let secondTestCoordinator = try await TestCoordinator(
             alias: .custom("alias"),
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -58,10 +61,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testWhenSynchronizerIsDeallocatedAliasIsntUsedAnymore() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         var testCoordinator: TestCoordinator! = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -75,7 +81,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -88,10 +94,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testCallWipeWithAlreadyUsedAliasThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let firstTestCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -99,7 +108,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         let secondTestCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -146,10 +155,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testPrepareCanBeCalledAfterWipeWithSameInstanceOfSDKSynchronizer() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -180,10 +192,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testSendToAddressCalledWithoutPrepareThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -205,10 +220,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testShieldFundsCalledWithoutPrepareThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -229,10 +247,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testRefreshUTXOCalledWithoutPrepareThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )
@@ -249,10 +270,13 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testRewindCalledWithoutPrepareThrowsError() async throws {
+        // Pick a testnet height for which both Sapling and Orchard are active.
+        let walletBirthday = 1900000
+
         let testCoordinator = try await TestCoordinator(
             alias: .default,
             container: mockContainer,
-            walletBirthday: 10,
+            walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: false
         )

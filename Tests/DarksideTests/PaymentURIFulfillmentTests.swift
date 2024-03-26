@@ -315,6 +315,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
          */
 
         let memo = "VGhpcyBpcyBhIHNpbXBsZSBtZW1vLg" // "This is a simple memo."
+        // swiftlint:disable:next line_length
         let paymentURI = "zcash:zecIsGreat17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a?amount=0.0002&memo=\(memo)&message=Thank%20you%20for%20your%20purchase&label=Your%20Purchase"
 
         do {

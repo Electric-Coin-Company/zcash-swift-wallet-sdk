@@ -63,6 +63,8 @@ enum TestDbBuilder {
         case .success: return provider
         case .seedRequired:
             throw ZcashError.compactBlockProcessorDataDbInitFailed("Seed value required to initialize the wallet database")
+        case .seedNotRelevant:
+            throw ZcashError.compactBlockProcessorDataDbInitFailed("Relevant seed value required")
         }
     }
     

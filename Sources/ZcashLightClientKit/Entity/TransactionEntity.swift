@@ -65,6 +65,7 @@ public enum ZcashTransaction {
         public enum Pool {
             case transaparent
             case sapling
+            case orchard
             case other(Int)
             init(rawValue: Int) {
                 switch rawValue {
@@ -72,6 +73,8 @@ public enum ZcashTransaction {
                     self = .transaparent
                 case 2:
                     self = .sapling
+                case 3:
+                    self = .orchard
                 default:
                     self = .other(rawValue)
                 }
@@ -101,8 +104,8 @@ extension ZcashTransaction.Output {
         static let rawID = Expression<Blob>("txid")
         static let pool = Expression<Int>("output_pool")
         static let index = Expression<Int>("output_index")
-        static let toAccount = Expression<Int?>("to_account")
-        static let fromAccount = Expression<Int?>("from_account")
+        static let toAccount = Expression<Int?>("to_account_id")
+        static let fromAccount = Expression<Int?>("from_account_id")
         static let toAddress = Expression<String?>("to_address")
         static let value = Expression<Int64>("value")
         static let isChange = Expression<Bool>("is_change")

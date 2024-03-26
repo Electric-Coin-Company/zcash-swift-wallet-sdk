@@ -102,8 +102,8 @@ class RustBackendMockHelper {
             try await rustBackend.suggestScanRanges()
         }
 
-        await rustBackendMock.setScanBlocksFromHeightLimitClosure() { fromHeight, limit in
-            try await rustBackend.scanBlocks(fromHeight: fromHeight, limit: limit)
+        await rustBackendMock.setScanBlocksFromHeightFromStateLimitClosure { fromHeight, fromState, limit in
+            try await rustBackend.scanBlocks(fromHeight: fromHeight, fromState: fromState, limit: limit)
         }
     }
 
@@ -145,7 +145,7 @@ extension SynchronizerState {
     static var mock: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalance: AccountBalance(saplingBalance: .zero, unshielded: Zatoshi(200)),
+            accountBalance: AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(200)),
             internalSyncStatus: .syncing(0),
             latestBlockHeight: 222222
         )

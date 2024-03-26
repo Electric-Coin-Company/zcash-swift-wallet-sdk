@@ -23,7 +23,6 @@ protocol UTXOFetcher {
 }
 
 struct UTXOFetcherImpl {
-    let accountRepository: AccountRepository
     let blockDownloaderService: BlockDownloaderService
     let config: UTXOFetcherConfig
     let rustBackend: ZcashRustBackendWelding
@@ -37,8 +36,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
     ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
-        let accounts = try accountRepository.getAll()
-            .map { $0.account }
+        let accounts = try await rustBackend.listAccounts()
 
         var tAddresses: [TransparentAddress] = []
         for account in accounts {

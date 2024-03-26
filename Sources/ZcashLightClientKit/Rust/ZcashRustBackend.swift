@@ -49,6 +49,31 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    func listAccounts() async throws -> [Int32] {
+        globalDBLock.lock()
+        let accountsPtr = zcashlc_list_accounts(
+            dbData.0,
+            dbData.1,
+            networkType.networkId
+        )
+        globalDBLock.unlock()
+
+        guard let accountsPtr else {
+            throw ZcashError.rustListAccounts(lastErrorMessage(fallback: "`listAccounts` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_accounts(accountsPtr) }
+
+        var accounts: [Int32] = []
+
+        for i in (0 ..< Int(accountsPtr.pointee.len)) {
+            let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
+            accounts.append(Int32(account.account_index))
+        }
+
+        return accounts
+    }
+
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
@@ -78,6 +103,26 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         defer { zcashlc_free_binary_key(ffiBinaryKeyPtr) }
 
         return ffiBinaryKeyPtr.pointee.unsafeToUnifiedSpendingKey(network: networkType)
+    }
+
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        globalDBLock.lock()
+        let result = zcashlc_is_seed_relevant_to_any_derived_account(
+            dbData.0,
+            dbData.1,
+            seed,
+            UInt(seed.count),
+            networkType.networkId
+        )
+        globalDBLock.unlock()
+
+        // -1 is the error sentinel.
+        guard result >= 0 else {
+            throw ZcashError.rustIsSeedRelevantToAnyDerivedAccount(lastErrorMessage(fallback: "`isSeedRelevantToAnyDerivedAccount` failed with unknown error"))
+        }
+
+        // 0 is false, 1 is true.
+        return result != 0
     }
 
     func proposeTransfer(
@@ -298,6 +343,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             return DbInitResult.success
         case 1:
             return DbInitResult.seedRequired
+        case 2:
+            return DbInitResult.seedNotRelevant
         default:
             throw ZcashError.rustInitDataDb(lastErrorMessage(fallback: "`initDataDb` failed with unknown error"))
         }
@@ -589,7 +636,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             chainTipHeight: BlockHeight(summaryPtr.pointee.chain_tip_height),
             fullyScannedHeight: BlockHeight(summaryPtr.pointee.fully_scanned_height),
             scanProgress: summaryPtr.pointee.scan_progress?.pointee.toScanProgress(),
-            nextSaplingSubtreeIndex: UInt32(summaryPtr.pointee.next_sapling_subtree_index)
+            nextSaplingSubtreeIndex: UInt32(summaryPtr.pointee.next_sapling_subtree_index),
+            nextOrchardSubtreeIndex: UInt32(summaryPtr.pointee.next_orchard_subtree_index)
         )
     }
 
@@ -623,9 +671,20 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return scanRanges
     }
 
-    func scanBlocks(fromHeight: Int32, limit: UInt32 = 0) async throws -> ScanSummary {
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32 = 0) async throws -> ScanSummary {
+        let fromStateBytes = try fromState.serializedData(partial: false).bytes
+
         globalDBLock.lock()
-        let summaryPtr = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, fromHeight, limit, networkType.networkId)
+        let summaryPtr = zcashlc_scan_blocks(
+            fsBlockDbRoot.0,
+            fsBlockDbRoot.1,
+            dbData.0,
+            dbData.1,
+            fromHeight,
+            fromStateBytes,
+            UInt(fromStateBytes.count),
+            limit,
+            networkType.networkId)
         globalDBLock.unlock()
 
         guard let summaryPtr else {
@@ -841,6 +900,7 @@ extension FfiAccountBalance {
     func toAccountBalance() -> AccountBalance {
         .init(
             saplingBalance: self.sapling_balance.toPoolBalance(),
+            orchardBalance: self.orchard_balance.toPoolBalance(),
             unshielded: Zatoshi(self.unshielded)
         )
     }
@@ -856,6 +916,7 @@ extension FfiScanProgress {
     }
 }
 
+// swiftlint:disable large_tuple line_length
 struct FfiTxId {
     var tuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
     var array: [UInt8] {

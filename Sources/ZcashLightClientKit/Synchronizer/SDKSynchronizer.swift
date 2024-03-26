@@ -40,7 +40,6 @@ public class SDKSynchronizer: Synchronizer {
     public let network: ZcashNetwork
     private let transactionEncoder: TransactionEncoder
     private let transactionRepository: TransactionRepository
-    private let utxoRepository: UnspentTransactionOutputRepository
 
     private let syncSessionIDGenerator: SyncSessionIDGenerator
     private let syncSession: SyncSession
@@ -55,7 +54,6 @@ public class SDKSynchronizer: Synchronizer {
             initializer: initializer,
             transactionEncoder: WalletTransactionEncoder(initializer: initializer),
             transactionRepository: initializer.transactionRepository,
-            utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(
                 initializer: initializer,
                 walletBirthdayProvider: { initializer.walletBirthday }
@@ -69,7 +67,6 @@ public class SDKSynchronizer: Synchronizer {
         initializer: Initializer,
         transactionEncoder: TransactionEncoder,
         transactionRepository: TransactionRepository,
-        utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor,
         syncSessionTicker: SessionTicker
     ) {
@@ -78,7 +75,6 @@ public class SDKSynchronizer: Synchronizer {
         self.initializer = initializer
         self.transactionEncoder = transactionEncoder
         self.transactionRepository = transactionRepository
-        self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.network = initializer.network
         self.metrics = initializer.container.resolve(SDKMetrics.self)
@@ -136,8 +132,6 @@ public class SDKSynchronizer: Synchronizer {
         if let error = checkIfCanContinueInitialisation() {
             throw error
         }
-
-        try await utxoRepository.initialise()
 
         if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday, for: walletMode) {
             return .seedRequired
@@ -309,8 +303,8 @@ public class SDKSynchronizer: Synchronizer {
                uri,
                accountIndex: accountIndex
            )
-        } catch ZcashError.rustCreateToAddress(let e) {
-            throw ZcashError.rustProposeTransferFromURI(e)
+        } catch ZcashError.rustCreateToAddress(let error) {
+            throw ZcashError.rustProposeTransferFromURI(error)
         } catch {
             throw error
         }
@@ -502,25 +496,6 @@ public class SDKSynchronizer: Synchronizer {
         try await blockProcessor.latestHeight()
     }
 
-    public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
-        try throwIfUnprepared()
-
-        guard initializer.isValidTransparentAddress(address) else {
-            throw ZcashError.synchronizerLatestUTXOsInvalidTAddress
-        }
-        
-        let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
-        
-        // swiftlint:disable:next array_constructor
-        var utxos: [UnspentTransactionOutputEntity] = []
-        for try await transactionEntity in stream {
-            utxos.append(transactionEntity)
-        }
-        try await self.utxoRepository.clearAll(address: address)
-        try await self.utxoRepository.store(utxos: utxos)
-        return utxos
-    }
-
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
         try throwIfUnprepared()
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
@@ -628,7 +603,11 @@ public class SDKSynchronizer: Synchronizer {
 
         return subject.eraseToAnyPublisher()
     }
-    
+
+    public func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        try await initializer.rustBackend.isSeedRelevantToAnyDerivedAccount(seed: seed)
+    }
+
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
@@ -692,8 +671,7 @@ public class SDKSynchronizer: Synchronizer {
         // CompactBlockProcessor dependency update
         Dependencies.setupCompactBlockProcessor(
             in: initializer.container,
-            config: await blockProcessor.config,
-            accountRepository: initializer.accountRepository
+            config: await blockProcessor.config
         )
         
         // INITIALIZER

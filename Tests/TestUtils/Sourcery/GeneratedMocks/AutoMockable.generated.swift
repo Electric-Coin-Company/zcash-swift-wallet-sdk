@@ -963,6 +963,30 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getTreeState
+
+    var getTreeStateThrowableError: Error?
+    var getTreeStateCallsCount = 0
+    var getTreeStateCalled: Bool {
+        return getTreeStateCallsCount > 0
+    }
+    var getTreeStateReceivedId: BlockID?
+    var getTreeStateReturnValue: TreeState!
+    var getTreeStateClosure: ((BlockID) async throws -> TreeState)?
+
+    func getTreeState(_ id: BlockID) async throws -> TreeState {
+        if let error = getTreeStateThrowableError {
+            throw error
+        }
+        getTreeStateCallsCount += 1
+        getTreeStateReceivedId = id
+        if let closure = getTreeStateClosure {
+            return try await closure(id)
+        } else {
+            return getTreeStateReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -1776,6 +1800,30 @@ class SynchronizerMock: Synchronizer {
         try await switchToEndpointClosure!(endpoint)
     }
 
+    // MARK: - isSeedRelevantToAnyDerivedAccount
+
+    var isSeedRelevantToAnyDerivedAccountSeedThrowableError: Error?
+    var isSeedRelevantToAnyDerivedAccountSeedCallsCount = 0
+    var isSeedRelevantToAnyDerivedAccountSeedCalled: Bool {
+        return isSeedRelevantToAnyDerivedAccountSeedCallsCount > 0
+    }
+    var isSeedRelevantToAnyDerivedAccountSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToAnyDerivedAccountSeedReturnValue: Bool!
+    var isSeedRelevantToAnyDerivedAccountSeedClosure: (([UInt8]) async throws -> Bool)?
+
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToAnyDerivedAccountSeedThrowableError {
+            throw error
+        }
+        isSeedRelevantToAnyDerivedAccountSeedCallsCount += 1
+        isSeedRelevantToAnyDerivedAccountSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToAnyDerivedAccountSeedClosure {
+            return try await closure(seed)
+        } else {
+            return isSeedRelevantToAnyDerivedAccountSeedReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
@@ -2213,6 +2261,37 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         self.consensusBranchIdForHeightClosure = consensusBranchIdForHeightClosure
     }
 
+    // MARK: - listAccounts
+
+    var listAccountsThrowableError: Error?
+    func setListAccountsThrowableError(_ param: Error?) async {
+        listAccountsThrowableError = param
+    }
+    var listAccountsCallsCount = 0
+    var listAccountsCalled: Bool {
+        return listAccountsCallsCount > 0
+    }
+    var listAccountsReturnValue: [Int32]!
+    func setListAccountsReturnValue(_ param: [Int32]) async {
+        listAccountsReturnValue = param
+    }
+    var listAccountsClosure: (() async throws -> [Int32])?
+    func setListAccountsClosure(_ param: (() async throws -> [Int32])?) async {
+        listAccountsClosure = param
+    }
+
+    func listAccounts() async throws -> [Int32] {
+        if let error = listAccountsThrowableError {
+            throw error
+        }
+        listAccountsCallsCount += 1
+        if let closure = listAccountsClosure {
+            return try await closure()
+        } else {
+            return listAccountsReturnValue
+        }
+    }
+
     // MARK: - createAccount
 
     var createAccountSeedTreeStateRecoverUntilThrowableError: Error?
@@ -2243,6 +2322,39 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(seed, treeState, recoverUntil)
         } else {
             return createAccountSeedTreeStateRecoverUntilReturnValue
+        }
+    }
+
+    // MARK: - isSeedRelevantToAnyDerivedAccount
+
+    var isSeedRelevantToAnyDerivedAccountSeedThrowableError: Error?
+    func setIsSeedRelevantToAnyDerivedAccountSeedThrowableError(_ param: Error?) async {
+        isSeedRelevantToAnyDerivedAccountSeedThrowableError = param
+    }
+    var isSeedRelevantToAnyDerivedAccountSeedCallsCount = 0
+    var isSeedRelevantToAnyDerivedAccountSeedCalled: Bool {
+        return isSeedRelevantToAnyDerivedAccountSeedCallsCount > 0
+    }
+    var isSeedRelevantToAnyDerivedAccountSeedReceivedSeed: [UInt8]?
+    var isSeedRelevantToAnyDerivedAccountSeedReturnValue: Bool!
+    func setIsSeedRelevantToAnyDerivedAccountSeedReturnValue(_ param: Bool) async {
+        isSeedRelevantToAnyDerivedAccountSeedReturnValue = param
+    }
+    var isSeedRelevantToAnyDerivedAccountSeedClosure: (([UInt8]) async throws -> Bool)?
+    func setIsSeedRelevantToAnyDerivedAccountSeedClosure(_ param: (([UInt8]) async throws -> Bool)?) async {
+        isSeedRelevantToAnyDerivedAccountSeedClosure = param
+    }
+
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
+        if let error = isSeedRelevantToAnyDerivedAccountSeedThrowableError {
+            throw error
+        }
+        isSeedRelevantToAnyDerivedAccountSeedCallsCount += 1
+        isSeedRelevantToAnyDerivedAccountSeedReceivedSeed = seed
+        if let closure = isSeedRelevantToAnyDerivedAccountSeedClosure {
+            return try await closure(seed)
+        } else {
+            return isSeedRelevantToAnyDerivedAccountSeedReturnValue
         }
     }
 
@@ -2761,34 +2873,34 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - scanBlocks
 
-    var scanBlocksFromHeightLimitThrowableError: Error?
-    func setScanBlocksFromHeightLimitThrowableError(_ param: Error?) async {
-        scanBlocksFromHeightLimitThrowableError = param
+    var scanBlocksFromHeightFromStateLimitThrowableError: Error?
+    func setScanBlocksFromHeightFromStateLimitThrowableError(_ param: Error?) async {
+        scanBlocksFromHeightFromStateLimitThrowableError = param
     }
-    var scanBlocksFromHeightLimitCallsCount = 0
-    var scanBlocksFromHeightLimitCalled: Bool {
-        return scanBlocksFromHeightLimitCallsCount > 0
+    var scanBlocksFromHeightFromStateLimitCallsCount = 0
+    var scanBlocksFromHeightFromStateLimitCalled: Bool {
+        return scanBlocksFromHeightFromStateLimitCallsCount > 0
     }
-    var scanBlocksFromHeightLimitReceivedArguments: (fromHeight: Int32, limit: UInt32)?
-    var scanBlocksFromHeightLimitReturnValue: ScanSummary!
-    func setScanBlocksFromHeightLimitReturnValue(_ param: ScanSummary) async {
-        scanBlocksFromHeightLimitReturnValue = param
+    var scanBlocksFromHeightFromStateLimitReceivedArguments: (fromHeight: Int32, fromState: TreeState, limit: UInt32)?
+    var scanBlocksFromHeightFromStateLimitReturnValue: ScanSummary!
+    func setScanBlocksFromHeightFromStateLimitReturnValue(_ param: ScanSummary) async {
+        scanBlocksFromHeightFromStateLimitReturnValue = param
     }
-    var scanBlocksFromHeightLimitClosure: ((Int32, UInt32) async throws -> ScanSummary)?
-    func setScanBlocksFromHeightLimitClosure(_ param: ((Int32, UInt32) async throws -> ScanSummary)?) async {
-        scanBlocksFromHeightLimitClosure = param
+    var scanBlocksFromHeightFromStateLimitClosure: ((Int32, TreeState, UInt32) async throws -> ScanSummary)?
+    func setScanBlocksFromHeightFromStateLimitClosure(_ param: ((Int32, TreeState, UInt32) async throws -> ScanSummary)?) async {
+        scanBlocksFromHeightFromStateLimitClosure = param
     }
 
-    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws -> ScanSummary {
-        if let error = scanBlocksFromHeightLimitThrowableError {
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32) async throws -> ScanSummary {
+        if let error = scanBlocksFromHeightFromStateLimitThrowableError {
             throw error
         }
-        scanBlocksFromHeightLimitCallsCount += 1
-        scanBlocksFromHeightLimitReceivedArguments = (fromHeight: fromHeight, limit: limit)
-        if let closure = scanBlocksFromHeightLimitClosure {
-            return try await closure(fromHeight, limit)
+        scanBlocksFromHeightFromStateLimitCallsCount += 1
+        scanBlocksFromHeightFromStateLimitReceivedArguments = (fromHeight: fromHeight, fromState: fromState, limit: limit)
+        if let closure = scanBlocksFromHeightFromStateLimitClosure {
+            return try await closure(fromHeight, fromState, limit)
         } else {
-            return scanBlocksFromHeightLimitReturnValue
+            return scanBlocksFromHeightFromStateLimitReturnValue
         }
     }
 

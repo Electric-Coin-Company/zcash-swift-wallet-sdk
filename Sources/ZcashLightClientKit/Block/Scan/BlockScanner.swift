@@ -23,6 +23,7 @@ protocol BlockScanner {
 struct BlockScannerImpl {
     let config: BlockScannerConfig
     let rustBackend: ZcashRustBackendWelding
+    let service: LightWalletService
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
@@ -56,7 +57,9 @@ extension BlockScannerImpl: BlockScanner {
             let scanSummary: ScanSummary
             let scanStartTime = Date()
             do {
-                scanSummary = try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), limit: batchSize)
+                let fromState = try await service.getTreeState(BlockID(height: startHeight - 1))
+
+                scanSummary = try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), fromState: fromState, limit: batchSize)
             } catch {
                 logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error

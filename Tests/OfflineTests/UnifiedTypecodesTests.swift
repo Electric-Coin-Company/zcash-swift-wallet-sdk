@@ -32,7 +32,7 @@ final class UnifiedTypecodesTests: XCTestCase {
 
         let typecodes = try DerivationTool(networkType: .testnet).receiverTypecodesFromUnifiedAddress(address)
 
-        XCTAssertEqual(typecodes, [.sapling, .p2pkh])
+        XCTAssertEqual(typecodes, [.orchard, .sapling, .p2pkh])
     }
 
     func testUnifiedAddressHasTransparentSaplingReceivers() throws {
@@ -51,6 +51,7 @@ final class UnifiedTypecodesTests: XCTestCase {
         XCTAssertEqual(
             Set<UnifiedAddress.ReceiverTypecodes>(typecodes),
             Set([
+                .orchard,
                 .sapling,
                 .p2pkh
             ])

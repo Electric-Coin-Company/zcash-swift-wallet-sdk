@@ -100,8 +100,7 @@ enum Dependencies {
     
     static func setupCompactBlockProcessor(
         in container: DIContainer,
-        config: CompactBlockProcessor.Configuration,
-        accountRepository: AccountRepository
+        config: CompactBlockProcessor.Configuration
     ) {
         container.register(type: BlockDownloader.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
@@ -120,6 +119,7 @@ enum Dependencies {
         }
 
         container.register(type: BlockScanner.self, isSingleton: true) { di in
+            let service = di.resolve(LightWalletService.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
             let transactionRepository = di.resolve(TransactionRepository.self)
             let metrics = di.resolve(SDKMetrics.self)
@@ -133,6 +133,7 @@ enum Dependencies {
             return BlockScannerImpl(
                 config: blockScannerConfig,
                 rustBackend: rustBackend,
+                service: service,
                 transactionRepository: transactionRepository,
                 metrics: metrics,
                 logger: logger
@@ -163,7 +164,6 @@ enum Dependencies {
             let logger = di.resolve(Logger.self)
             
             return UTXOFetcherImpl(
-                accountRepository: accountRepository,
                 blockDownloaderService: blockDownloaderService,
                 config: utxoFetcherConfig,
                 rustBackend: rustBackend,

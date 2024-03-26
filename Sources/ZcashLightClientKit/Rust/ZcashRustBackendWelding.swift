@@ -11,15 +11,21 @@ import Foundation
 enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
-/// Enumeration of potential return states for database initialization. If `seedRequired`
-/// is returned, the caller must re-attempt initialization providing the seed
+
+/// Enumeration of potential return states for database initialization.
+///
+/// If `seedRequired` is returned, the caller must re-attempt initialization providing the seed.
 public enum DbInitResult {
     case success
     case seedRequired
+    case seedNotRelevant
 }
 
 // sourcery: mockActor
 protocol ZcashRustBackendWelding {
+    /// Returns a list of the accounts in the wallet.
+    func listAccounts() async throws -> [Int32]
+
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
     ///
@@ -40,6 +46,11 @@ protocol ZcashRustBackendWelding {
     /// - Returns: The `UnifiedSpendingKey` structs for the number of accounts created
     /// - Throws: `rustCreateAccount`.
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
+
+    /// Checks whether the given seed is relevant to any of the derived accounts in the wallet.
+    ///
+    /// - parameter seed: byte array of the seed
+    func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
 
     /// Scans a transaction for any information that can be decrypted by the accounts in the wallet, and saves it to the wallet.
     /// - parameter tx:     the transaction to decrypt
@@ -173,9 +184,10 @@ protocol ZcashRustBackendWelding {
     /// cache, an error will be signalled.
     ///
     /// - parameter fromHeight: scan starting from the given height.
+    /// - parameter fromState: The TreeState Protobuf object for the height prior to `fromHeight`
     /// - parameter limit: scan up to limit blocks.
     /// - Throws: `rustScanBlocks` if rust layer returns error.
-    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws -> ScanSummary
+    func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32) async throws -> ScanSummary
 
     /// Upserts a UTXO into the data db database
     /// - parameter txid: the txid bytes for the UTXO
