@@ -65,6 +65,7 @@ public enum ZcashTransaction {
         public enum Pool {
             case transaparent
             case sapling
+            case orchard
             case other(Int)
             init(rawValue: Int) {
                 switch rawValue {
@@ -72,6 +73,8 @@ public enum ZcashTransaction {
                     self = .transaparent
                 case 2:
                     self = .sapling
+                case 3:
+                    self = .orchard
                 default:
                     self = .other(rawValue)
                 }
