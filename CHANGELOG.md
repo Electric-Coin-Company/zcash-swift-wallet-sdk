@@ -22,6 +22,25 @@ Possible errors:
 
 - `SDKSynchronizer.latestUTXOs`
 
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2430000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2447500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2750000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2770000.json
+````
+
 # 2.0.11 - 2024-03-08
 
 ## Changed
