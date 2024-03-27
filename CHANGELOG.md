@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.1 - 2024-03-27
+
+## Fixed
+- Bug in an SQL query that prevented shielding of transparent funds.
+
 # 2.1.0 - 2024-03-26
 
 ### [#1379] Fulfill Payment from a valid ZIP-321 request
