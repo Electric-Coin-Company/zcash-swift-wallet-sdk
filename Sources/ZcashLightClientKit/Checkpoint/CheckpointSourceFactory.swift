@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CheckpointSourceFactory {
+enum CheckpointSourceFactory {
     static func fromBundle(for network: NetworkType) -> CheckpointSource {
         BundleCheckpointSource(network: network)
     }
