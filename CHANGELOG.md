@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.2 - 2024-03-27
+
+## Fixed
+- Bug in note selection when sending to a transparent recipient.
+
 # 2.1.1 - 2024-03-27
 
 ## Fixed
