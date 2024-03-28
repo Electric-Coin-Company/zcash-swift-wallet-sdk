@@ -78,7 +78,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
 
             let acResult = nextContext.checkStateIs(.updateChainTip)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
+            XCTAssertTrue(acResult == .called(2), "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testUpdateSubtreeRootsAction_RootsAvailablePutRootsSuccess is not expected to fail. \(error)")
         }
