@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.3 - 2024-03-28
+
 ## Fixed
 - Orchard subtree roots are now fetched alongside Sapling subtree roots.
 
