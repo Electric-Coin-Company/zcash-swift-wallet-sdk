@@ -133,6 +133,8 @@ protocol ZcashRustBackendWelding {
 
     func putSaplingSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws
 
+    func putOrchardSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws
+
     /// Updates the wallet's view of the blockchain.
     ///
     /// This method is used to provide the wallet with information about the state of the blockchain,

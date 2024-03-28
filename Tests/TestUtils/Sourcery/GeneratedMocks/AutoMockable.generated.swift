@@ -2722,6 +2722,31 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         try await putSaplingSubtreeRootsStartIndexRootsClosure!(startIndex, roots)
     }
 
+    // MARK: - putOrchardSubtreeRoots
+
+    var putOrchardSubtreeRootsStartIndexRootsThrowableError: Error?
+    func setPutOrchardSubtreeRootsStartIndexRootsThrowableError(_ param: Error?) async {
+        putOrchardSubtreeRootsStartIndexRootsThrowableError = param
+    }
+    var putOrchardSubtreeRootsStartIndexRootsCallsCount = 0
+    var putOrchardSubtreeRootsStartIndexRootsCalled: Bool {
+        return putOrchardSubtreeRootsStartIndexRootsCallsCount > 0
+    }
+    var putOrchardSubtreeRootsStartIndexRootsReceivedArguments: (startIndex: UInt64, roots: [SubtreeRoot])?
+    var putOrchardSubtreeRootsStartIndexRootsClosure: ((UInt64, [SubtreeRoot]) async throws -> Void)?
+    func setPutOrchardSubtreeRootsStartIndexRootsClosure(_ param: ((UInt64, [SubtreeRoot]) async throws -> Void)?) async {
+        putOrchardSubtreeRootsStartIndexRootsClosure = param
+    }
+
+    func putOrchardSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
+        if let error = putOrchardSubtreeRootsStartIndexRootsThrowableError {
+            throw error
+        }
+        putOrchardSubtreeRootsStartIndexRootsCallsCount += 1
+        putOrchardSubtreeRootsStartIndexRootsReceivedArguments = (startIndex: startIndex, roots: roots)
+        try await putOrchardSubtreeRootsStartIndexRootsClosure!(startIndex, roots)
+    }
+
     // MARK: - updateChainTip
 
     var updateChainTipHeightThrowableError: Error?

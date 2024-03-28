@@ -181,6 +181,10 @@ public enum ZcashErrorCode: String {
     case rustListAccounts = "ZRUST0058"
     /// Error from rust layer when calling ZcashRustBackend.rustIsSeedRelevantToAnyDerivedAccount
     case rustIsSeedRelevantToAnyDerivedAccount = "ZRUST0059"
+    /// Unable to allocate memory required to write blocks when calling ZcashRustBackend.putOrchardSubtreeRoots
+    case rustPutOrchardSubtreeRootsAllocationProblem = "ZRUST0060"
+    /// Error from rust layer when calling ZcashRustBackend.putOrchardSubtreeRoots
+    case rustPutOrchardSubtreeRoots = "ZRUST0061"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
@@ -337,6 +341,8 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorLastScannedHeight = "ZCBPEO0020"
     /// Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value.
     case compactBlockProcessorSupportedSyncAlgorithm = "ZCBPEO0021"
+    /// Put Orchard subtree roots to the DB failed.
+    case compactBlockProcessorPutOrchardSubtreeRoots = "ZCBPEO0022"
     /// The synchronizer is unprepared.
     case synchronizerNotPrepared = "ZSYNCO0001"
     /// Memos can't be sent to transparent addresses.
