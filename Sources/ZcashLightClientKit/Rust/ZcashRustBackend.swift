@@ -571,6 +571,64 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    func putOrchardSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
+        var ffiSubtreeRootsVec: [FfiSubtreeRoot] = []
+
+        for root in roots {
+            let hashPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: root.rootHash.count)
+
+            let contiguousHashBytes = ContiguousArray(root.rootHash.bytes)
+
+            let result: Void? = contiguousHashBytes.withContiguousStorageIfAvailable { hashBytesPtr in
+                // swiftlint:disable:next force_unwrapping
+                hashPtr.initialize(from: hashBytesPtr.baseAddress!, count: hashBytesPtr.count)
+            }
+
+            guard result != nil else {
+                defer {
+                    hashPtr.deallocate()
+                    ffiSubtreeRootsVec.deallocateElements()
+                }
+                throw ZcashError.rustPutOrchardSubtreeRootsAllocationProblem
+            }
+
+            ffiSubtreeRootsVec.append(
+                FfiSubtreeRoot(
+                    root_hash_ptr: hashPtr,
+                    root_hash_ptr_len: UInt(contiguousHashBytes.count),
+                    completing_block_height: UInt32(root.completingBlockHeight)
+                )
+            )
+        }
+
+        var contiguousFfiRoots = ContiguousArray(ffiSubtreeRootsVec)
+
+        let len = UInt(contiguousFfiRoots.count)
+
+        let rootsPtr = UnsafeMutablePointer<FfiSubtreeRoots>.allocate(capacity: 1)
+
+        defer {
+            ffiSubtreeRootsVec.deallocateElements()
+            rootsPtr.deallocate()
+        }
+
+        try contiguousFfiRoots.withContiguousMutableStorageIfAvailable { ptr in
+            var roots = FfiSubtreeRoots()
+            roots.ptr = ptr.baseAddress
+            roots.len = len
+
+            rootsPtr.initialize(to: roots)
+
+            globalDBLock.lock()
+            let res = zcashlc_put_orchard_subtree_roots(dbData.0, dbData.1, startIndex, rootsPtr, networkType.networkId)
+            globalDBLock.unlock()
+
+            guard res else {
+                throw ZcashError.rustPutOrchardSubtreeRoots(lastErrorMessage(fallback: "`putOrchardSubtreeRoots` failed with unknown error"))
+            }
+        }
+    }
+
     func updateChainTip(height: Int32) async throws {
         globalDBLock.lock()
         let result = zcashlc_update_chain_tip(dbData.0, dbData.1, height, networkType.networkId)

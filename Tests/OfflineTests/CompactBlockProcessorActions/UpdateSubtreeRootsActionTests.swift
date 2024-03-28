@@ -70,6 +70,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             }
         }
         await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure({ _, _ in })
+        await tupple.rustBackendMock.setPutOrchardSubtreeRootsStartIndexRootsClosure({ _, _ in })
 
         do {
             let context = ActionContextMock.default()
@@ -77,13 +78,13 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
 
             let acResult = nextContext.checkStateIs(.updateChainTip)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
+            XCTAssertTrue(acResult == .called(2), "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testUpdateSubtreeRootsAction_RootsAvailablePutRootsSuccess is not expected to fail. \(error)")
         }
     }
     
-    func testUpdateSubtreeRootsAction_RootsAvailablePutRootsFailure() async throws {
+    func testUpdateSubtreeRootsAction_RootsAvailablePutSaplingRootsFailure() async throws {
         let loggerMock = LoggerMock()
         
         loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
@@ -98,6 +99,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             }
         }
         await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsThrowableError("putSaplingFailed")
+        await tupple.rustBackendMock.setPutOrchardSubtreeRootsStartIndexRootsClosure({ _, _ in })
 
         do {
             let context = ActionContextMock.default()
@@ -111,7 +113,37 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             XCTFail("testUpdateSubtreeRootsAction_RootsAvailablePutRootsFailure is not expected to fail. \(error)")
         }
     }
-    
+
+    func testUpdateSubtreeRootsAction_RootsAvailablePutOrchardRootsFailure() async throws {
+        let loggerMock = LoggerMock()
+
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+
+        let tupple = setupAction(loggerMock)
+        let updateSubtreeRootsActionAction = tupple.action
+        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+            AsyncThrowingStream { continuation in
+                continuation.yield(SubtreeRoot())
+                continuation.finish()
+            }
+        }
+        await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure({ _, _ in })
+        await tupple.rustBackendMock.setPutOrchardSubtreeRootsStartIndexRootsThrowableError("putOrchardFailed")
+
+        do {
+            let context = ActionContextMock.default()
+
+            _ = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
+
+            XCTFail("updateSubtreeRootsActionAction.run(with:) is excpected to fail but didn't.")
+        } catch ZcashError.compactBlockProcessorPutOrchardSubtreeRoots {
+            // this is expected result of this test
+        } catch {
+            XCTFail("testUpdateSubtreeRootsAction_RootsAvailablePutRootsFailure is not expected to fail. \(error)")
+        }
+    }
+
     // swiftlint:disable large_tuple
     private func setupAction(
         _ loggerMock: LoggerMock = LoggerMock()
