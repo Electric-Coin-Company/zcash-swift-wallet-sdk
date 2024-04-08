@@ -8,22 +8,6 @@
 import Foundation
 import SQLite
 
-extension Connection {
-    public func scalarLocked<V: Value>(_ query: ScalarQuery<V?>) throws -> V.ValueType? {
-        globalDBLock.lock()
-        defer { globalDBLock.unlock() }
-
-        return try scalar(query)
-    }
-    
-    public func scalarLocked<V: Value>(_ query: ScalarQuery<V>) throws -> V {
-        globalDBLock.lock()
-        defer { globalDBLock.unlock() }
-
-        return try scalar(query)
-    }
-}
-
 class TransactionSQLDAO: TransactionRepository {
     enum NotesTableStructure {
         static let transactionID = Expression<Int>("tx")
@@ -55,17 +39,19 @@ class TransactionSQLDAO: TransactionRepository {
         true
     }
     
+    @DBActor
     func countAll() async throws -> Int {
         do {
-            return try connection().scalarLocked(transactionsView.count)
+            return try connection().scalar(transactionsView.count)
         } catch {
             throw ZcashError.transactionRepositoryCountAll(error)
         }
     }
     
+    @DBActor
     func countUnmined() async throws -> Int {
         do {
-            return try connection().scalarLocked(transactionsView.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
+            return try connection().scalar(transactionsView.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
         } catch {
             throw ZcashError.transactionRepositoryCountUnmined(error)
         }
@@ -76,7 +62,7 @@ class TransactionSQLDAO: TransactionRepository {
             .filter(ZcashTransaction.Overview.Column.rawID == Blob(bytes: rawID.bytes))
             .limit(1)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func find(offset: Int, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
@@ -85,7 +71,7 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
@@ -98,7 +84,7 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func find(from transaction: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
@@ -119,7 +105,7 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit)
         
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
@@ -128,7 +114,7 @@ class TransactionSQLDAO: TransactionRepository {
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func findSent(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
@@ -137,7 +123,7 @@ class TransactionSQLDAO: TransactionRepository {
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func findPendingTransactions(latestHeight: BlockHeight, offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
@@ -146,7 +132,7 @@ class TransactionSQLDAO: TransactionRepository {
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
     func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
@@ -162,23 +148,25 @@ class TransactionSQLDAO: TransactionRepository {
         let query = self.txOutputsView
             .filter(ZcashTransaction.Output.Column.rawID == Blob(bytes: rawID.bytes))
 
-        return try execute(query) { try ZcashTransaction.Output(row: $0) }
+        return try await execute(query) { try ZcashTransaction.Output(row: $0) }
     }
 
     func getRecipients(for rawID: Data) async throws -> [TransactionRecipient] {
         try await getTransactionOutputs(for: rawID).map { $0.recipient }
     }
 
-    private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> Entity {
-        let entities: [Entity] = try execute(query, createEntity: createEntity)
-        guard let entity = entities.first else { throw ZcashError.transactionRepositoryEntityNotFound }
+    private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) async throws -> Entity {
+        let entities: [Entity] = try await execute(query, createEntity: createEntity)
+        
+        guard let entity = entities.first else {
+            throw ZcashError.transactionRepositoryEntityNotFound
+        }
+        
         return entity
     }
 
-    private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> [Entity] {
-        globalDBLock.lock()
-        defer { globalDBLock.unlock() }
-        
+    @DBActor
+    private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) async throws -> [Entity] {
         do {
             let entities = try connection()
                 .prepare(query)

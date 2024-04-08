@@ -92,14 +92,14 @@ final class RewindActionTests: ZcashTestCase {
         _ loggerMock: LoggerMock = LoggerMock(),
         _ blockDownloaderServiceMock: BlockDownloaderServiceMock = BlockDownloaderServiceMock()
     ) async -> RewindAction {
-        let rustBackendMock = ZcashRustBackendWeldingMock(
-            consensusBranchIdForHeightClosure: { height in
-                XCTAssertEqual(height, 2, "")
-                return -1026109260
-            }
-        )
+        let rustBackendMock = ZcashRustBackendWeldingMock()
         
-        await rustBackendMock.setRewindToHeightHeightClosure({ _ in })
+        rustBackendMock.consensusBranchIdForHeightClosure = { height in
+            XCTAssertEqual(height, 2, "")
+            return -1026109260
+        }
+        
+        rustBackendMock.rewindToHeightHeightClosure = { _ in }
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in blockDownloaderServiceMock }
