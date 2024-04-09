@@ -9,9 +9,7 @@
 import Foundation
 import libzcashlc
 
-let globalDBLock = NSLock()
-
-actor ZcashRustBackend: ZcashRustBackendWelding {
+struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
     let useZIP317Fees = true
 
@@ -21,7 +19,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     let outputParamsPath: (String, UInt)
     let keyDeriving: ZcashKeyDerivationBackendWelding
 
-    nonisolated let networkType: NetworkType
+    let networkType: NetworkType
 
     static var tracingEnabled = false
     /// Creates instance of `ZcashRustBackend`.
@@ -49,14 +47,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func listAccounts() async throws -> [Int32] {
-        globalDBLock.lock()
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard let accountsPtr else {
             throw ZcashError.rustListAccounts(lastErrorMessage(fallback: "`listAccounts` failed with unknown error"))
@@ -74,6 +71,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return accounts
     }
 
+    @DBActor
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
@@ -83,7 +81,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
         
-        globalDBLock.lock()
         let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
@@ -94,7 +91,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             rUntil,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard let ffiBinaryKeyPtr else {
             throw ZcashError.rustCreateAccount(lastErrorMessage(fallback: "`createAccount` failed with unknown error"))
@@ -105,8 +101,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return ffiBinaryKeyPtr.pointee.unsafeToUnifiedSpendingKey(network: networkType)
     }
 
+    @DBActor
     func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool {
-        globalDBLock.lock()
         let result = zcashlc_is_seed_relevant_to_any_derived_account(
             dbData.0,
             dbData.1,
@@ -114,7 +110,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             UInt(seed.count),
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         // -1 is the error sentinel.
         guard result >= 0 else {
@@ -125,13 +120,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result != 0
     }
 
+    @DBActor
     func proposeTransfer(
         account: Int32,
         to address: String,
         value: Int64,
         memo: MemoBytes?
     ) async throws -> FfiProposal {
-        globalDBLock.lock()
         let proposal = zcashlc_propose_transfer(
             dbData.0,
             dbData.1,
@@ -143,7 +138,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             minimumConfirmations,
             useZIP317Fees
         )
-        globalDBLock.unlock()
 
         guard let proposal else {
             throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`proposeTransfer` failed with unknown error"))
@@ -157,11 +151,11 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         ))
     }
 
+    @DBActor
     func proposeTransferFromURI(
         _ uri: String,
         account: Int32
     ) async throws -> FfiProposal {
-        globalDBLock.lock()
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
             dbData.1,
@@ -171,7 +165,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             minimumConfirmations,
             useZIP317Fees
         )
-        globalDBLock.unlock()
 
         guard let proposal else {
             throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`proposeTransfer` failed with unknown error"))
@@ -185,8 +178,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         ))
     }
 
+    @DBActor
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
-        globalDBLock.lock()
         let result = zcashlc_decrypt_and_store_transaction(
             dbData.0,
             dbData.1,
@@ -195,22 +188,20 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             UInt32(minedHeight),
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard result != 0 else {
             throw ZcashError.rustDecryptAndStoreTransaction(lastErrorMessage(fallback: "`decryptAndStoreTransaction` failed with unknown error"))
         }
     }
 
+    @DBActor
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
-        globalDBLock.lock()
         let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard let addressCStr else {
             throw ZcashError.rustGetCurrentAddress(lastErrorMessage(fallback: "`getCurrentAddress` failed with unknown error"))
@@ -225,15 +216,14 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
+    @DBActor
     func getNearestRewindHeight(height: Int32) async throws -> Int32 {
-        globalDBLock.lock()
         let result = zcashlc_get_nearest_rewind_height(
             dbData.0,
             dbData.1,
             height,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard result > 0 else {
             throw ZcashError.rustGetNearestRewindHeight(lastErrorMessage(fallback: "`getNearestRewindHeight` failed with unknown error"))
@@ -242,15 +232,14 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
 
+    @DBActor
     func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
-        globalDBLock.lock()
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard let addressCStr else {
             throw ZcashError.rustGetNextAvailableAddress(lastErrorMessage(fallback: "`getNextAvailableAddress` failed with unknown error"))
@@ -265,6 +254,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
+    @DBActor
     func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo? {
         guard txId.count == 32 else {
             throw ZcashError.rustGetMemoInvalidTxIdLength
@@ -273,30 +263,27 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
         var success = false
 
-        globalDBLock.lock()
         contiguousMemoBytes.withUnsafeMutableBufferPointer { memoBytePtr in
             success = zcashlc_get_memo(dbData.0, dbData.1, txId.bytes, outputIndex, memoBytePtr.baseAddress, networkType.networkId)
         }
-        globalDBLock.unlock()
 
         guard success else { return nil }
 
         return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
     }
 
+    @DBActor
     func getTransparentBalance(account: Int32) async throws -> Int64 {
         guard account >= 0 else {
             throw ZcashError.rustGetTransparentBalanceNegativeAccount(Int(account))
         }
 
-        globalDBLock.lock()
         let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
             account
         )
-        globalDBLock.unlock()
 
         guard balance >= 0 else {
             throw ZcashError.rustGetTransparentBalance(
@@ -308,12 +295,12 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
+    @DBActor
     func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
         guard account >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalanceNegativeAccount(Int(account))
         }
 
-        globalDBLock.lock()
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
@@ -321,7 +308,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             account,
             minimumConfirmations
         )
-        globalDBLock.unlock()
 
         guard balance >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalance(
@@ -333,10 +319,9 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
+    @DBActor
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult {
-        globalDBLock.lock()
         let initResult = zcashlc_init_data_database(dbData.0, dbData.1, seed, UInt(seed?.count ?? 0), networkType.networkId)
-        globalDBLock.unlock()
 
         switch initResult {
         case 0: // ok
@@ -350,16 +335,16 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func initBlockMetadataDb() async throws {
-        globalDBLock.lock()
         let result = zcashlc_init_block_metadata_db(fsBlockDbRoot.0, fsBlockDbRoot.1)
-        globalDBLock.unlock()
 
         guard result else {
             throw ZcashError.rustInitBlockMetadataDb(lastErrorMessage(fallback: "`initBlockMetadataDb` failed with unknown error"))
         }
     }
 
+    @DBActor
     func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws {
         var ffiBlockMetaVec: [FFIBlockMeta] = []
 
@@ -409,9 +394,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
             fsBlocks.initialize(to: meta)
 
-            globalDBLock.lock()
             let res = zcashlc_write_block_metadata(fsBlockDbRoot.0, fsBlockDbRoot.1, fsBlocks)
-            globalDBLock.unlock()
 
             guard res else {
                 throw ZcashError.rustWriteBlocksMetadata(lastErrorMessage(fallback: "`writeBlocksMetadata` failed with unknown error"))
@@ -419,10 +402,9 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func latestCachedBlockHeight() async throws -> BlockHeight {
-        globalDBLock.lock()
         let height = zcashlc_latest_cached_block_height(fsBlockDbRoot.0, fsBlockDbRoot.1)
-        globalDBLock.unlock()
 
         if height >= 0 {
             return BlockHeight(height)
@@ -433,15 +415,14 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
-        globalDBLock.lock()
         let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard let encodedKeysPtr else {
             throw ZcashError.rustListTransparentReceivers(lastErrorMessage(fallback: "`listTransparentReceivers` failed with unknown error"))
@@ -466,6 +447,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return addresses
     }
 
+    @DBActor
     func putUnspentTransparentOutput(
         txid: [UInt8],
         index: Int,
@@ -473,7 +455,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         value: Int64,
         height: BlockHeight
     ) async throws {
-        globalDBLock.lock()
         let result = zcashlc_put_utxo(
             dbData.0,
             dbData.1,
@@ -486,33 +467,31 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             Int32(height),
             networkType.networkId
         )
-        globalDBLock.unlock()
 
         guard result else {
             throw ZcashError.rustPutUnspentTransparentOutput(lastErrorMessage(fallback: "`putUnspentTransparentOutput` failed with unknown error"))
         }
     }
 
+    @DBActor
     func rewindToHeight(height: Int32) async throws {
-        globalDBLock.lock()
         let result = zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkType.networkId)
-        globalDBLock.unlock()
 
         guard result else {
             throw ZcashError.rustRewindToHeight(height, lastErrorMessage(fallback: "`rewindToHeight` failed with unknown error"))
         }
     }
 
+    @DBActor
     func rewindCacheToHeight(height: Int32) async throws {
-        globalDBLock.lock()
         let result = zcashlc_rewind_fs_block_cache_to_height(fsBlockDbRoot.0, fsBlockDbRoot.1, height)
-        globalDBLock.unlock()
 
         guard result else {
             throw ZcashError.rustRewindCacheToHeight(lastErrorMessage(fallback: "`rewindCacheToHeight` failed with unknown error"))
         }
     }
 
+    @DBActor
     func putSaplingSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
         var ffiSubtreeRootsVec: [FfiSubtreeRoot] = []
 
@@ -561,9 +540,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
             rootsPtr.initialize(to: roots)
 
-            globalDBLock.lock()
             let res = zcashlc_put_sapling_subtree_roots(dbData.0, dbData.1, startIndex, rootsPtr, networkType.networkId)
-            globalDBLock.unlock()
 
             guard res else {
                 throw ZcashError.rustPutSaplingSubtreeRoots(lastErrorMessage(fallback: "`putSaplingSubtreeRoots` failed with unknown error"))
@@ -571,6 +548,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func putOrchardSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
         var ffiSubtreeRootsVec: [FfiSubtreeRoot] = []
 
@@ -619,9 +597,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
             rootsPtr.initialize(to: roots)
 
-            globalDBLock.lock()
             let res = zcashlc_put_orchard_subtree_roots(dbData.0, dbData.1, startIndex, rootsPtr, networkType.networkId)
-            globalDBLock.unlock()
 
             guard res else {
                 throw ZcashError.rustPutOrchardSubtreeRoots(lastErrorMessage(fallback: "`putOrchardSubtreeRoots` failed with unknown error"))
@@ -629,20 +605,18 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func updateChainTip(height: Int32) async throws {
-        globalDBLock.lock()
         let result = zcashlc_update_chain_tip(dbData.0, dbData.1, height, networkType.networkId)
-        globalDBLock.unlock()
 
         guard result else {
             throw ZcashError.rustUpdateChainTip(lastErrorMessage(fallback: "`updateChainTip` failed with unknown error"))
         }
     }
 
+    @DBActor
     func fullyScannedHeight() async throws -> BlockHeight? {
-        globalDBLock.lock()
         let height = zcashlc_fully_scanned_height(dbData.0, dbData.1, networkType.networkId)
-        globalDBLock.unlock()
 
         if height >= 0 {
             return BlockHeight(height)
@@ -653,10 +627,9 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func maxScannedHeight() async throws -> BlockHeight? {
-        globalDBLock.lock()
         let height = zcashlc_max_scanned_height(dbData.0, dbData.1, networkType.networkId)
-        globalDBLock.unlock()
 
         if height >= 0 {
             return BlockHeight(height)
@@ -667,10 +640,9 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    @DBActor
     func getWalletSummary() async throws -> WalletSummary? {
-        globalDBLock.lock()
         let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, minimumConfirmations)
-        globalDBLock.unlock()
 
         guard let summaryPtr else {
             throw ZcashError.rustGetWalletSummary(lastErrorMessage(fallback: "`getWalletSummary` failed with unknown error"))
@@ -699,10 +671,9 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
 
+    @DBActor
     func suggestScanRanges() async throws -> [ScanRange] {
-        globalDBLock.lock()
         let scanRangesPtr = zcashlc_suggest_scan_ranges(dbData.0, dbData.1, networkType.networkId)
-        globalDBLock.unlock()
 
         guard let scanRangesPtr else {
             throw ZcashError.rustSuggestScanRanges(lastErrorMessage(fallback: "`suggestScanRanges` failed with unknown error"))
@@ -729,10 +700,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return scanRanges
     }
 
+    @DBActor
     func scanBlocks(fromHeight: Int32, fromState: TreeState, limit: UInt32 = 0) async throws -> ScanSummary {
         let fromStateBytes = try fromState.serializedData(partial: false).bytes
 
-        globalDBLock.lock()
         let summaryPtr = zcashlc_scan_blocks(
             fsBlockDbRoot.0,
             fsBlockDbRoot.1,
@@ -742,8 +713,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             fromStateBytes,
             UInt(fromStateBytes.count),
             limit,
-            networkType.networkId)
-        globalDBLock.unlock()
+            networkType.networkId
+        )
 
         guard let summaryPtr else {
             throw ZcashError.rustScanBlocks(lastErrorMessage(fallback: "`scanBlocks` failed with unknown error"))
@@ -761,13 +732,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
 
+    @DBActor
     func proposeShielding(
         account: Int32,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
     ) async throws -> FfiProposal? {
-        globalDBLock.lock()
         let proposal = zcashlc_propose_shielding(
             dbData.0,
             dbData.1,
@@ -779,7 +750,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             minimumConfirmations,
             useZIP317Fees
         )
-        globalDBLock.unlock()
 
         guard let proposal else {
             throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`proposeShielding` failed with unknown error"))
@@ -793,13 +763,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         ))
     }
 
+    @DBActor
     func createProposedTransactions(
         proposal: FfiProposal,
         usk: UnifiedSpendingKey
     ) async throws -> [Data] {
         let proposalBytes = try proposal.serializedData(partial: false).bytes
 
-        globalDBLock.lock()
         let txIdsPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
             usk.bytes.withUnsafeBufferPointer { uskPtr in
                 zcashlc_create_proposed_transactions(
@@ -817,7 +787,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
                 )
             }
         }
-        globalDBLock.unlock()
 
         guard let txIdsPtr else {
             throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))

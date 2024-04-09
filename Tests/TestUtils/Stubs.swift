@@ -58,51 +58,51 @@ class RustBackendMockHelper {
         rustBackend: ZcashRustBackendWelding,
         consensusBranchID: Int32? = nil
     ) async {
-        self.rustBackendMock = ZcashRustBackendWeldingMock(
-            consensusBranchIdForHeightClosure: { height in
-                if let consensusBranchID {
-                    return consensusBranchID
-                } else {
-                    return try rustBackend.consensusBranchIdFor(height: height)
-                }
+        self.rustBackendMock = ZcashRustBackendWeldingMock()
+        self.rustBackendMock.consensusBranchIdForHeightClosure = { height in
+            if let consensusBranchID {
+                return consensusBranchID
+            } else {
+                return try rustBackend.consensusBranchIdFor(height: height)
             }
-        )
-        await setupDefaultMock(rustBackend: rustBackend)
-    }
-
-    private func setupDefaultMock(rustBackend: ZcashRustBackendWelding) async {
-        await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
-        await rustBackendMock.setInitBlockMetadataDbClosure() { }
-        await rustBackendMock.setWriteBlocksMetadataBlocksClosure() { _ in }
-        await rustBackendMock.setGetTransparentBalanceAccountReturnValue(0)
-        await rustBackendMock.setListTransparentReceiversAccountReturnValue([])
-        await rustBackendMock.setGetCurrentAddressAccountThrowableError(ZcashError.rustGetCurrentAddress("mocked error"))
-        await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(ZcashError.rustGetNextAvailableAddress("mocked error"))
-        await rustBackendMock.setCreateAccountSeedTreeStateRecoverUntilThrowableError(ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes)
-        await rustBackendMock.setGetMemoTxIdOutputIndexReturnValue(nil)
-        await rustBackendMock.setInitDataDbSeedReturnValue(.seedRequired)
-        await rustBackendMock.setGetNearestRewindHeightHeightReturnValue(-1)
-        await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
-        await rustBackendMock.setProposeTransferAccountToValueMemoThrowableError(ZcashError.rustCreateToAddress("mocked error"))
-        await rustBackendMock.setProposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError(ZcashError.rustShieldFunds("mocked error"))
-        await rustBackendMock.setCreateProposedTransactionsProposalUskThrowableError(ZcashError.rustCreateToAddress("mocked error"))
-        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(ZcashError.rustDecryptAndStoreTransaction("mock fail"))
-
-        await rustBackendMock.setInitDataDbSeedClosure() { seed in
-            return try await rustBackend.initDataDb(seed: seed)
         }
 
-        await rustBackendMock.setRewindToHeightHeightClosure() { height in
+        setupDefaultMock(rustBackend: rustBackend)
+    }
+
+    private func setupDefaultMock(rustBackend: ZcashRustBackendWelding) {
+        rustBackendMock.latestCachedBlockHeightReturnValue = .empty()
+        rustBackendMock.initBlockMetadataDbClosure = { }
+        rustBackendMock.writeBlocksMetadataBlocksClosure = { _ in }
+        rustBackendMock.getTransparentBalanceAccountReturnValue = 0
+        rustBackendMock.listTransparentReceiversAccountReturnValue = []
+        rustBackendMock.getCurrentAddressAccountThrowableError = ZcashError.rustGetCurrentAddress("mocked error")
+        rustBackendMock.getNextAvailableAddressAccountThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
+        rustBackendMock.createAccountSeedTreeStateRecoverUntilThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
+        rustBackendMock.getMemoTxIdOutputIndexReturnValue = nil
+        rustBackendMock.initDataDbSeedReturnValue = .seedRequired
+        rustBackendMock.getNearestRewindHeightHeightReturnValue = -1
+        rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }
+        rustBackendMock.proposeTransferAccountToValueMemoThrowableError = ZcashError.rustCreateToAddress("mocked error")
+        rustBackendMock.proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError = ZcashError.rustShieldFunds("mocked error")
+        rustBackendMock.createProposedTransactionsProposalUskThrowableError = ZcashError.rustCreateToAddress("mocked error")
+        rustBackendMock.decryptAndStoreTransactionTxBytesMinedHeightThrowableError = ZcashError.rustDecryptAndStoreTransaction("mock fail")
+
+        rustBackendMock.initDataDbSeedClosure = { seed in
+            try await rustBackend.initDataDb(seed: seed)
+        }
+
+        rustBackendMock.rewindToHeightHeightClosure = { height in
             try await rustBackend.rewindToHeight(height: height)
         }
 
-        await rustBackendMock.setRewindCacheToHeightHeightClosure() { _ in }
+        rustBackendMock.rewindCacheToHeightHeightClosure = { _ in }
 
-        await rustBackendMock.setSuggestScanRangesClosure() {
+        rustBackendMock.suggestScanRangesClosure = {
             try await rustBackend.suggestScanRanges()
         }
 
-        await rustBackendMock.setScanBlocksFromHeightFromStateLimitClosure { fromHeight, fromState, limit in
+        rustBackendMock.scanBlocksFromHeightFromStateLimitClosure = { fromHeight, fromState, limit in
             try await rustBackend.scanBlocks(fromHeight: fromHeight, fromState: fromState, limit: limit)
         }
     }

@@ -31,7 +31,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         loggerMock.syncFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [] })
+        tupple.rustBackendMock.suggestScanRangesClosure = { [] }
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -59,9 +59,9 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         sdkMetricsMock.actionDetailForClosure = { _, _ in }
 
         let tupple = setupAction(loggerMock, sdkMetricsMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
-            ScanRange(range: 0..<10, priority: .chainTip)
-        ] })
+        tupple.rustBackendMock.suggestScanRangesClosure = {
+            [ScanRange(range: 0..<10, priority: .chainTip)]
+        }
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -121,12 +121,11 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
         )
 
-        let rustBackendMock = ZcashRustBackendWeldingMock(
-            consensusBranchIdForHeightClosure: { height in
-                XCTAssertEqual(height, 2, "")
-                return -1026109260
-            }
-        )
+        let rustBackendMock = ZcashRustBackendWeldingMock()
+        rustBackendMock.consensusBranchIdForHeightClosure = { height in
+            XCTAssertEqual(height, 2, "")
+            return -1026109260
+        }
         
         let lightWalletdInfoMock = LightWalletdInfoMock()
         lightWalletdInfoMock.underlyingConsensusBranchID = underlyingConsensusBranchID

@@ -21,7 +21,6 @@ public enum DbInitResult {
     case seedNotRelevant
 }
 
-// sourcery: mockActor
 protocol ZcashRustBackendWelding {
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Int32]

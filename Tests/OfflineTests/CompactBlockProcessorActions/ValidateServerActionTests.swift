@@ -135,12 +135,11 @@ final class ValidateServerActionTests: ZcashTestCase {
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
         )
 
-        let rustBackendMock = ZcashRustBackendWeldingMock(
-            consensusBranchIdForHeightClosure: { height in
-                XCTAssertEqual(height, 2, "")
-                return -1026109260
-            }
-        )
+        let rustBackendMock = ZcashRustBackendWeldingMock()
+        rustBackendMock.consensusBranchIdForHeightClosure = { height in
+            XCTAssertEqual(height, 2, "")
+            return -1026109260
+        }
         
         let lightWalletdInfoMock = LightWalletdInfoMock()
         lightWalletdInfoMock.underlyingConsensusBranchID = underlyingConsensusBranchID
