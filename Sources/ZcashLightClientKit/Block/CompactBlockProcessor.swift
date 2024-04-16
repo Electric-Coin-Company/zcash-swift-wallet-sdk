@@ -386,6 +386,8 @@ extension CompactBlockProcessor {
 
             try await rewindDownloadBlockAction(to: nil)
 
+            await latestBlocksDataProvider.reset()
+            
             await context.completion(nil)
         } catch {
             await context.completion(error)

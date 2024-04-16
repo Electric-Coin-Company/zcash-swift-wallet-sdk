@@ -12,7 +12,8 @@ protocol LatestBlocksDataProvider {
     var maxScannedHeight: BlockHeight { get async }
     var latestBlockHeight: BlockHeight { get async }
     var walletBirthday: BlockHeight { get async }
-
+    
+    func reset() async
     func updateScannedData() async
     func updateBlockData() async
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async
@@ -34,6 +35,13 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     init(service: LightWalletService, rustBackend: ZcashRustBackendWelding) {
         self.service = service
         self.rustBackend = rustBackend
+    }
+    
+    func reset() async {
+        fullyScannedHeight = .zero
+        maxScannedHeight = .zero
+        latestBlockHeight = .zero
+        walletBirthday = .zero
     }
     
     func updateScannedData() async {

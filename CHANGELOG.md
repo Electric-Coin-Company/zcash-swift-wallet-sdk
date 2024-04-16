@@ -6,6 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+- The database locking mechanism has been changed to use async/await concurrency approach - the DBActor.
+
+## Fixed
+- Call of wipe() resets local (in memory) values. 
+
 # 2.1.3 - 2024-03-28
 
 ## Fixed
