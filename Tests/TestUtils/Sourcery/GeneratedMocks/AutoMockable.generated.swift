@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.1.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.3 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -2434,25 +2434,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getMemo
 
-    var getMemoTxIdOutputIndexThrowableError: Error?
-    var getMemoTxIdOutputIndexCallsCount = 0
-    var getMemoTxIdOutputIndexCalled: Bool {
-        return getMemoTxIdOutputIndexCallsCount > 0
+    var getMemoTxIdOutputPoolOutputIndexThrowableError: Error?
+    var getMemoTxIdOutputPoolOutputIndexCallsCount = 0
+    var getMemoTxIdOutputPoolOutputIndexCalled: Bool {
+        return getMemoTxIdOutputPoolOutputIndexCallsCount > 0
     }
-    var getMemoTxIdOutputIndexReceivedArguments: (txId: Data, outputIndex: UInt16)?
-    var getMemoTxIdOutputIndexReturnValue: Memo?
-    var getMemoTxIdOutputIndexClosure: ((Data, UInt16) async throws -> Memo?)?
+    var getMemoTxIdOutputPoolOutputIndexReceivedArguments: (txId: Data, outputPool: UInt32, outputIndex: UInt16)?
+    var getMemoTxIdOutputPoolOutputIndexReturnValue: Memo?
+    var getMemoTxIdOutputPoolOutputIndexClosure: ((Data, UInt32, UInt16) async throws -> Memo?)?
 
-    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo? {
-        if let error = getMemoTxIdOutputIndexThrowableError {
+    func getMemo(txId: Data, outputPool: UInt32, outputIndex: UInt16) async throws -> Memo? {
+        if let error = getMemoTxIdOutputPoolOutputIndexThrowableError {
             throw error
         }
-        getMemoTxIdOutputIndexCallsCount += 1
-        getMemoTxIdOutputIndexReceivedArguments = (txId: txId, outputIndex: outputIndex)
-        if let closure = getMemoTxIdOutputIndexClosure {
-            return try await closure(txId, outputIndex)
+        getMemoTxIdOutputPoolOutputIndexCallsCount += 1
+        getMemoTxIdOutputPoolOutputIndexReceivedArguments = (txId: txId, outputPool: outputPool, outputIndex: outputIndex)
+        if let closure = getMemoTxIdOutputPoolOutputIndexClosure {
+            return try await closure(txId, outputPool, outputIndex)
         } else {
-            return getMemoTxIdOutputIndexReturnValue
+            return getMemoTxIdOutputPoolOutputIndexReturnValue
         }
     }
 

@@ -85,8 +85,9 @@ protocol ZcashRustBackendWelding {
 
     /// Get memo from note.
     /// - parameter txId: ID of transaction containing the note
+    /// - parameter outputPool: output pool identifier (2 = Sapling, 3 = Orchard)
     /// - parameter outputIndex: output index of note
-    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo?
+    func getMemo(txId: Data, outputPool: UInt32, outputIndex: UInt16) async throws -> Memo?
 
     /// Get the verified cached transparent balance for the given address
     /// - parameter account; the account index to query

@@ -68,7 +68,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
             return false
         }
 
-        return zcashlc_is_valid_shielded_address([CChar](address.utf8CString), networkType.networkId)
+        return zcashlc_is_valid_sapling_address([CChar](address.utf8CString), networkType.networkId)
     }
 
     func isValidSaplingExtendedFullViewingKey(_ key: String) -> Bool {

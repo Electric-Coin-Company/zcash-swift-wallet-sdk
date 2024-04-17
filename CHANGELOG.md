@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+- Updated to `zcash-light-client-ffi` version 0.8.0.
+- `ZcashRustBackend.getMemo` now takes an additional `outputPool` argument that identifies
+  the shielded pool for the decrypted output.
+
 # 2.1.4 - 2024-04-17
 
 ## Changed
