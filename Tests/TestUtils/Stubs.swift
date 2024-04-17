@@ -79,7 +79,7 @@ class RustBackendMockHelper {
         rustBackendMock.getCurrentAddressAccountThrowableError = ZcashError.rustGetCurrentAddress("mocked error")
         rustBackendMock.getNextAvailableAddressAccountThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
         rustBackendMock.createAccountSeedTreeStateRecoverUntilThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
-        rustBackendMock.getMemoTxIdOutputIndexReturnValue = nil
+        rustBackendMock.getMemoTxIdOutputPoolOutputIndexReturnValue = nil
         rustBackendMock.initDataDbSeedReturnValue = .seedRequired
         rustBackendMock.getNearestRewindHeightHeightReturnValue = -1
         rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }

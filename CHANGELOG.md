@@ -6,13 +6,20 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+- Updated to `zcash-light-client-ffi` version 0.8.0. This includes a migration to
+  ensure that the default Unified Address for existing wallets contains an Orchard
+  receiver.
+- This release includes a workaround for build and deployment issues related to
+  a bug in XCode 15.3.
+
 # 2.1.4 - 2024-04-17
 
 ## Changed
 - The database locking mechanism has been changed to use async/await concurrency approach - the DBActor.
 
 ## Fixed
-- Call of wipe() resets local (in memory) values. 
+- Call of wipe() resets local (in memory) values.
 
 ## Checkpoints
 
@@ -131,7 +138,7 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2740000.json
 ## Added
 
 ### [#1153] Allow runtime switch of lightwalletd servers
-New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`. 
+New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`.
 Possible errors:
 - `ZcashError.synchronizerServerSwitch` will perform a check to ensure that it's possible to communicate with the specified lightwalletd server, which may result in an an error. If this check fails, the user should be prompted to check the address, port and verify that the `address:port` format is respected.
 - Switching endpoints causes a call to `synchronizer.Start()`, which may throw a `ZcashError`.
@@ -139,7 +146,7 @@ Possible errors:
 ## Changed
 
 ### [#1369] SynchronizerState refactor and balances cleanup
-`SynchronizerState` cleaned up and changed to provide only `AccountBalance`. This struct holds `saplingBalance: PoolBalance` which represents shielded balance for both total and spendable. Also holds `unshielded: Zatoshi` which represents transparent balance. 
+`SynchronizerState` cleaned up and changed to provide only `AccountBalance`. This struct holds `saplingBalance: PoolBalance` which represents shielded balance for both total and spendable. Also holds `unshielded: Zatoshi` which represents transparent balance.
 
 ## Removed
 
@@ -159,14 +166,14 @@ Possible errors:
 ## Added
 
 ### [#1153] Allow runtime switch of lightwalletd servers
-New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`. 
+New API implemented that allows clients to change the `mainnet` endpoint. Use `func switchTo(endpoint: LightWalletEndpoint) async throws`.
 Possible errors:
 - `ZcashError.synchronizerServerSwitch`: endpoint fails, check the address, port and format address:port,
 - Some `ZcashError` related to `synchronizer.Start()`: the switch calls `start()` at the end and that is the only throwing function except the validation.
 
 # 2.0.8 - 2024-01-30
 
-Adopt `zcash-light-client-ffi 0.5.1`. This fixes a serialization problem 
+Adopt `zcash-light-client-ffi 0.5.1`. This fixes a serialization problem
 broke shielding.
 
 # 2.0.7 - 2024-01-29
