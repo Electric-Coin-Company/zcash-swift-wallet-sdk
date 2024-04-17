@@ -6,11 +6,31 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.4 - 2024-04-17
+
 ## Changed
 - The database locking mechanism has been changed to use async/await concurrency approach - the DBActor.
 
 ## Fixed
 - Call of wipe() resets local (in memory) values. 
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2450000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2472500.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2780000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2790000.json
+````
 
 # 2.1.3 - 2024-03-28
 
