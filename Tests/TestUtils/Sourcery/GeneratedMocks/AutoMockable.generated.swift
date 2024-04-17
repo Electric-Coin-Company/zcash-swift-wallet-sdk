@@ -671,6 +671,19 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
     }
     var underlyingWalletBirthday: BlockHeight!
 
+    // MARK: - reset
+
+    var resetCallsCount = 0
+    var resetCalled: Bool {
+        return resetCallsCount > 0
+    }
+    var resetClosure: (() async -> Void)?
+
+    func reset() async {
+        resetCallsCount += 1
+        await resetClosure!()
+    }
+
     // MARK: - updateScannedData
 
     var updateScannedDataCallsCount = 0
