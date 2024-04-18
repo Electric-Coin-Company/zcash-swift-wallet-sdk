@@ -255,7 +255,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo? {
+    func getMemo(txId: Data, outputPool: UInt32, outputIndex: UInt16) async throws -> Memo? {
         guard txId.count == 32 else {
             throw ZcashError.rustGetMemoInvalidTxIdLength
         }
@@ -264,7 +264,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         var success = false
 
         contiguousMemoBytes.withUnsafeMutableBufferPointer { memoBytePtr in
-            success = zcashlc_get_memo(dbData.0, dbData.1, txId.bytes, outputIndex, memoBytePtr.baseAddress, networkType.networkId)
+            success = zcashlc_get_memo(dbData.0, dbData.1, txId.bytes, outputPool, outputIndex, memoBytePtr.baseAddress, networkType.networkId)
         }
 
         guard success else { return nil }
