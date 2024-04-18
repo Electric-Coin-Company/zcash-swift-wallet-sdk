@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.5 - 2024-04-18
+
 ## Changed
 - Updated to `zcash-light-client-ffi` version 0.8.0. This includes a migration to
   ensure that the default Unified Address for existing wallets contains an Orchard
