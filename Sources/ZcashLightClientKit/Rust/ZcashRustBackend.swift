@@ -11,6 +11,7 @@ import libzcashlc
 
 struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
+    let minimumShieldingConfirmations: UInt32 = 1
     let useZIP317Fees = true
 
     let dbData: (String, UInt)
@@ -306,7 +307,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             dbData.1,
             networkType.networkId,
             account,
-            minimumConfirmations
+            minimumShieldingConfirmations
         )
 
         guard balance >= 0 else {
@@ -747,7 +748,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
             networkType.networkId,
-            minimumConfirmations,
+            minimumShieldingConfirmations,
             useZIP317Fees
         )
 
