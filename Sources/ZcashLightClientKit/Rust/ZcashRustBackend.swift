@@ -752,11 +752,15 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard let proposal else {
-            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`proposeShielding` failed with unknown error"))
+            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "Failed with nil proposal."))
         }
 
         defer { zcashlc_free_boxed_slice(proposal) }
-
+        
+        guard proposal.pointee.ptr != nil else {
+            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "Failed with nil pointer."))
+        }
+        
         return try FfiProposal(contiguousBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
