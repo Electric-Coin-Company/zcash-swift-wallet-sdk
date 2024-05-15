@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+- The backend method proposeShielding checks the pointer for a null value before attempting to construct the Data with it. Without this check, proposeShielding would crash when there were either zero funds to shield or when the amount was less than the threshold defined by the client.
+
 # 2.1.5 - 2024-04-18
 
 ## Changed
