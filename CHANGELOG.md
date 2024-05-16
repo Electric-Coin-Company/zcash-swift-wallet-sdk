@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.7 - 2024-05-16
+
+## Changed
+- `minimumShieldingConfirmations` set to 1 instead of 10. This should fasten the time it takes to swap transparent funds to shielded ones.
+
 # 2.1.6 - 2024-05-15
 
 ## Fixed
