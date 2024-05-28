@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.3 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.4 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1600,6 +1600,30 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - getMemos
 
+    var getMemosForRawIDThrowableError: Error?
+    var getMemosForRawIDCallsCount = 0
+    var getMemosForRawIDCalled: Bool {
+        return getMemosForRawIDCallsCount > 0
+    }
+    var getMemosForRawIDReceivedRawID: Data?
+    var getMemosForRawIDReturnValue: [Memo]!
+    var getMemosForRawIDClosure: ((Data) async throws -> [Memo])?
+
+    func getMemos(for rawID: Data) async throws -> [Memo] {
+        if let error = getMemosForRawIDThrowableError {
+            throw error
+        }
+        getMemosForRawIDCallsCount += 1
+        getMemosForRawIDReceivedRawID = rawID
+        if let closure = getMemosForRawIDClosure {
+            return try await closure(rawID)
+        } else {
+            return getMemosForRawIDReturnValue
+        }
+    }
+
+    // MARK: - getMemos
+
     var getMemosForClearedTransactionThrowableError: Error?
     var getMemosForClearedTransactionCallsCount = 0
     var getMemosForClearedTransactionCalled: Bool {
@@ -2094,25 +2118,49 @@ class TransactionRepositoryMock: TransactionRepository {
 
     // MARK: - findMemos
 
-    var findMemosForThrowableError: Error?
-    var findMemosForCallsCount = 0
-    var findMemosForCalled: Bool {
-        return findMemosForCallsCount > 0
+    var findMemosForRawIDThrowableError: Error?
+    var findMemosForRawIDCallsCount = 0
+    var findMemosForRawIDCalled: Bool {
+        return findMemosForRawIDCallsCount > 0
     }
-    var findMemosForReceivedTransaction: ZcashTransaction.Overview?
-    var findMemosForReturnValue: [Memo]!
-    var findMemosForClosure: ((ZcashTransaction.Overview) async throws -> [Memo])?
+    var findMemosForRawIDReceivedRawID: Data?
+    var findMemosForRawIDReturnValue: [Memo]!
+    var findMemosForRawIDClosure: ((Data) async throws -> [Memo])?
 
-    func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
-        if let error = findMemosForThrowableError {
+    func findMemos(for rawID: Data) async throws -> [Memo] {
+        if let error = findMemosForRawIDThrowableError {
             throw error
         }
-        findMemosForCallsCount += 1
-        findMemosForReceivedTransaction = transaction
-        if let closure = findMemosForClosure {
+        findMemosForRawIDCallsCount += 1
+        findMemosForRawIDReceivedRawID = rawID
+        if let closure = findMemosForRawIDClosure {
+            return try await closure(rawID)
+        } else {
+            return findMemosForRawIDReturnValue
+        }
+    }
+
+    // MARK: - findMemos
+
+    var findMemosForZcashTransactionThrowableError: Error?
+    var findMemosForZcashTransactionCallsCount = 0
+    var findMemosForZcashTransactionCalled: Bool {
+        return findMemosForZcashTransactionCallsCount > 0
+    }
+    var findMemosForZcashTransactionReceivedTransaction: ZcashTransaction.Overview?
+    var findMemosForZcashTransactionReturnValue: [Memo]!
+    var findMemosForZcashTransactionClosure: ((ZcashTransaction.Overview) async throws -> [Memo])?
+
+    func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
+        if let error = findMemosForZcashTransactionThrowableError {
+            throw error
+        }
+        findMemosForZcashTransactionCallsCount += 1
+        findMemosForZcashTransactionReceivedTransaction = transaction
+        if let closure = findMemosForZcashTransactionClosure {
             return try await closure(transaction)
         } else {
-            return findMemosForReturnValue
+            return findMemosForZcashTransactionReturnValue
         }
     }
 
