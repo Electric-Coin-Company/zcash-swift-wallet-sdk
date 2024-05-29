@@ -54,7 +54,7 @@ final class ActionContextStateTests: ZcashTestCase {
 
         XCTAssertEqual(
             contextLastEnhancedHeightAfterReset,
-            1_500_000, 
+            1_500_000,
             """
             testActionContextReset_DefaultBehaviour: The context after reset should restore the last enhanced height,
             received \(String(describing: contextLastEnhancedHeightAfterReset)) instead

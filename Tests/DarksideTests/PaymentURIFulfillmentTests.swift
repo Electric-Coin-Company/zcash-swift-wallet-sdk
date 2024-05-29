@@ -101,13 +101,13 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         sleep(1)
 
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var proposal: ZcashTransaction.Overview?
 
         /*
         2. send transaction to recipient address
         */
 
         let memo = "VGhpcyBpcyBhIHNpbXBsZSBtZW1vLg" // "This is a simple memo."
+        // swiftlint:disable:next line_length
         let paymentURI = "zcash:\(Environment.testRecipientAddress)?amount=0.0002&memo=\(memo)&message=Thank%20you%20for%20your%20purchase&label=Your%20Purchase"
 
         do {
@@ -128,7 +128,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
                     return
                 case .success(txId: let txId):
                     continue
-                case .submitFailure(txId: let txId, code: let code, description: let description):
+                case let .submitFailure(txId: txId, code: code, description: description):
                     XCTFail("transaction failed to submit with code: \(code) - description: \(description)")
                     return
                 case .notAttempted(txId: let txId):
@@ -142,7 +142,6 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         }
 
         await fulfillment(of: [sendExpectation], timeout: 13)
-
 
         /**
         3. getIncomingTransaction
@@ -319,7 +318,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         let paymentURI = "zcash:zecIsGreat17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a?amount=0.0002&memo=\(memo)&message=Thank%20you%20for%20your%20purchase&label=Your%20Purchase"
 
         do {
-            let _ = try await coordinator.synchronizer.proposefulfillingPaymentURI(
+            _ = try await coordinator.synchronizer.proposefulfillingPaymentURI(
                 paymentURI,
                 accountIndex: 0
             )

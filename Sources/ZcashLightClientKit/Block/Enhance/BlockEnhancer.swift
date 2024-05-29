@@ -136,7 +136,8 @@ extension BlockEnhancerImpl: BlockEnhancer {
             }
             
             let endTime = Date()
-            let logMsg = "Enhanced \(transactions.count) transaction(s) in \(endTime.timeIntervalSince1970 - startTime.timeIntervalSince1970) for range \(range.lowerBound)...\(range.upperBound)"
+            let diff = endTime.timeIntervalSince1970 - startTime.timeIntervalSince1970
+            let logMsg = "Enhanced \(transactions.count) transaction(s) in \(diff) for range \(range.lowerBound)...\(range.upperBound)"
             logger.sync(logMsg)
             metrics.actionDetail(logMsg, for: .enhance)
         } catch {

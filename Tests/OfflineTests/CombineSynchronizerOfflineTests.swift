@@ -808,12 +808,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                 PoolBalance(
                     spendableValue: .zero,
                     changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero),
+                    valuePendingSpendability: .zero
+                ),
             orchardBalance:
                 PoolBalance(
                     spendableValue: .zero,
                     changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero),
+                    valuePendingSpendability: .zero
+                ),
             unshielded: .zero
         )
         
@@ -875,12 +877,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                 PoolBalance(
                     spendableValue: Zatoshi(333),
                     changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero),
+                    valuePendingSpendability: .zero
+                ),
             orchardBalance:
                 PoolBalance(
                     spendableValue: Zatoshi(333),
                     changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero),
+                    valuePendingSpendability: .zero
+                ),
             unshielded: .zero
         )
         

@@ -10,6 +10,7 @@ import UIKit
 import ZcashLightClientKit
 
 final class TransactionDetailModel {
+    // swiftlint:disable:next todos
     // FIXME: This enumeration does not represent a sensible set of potential transaction states.
     // A transaction may be both sent from and received by the same wallet, and in either
     // case this designation is orthogonal with respect to whether the transaction is

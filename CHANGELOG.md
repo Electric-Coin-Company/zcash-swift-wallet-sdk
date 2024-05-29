@@ -9,6 +9,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 - New API `getMemos(for rawID: Data) -> [Memos]` to load memos for a certain transaction (ZcashTransaction.Overview) defined by its rawID. 
 
+## Fixed
+- Swiftlint issues have been addressed.
+
 # 2.1.7 - 2024-05-16
 
 ## Changed
