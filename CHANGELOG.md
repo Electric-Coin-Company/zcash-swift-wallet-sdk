@@ -12,6 +12,16 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 - Swiftlint issues have been addressed.
 
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2475000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2520000.json
+````
+
 # 2.1.7 - 2024-05-16
 
 ## Changed
