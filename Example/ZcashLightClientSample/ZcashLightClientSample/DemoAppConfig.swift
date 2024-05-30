@@ -10,7 +10,7 @@ import Foundation
 import ZcashLightClientKit
 import MnemonicSwift
 
-// swiftlint:disable force_try
+// swiftlint:disable force_try line_length
 enum DemoAppConfig {
     struct SynchronizerInitData {
         let alias: ZcashSynchronizerAlias

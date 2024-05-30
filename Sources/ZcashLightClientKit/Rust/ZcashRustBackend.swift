@@ -114,7 +114,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         // -1 is the error sentinel.
         guard result >= 0 else {
-            throw ZcashError.rustIsSeedRelevantToAnyDerivedAccount(lastErrorMessage(fallback: "`isSeedRelevantToAnyDerivedAccount` failed with unknown error"))
+            throw ZcashError.rustIsSeedRelevantToAnyDerivedAccount(
+                lastErrorMessage(fallback: "`isSeedRelevantToAnyDerivedAccount` failed with unknown error")
+            )
         }
 
         // 0 is false, 1 is true.

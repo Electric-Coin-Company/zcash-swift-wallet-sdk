@@ -10,7 +10,6 @@ import XCTest
 
 class CheckpointSourceTests: XCTestCase {
     func test_BirthdayGetsMostRecentCheckpointPrecedingTheGivenHeight_Testnet() throws {
-
         let source = CheckpointSourceFactory.fromBundle(for: .testnet)
 
         let birthday = source.birthday(for: 1530003)
@@ -57,7 +56,6 @@ class CheckpointSourceTests: XCTestCase {
     }
 
     func test_BirthdayCheckpointGetsExactHeightIfAvailable_Testnet() throws {
-
         let source = CheckpointSourceFactory.fromBundle(for: .testnet)
 
         let birthday = source.birthday(for: 1520000)

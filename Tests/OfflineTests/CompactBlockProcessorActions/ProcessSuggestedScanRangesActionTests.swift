@@ -82,9 +82,10 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
                 )
                 
                 let enhancedValue = nextContextMock.updateLastEnhancedHeightReceivedLastEnhancedHeight
+                let value = String(describing: enhancedValue)
                 XCTAssertNil(
                     enhancedValue,
-                    "context.update(updateLastEnhancedHeight:) is expected to reset the value to nil but received \(String(describing: enhancedValue))"
+                    "context.update(updateLastEnhancedHeight:) is expected to reset the value to nil but received \(value)"
                 )
             } else {
                 XCTFail("`nextContext` is not the ActionContextMock")

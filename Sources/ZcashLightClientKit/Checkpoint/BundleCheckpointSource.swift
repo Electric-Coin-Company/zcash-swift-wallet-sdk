@@ -14,12 +14,7 @@ struct BundleCheckpointSource: CheckpointSource {
     
     init(network: NetworkType) {
         self.network = network
-        self.saplingActivation = switch network {
-        case .mainnet:
-            Checkpoint.mainnetMin
-        case .testnet:
-            Checkpoint.testnetMin
-        }
+        self.saplingActivation = if network == .mainnet { Checkpoint.mainnetMin } else { Checkpoint.testnetMin }
     }
 
     func latestKnownCheckpoint() -> Checkpoint {

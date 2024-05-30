@@ -118,7 +118,6 @@ final class SDKMetricsImpl: SDKMetrics {
         try? await Task.sleep(nanoseconds: 100_000)
 
         for action in cbpOverview {
-
             let report = action.value
 
             var resText = """

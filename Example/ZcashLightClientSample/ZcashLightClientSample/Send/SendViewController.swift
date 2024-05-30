@@ -103,8 +103,12 @@ class SendViewController: UIViewController {
     }
     
     func updateBalance() async {
-        balanceLabel.text = format(balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.total() ?? .zero)
-        verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero)
+        balanceLabel.text = format(
+            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.total() ?? .zero
+        )
+        verifiedBalanceLabel.text = format(
+            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+        )
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {

@@ -98,7 +98,7 @@ extension ScanAction: Action {
         return await update(context: context)
     }
 
-    func stop() async { 
+    func stop() async {
         progressReportReducer = 0
     }
 }

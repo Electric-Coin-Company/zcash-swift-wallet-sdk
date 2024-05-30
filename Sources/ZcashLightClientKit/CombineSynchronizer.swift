@@ -97,7 +97,11 @@ public protocol CombineSynchronizer {
         memo: Memo?
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
     
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead")
+    @available(
+        *,
+        deprecated,
+        message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead"
+    )
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,

@@ -80,7 +80,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-     public func proposefulfillingPaymentURI(
+    public func proposefulfillingPaymentURI(
         _ uri: String,
         accountIndex: Int
     ) -> SinglePublisher<Proposal, Error> {
