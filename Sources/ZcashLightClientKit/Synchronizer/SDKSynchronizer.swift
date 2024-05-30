@@ -480,8 +480,12 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
 
+    public func getMemos(for rawID: Data) async throws -> [Memo] {
+        return try await transactionRepository.findMemos(for: rawID)
+    }
+
     public func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
-        return try await transactionRepository.findMemos(for: transaction)
+        return try await transactionRepository.findMemos(for: transaction.rawID)
     }
 
     public func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient] {

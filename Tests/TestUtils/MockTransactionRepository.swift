@@ -201,6 +201,10 @@ extension MockTransactionRepository: TransactionRepository {
         throw MockTransactionRepositoryError.notImplemented
     }
 
+    func findMemos(for rawID: Data) throws -> [ZcashLightClientKit.Memo] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
     func findMemos(for transaction: ZcashLightClientKit.ZcashTransaction.Overview) throws -> [ZcashLightClientKit.Memo] {
         throw MockTransactionRepositoryError.notImplemented
     }

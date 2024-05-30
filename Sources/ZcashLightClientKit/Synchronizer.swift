@@ -263,6 +263,11 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
+    /// Get all memos for `transaction.rawID`.
+    ///
+    // sourcery: mockedName="getMemosForRawID"
+    func getMemos(for rawID: Data) async throws -> [Memo]
+
     /// Get all memos for `transaction`.
     ///
     // sourcery: mockedName="getMemosForClearedTransaction"
