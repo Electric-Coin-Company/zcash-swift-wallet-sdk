@@ -9,6 +9,16 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 - Synchronizer's' `prepare()` method passes even if server is down and not providing chan tip. 
 
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2522500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2530000.json
+````
+
 # 2.1.8 - 2024-05-30
 
 ## Added
