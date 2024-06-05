@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.9 - 2024-06-05
+
 ## Fixed
 - Synchronizer's' `prepare()` method passes even if server is down and not providing chan tip. 
 
