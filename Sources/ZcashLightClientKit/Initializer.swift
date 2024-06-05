@@ -415,8 +415,8 @@ public class Initializer {
         if let seed, try await rustBackend.listAccounts().isEmpty {
             var chainTip: UInt32?
             
-            if walletMode == .restoreWallet {
-                chainTip = UInt32(try await lightWalletService.latestBlockHeight())
+            if walletMode == .restoreWallet, let latestBlockHeight = try? await lightWalletService.latestBlockHeight() {
+                chainTip = UInt32(latestBlockHeight)
             }
             
             _ = try await rustBackend.createAccount(
