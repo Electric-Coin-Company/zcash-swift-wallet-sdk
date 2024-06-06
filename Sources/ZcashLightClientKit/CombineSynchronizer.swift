@@ -131,6 +131,9 @@ public protocol CombineSynchronizer {
 
     func getAccountBalance(accountIndex: Int) -> SinglePublisher<AccountBalance?, Error>
 
+    /// Fetches the latest ZEC-USD exchange rate.
+    func getExchangeRateUSD() -> SinglePublisher<NSDecimalNumber, Error>
+
     func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error>
     func wipe() -> CompletablePublisher<Error>
 }

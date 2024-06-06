@@ -48,6 +48,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 generalStorageURL: try! generalStorageURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
+                torDirURL: try! torDirURLHelper(),
                 endpoint: DemoAppConfig.endpoint,
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
@@ -195,6 +196,15 @@ func dataDbURLHelper() throws -> URL {
         .appendingPathComponent(
             kZcashNetwork.constants.defaultDbNamePrefix + ZcashSDK.defaultDataDbName,
             isDirectory: false
+        )
+}
+
+func torDirURLHelper() throws -> URL {
+    try documentsDirectoryHelper()
+        .appendingPathComponent(kZcashNetwork.networkType.chainName)
+        .appendingPathComponent(
+            ZcashSDK.defaultTorDirName,
+            isDirectory: true
         )
 }
 

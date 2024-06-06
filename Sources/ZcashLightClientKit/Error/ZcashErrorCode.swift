@@ -185,6 +185,10 @@ public enum ZcashErrorCode: String {
     case rustPutOrchardSubtreeRootsAllocationProblem = "ZRUST0060"
     /// Error from rust layer when calling ZcashRustBackend.putOrchardSubtreeRoots
     case rustPutOrchardSubtreeRoots = "ZRUST0061"
+    /// Error from rust layer when calling TorClient.init
+    case rustTorClientInit = "ZRUST0062"
+    /// Error from rust layer when calling TorClient.get
+    case rustTorClientGet = "ZRUST0063"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

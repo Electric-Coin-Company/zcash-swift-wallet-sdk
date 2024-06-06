@@ -1798,6 +1798,28 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - getExchangeRateUSD
+
+    var getExchangeRateUSDThrowableError: Error?
+    var getExchangeRateUSDCallsCount = 0
+    var getExchangeRateUSDCalled: Bool {
+        return getExchangeRateUSDCallsCount > 0
+    }
+    var getExchangeRateUSDReturnValue: NSDecimalNumber!
+    var getExchangeRateUSDClosure: (() async throws -> NSDecimalNumber)?
+
+    func getExchangeRateUSD() async throws -> NSDecimalNumber {
+        if let error = getExchangeRateUSDThrowableError {
+            throw error
+        }
+        getExchangeRateUSDCallsCount += 1
+        if let closure = getExchangeRateUSDClosure {
+            return try await closure()
+        } else {
+            return getExchangeRateUSDReturnValue
+        }
+    }
+
     // MARK: - rewind
 
     var rewindCallsCount = 0

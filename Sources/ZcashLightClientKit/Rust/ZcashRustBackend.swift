@@ -854,28 +854,26 @@ private extension ZcashRustBackend {
     }
 }
 
-private extension ZcashRustBackend {
-    nonisolated func lastErrorMessage(fallback: String) -> String {
-        let errorLen = zcashlc_last_error_length()
-        defer { zcashlc_clear_last_error() }
+nonisolated func lastErrorMessage(fallback: String) -> String {
+    let errorLen = zcashlc_last_error_length()
+    defer { zcashlc_clear_last_error() }
 
-        if errorLen > 0 {
-            let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
-            defer { error.deallocate() }
+    if errorLen > 0 {
+        let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
+        defer { error.deallocate() }
 
-            zcashlc_error_message_utf8(error, errorLen)
-            if let errorMessage = String(validatingUTF8: error) {
-                return errorMessage
-            } else {
-                return fallback
-            }
+        zcashlc_error_message_utf8(error, errorLen)
+        if let errorMessage = String(validatingUTF8: error) {
+            return errorMessage
         } else {
             return fallback
         }
+    } else {
+        return fallback
     }
 }
 
-private extension URL {
+extension URL {
     func osStr() -> (String, UInt) {
         let path = self.absoluteString
         return (path, UInt(path.lengthOfBytes(using: .utf8)))

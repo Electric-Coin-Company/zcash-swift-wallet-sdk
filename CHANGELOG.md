@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 # Unreleased
+## Added
+- `Synchronizer.getExchangeRateUSD() -> NSDecimalNumber`, which fetches the latest USD/ZEC
+  exchange rate. Prices are queried over Tor (to hide the wallet's IP address) on Binance,
+  Coinbase, and Gemini.
 
 # 2.1.12 - 2024-07-04
 

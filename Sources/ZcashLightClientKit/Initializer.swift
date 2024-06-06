@@ -90,6 +90,7 @@ public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
         let dataDbURL: URL
+        let torDirURL: URL
         let generalStorageURL: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
@@ -115,6 +116,7 @@ public class Initializer {
     let fsBlockDbRoot: URL
     let generalStorageURL: URL
     let dataDbURL: URL
+    let torDirURL: URL
     let spendParamsURL: URL
     let outputParamsURL: URL
     let saplingParamsSourceURL: SaplingParamsSourceURL
@@ -158,6 +160,7 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
@@ -176,6 +179,7 @@ public class Initializer {
             fsBlockDbRoot: fsBlockDbRoot,
             generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             endpoint: endpoint,
             network: network,
             spendParamsURL: spendParamsURL,
@@ -205,6 +209,7 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
@@ -221,6 +226,7 @@ public class Initializer {
             fsBlockDbRoot: fsBlockDbRoot,
             generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             endpoint: endpoint,
             network: network,
             spendParamsURL: spendParamsURL,
@@ -260,6 +266,7 @@ public class Initializer {
         self.fsBlockDbRoot = urls.fsBlockDbRoot
         self.generalStorageURL = urls.generalStorageURL
         self.dataDbURL = urls.dataDbURL
+        self.torDirURL = urls.torDirURL
         self.endpoint = endpoint
         self.spendParamsURL = urls.spendParamsURL
         self.outputParamsURL = urls.outputParamsURL
@@ -282,6 +289,7 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
@@ -293,6 +301,7 @@ public class Initializer {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             generalStorageURL: generalStorageURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL
@@ -356,6 +365,10 @@ public class Initializer {
             return .failure(.initializerCantUpdateURLWithAlias(urls.dataDbURL))
         }
 
+        guard let updatedTorDirURL = urls.torDirURL.updateLastPathComponent(with: alias) else {
+            return .failure(.initializerCantUpdateURLWithAlias(urls.torDirURL))
+        }
+
         guard let updatedSpendParamsURL = urls.spendParamsURL.updateLastPathComponent(with: alias) else {
             return .failure(.initializerCantUpdateURLWithAlias(urls.spendParamsURL))
         }
@@ -372,6 +385,7 @@ public class Initializer {
             URLs(
                 fsBlockDbRoot: updatedFsBlockDbRoot,
                 dataDbURL: updatedDataDbURL,
+                torDirURL: updatedTorDirURL,
                 generalStorageURL: updatedGeneralStorageURL,
                 spendParamsURL: updatedSpendParamsURL,
                 outputParamsURL: updateOutputParamsURL

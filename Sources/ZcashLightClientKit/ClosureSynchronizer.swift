@@ -128,7 +128,10 @@ public protocol ClosureSynchronizer {
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
     func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
-    
+
+    /// Fetches the latest ZEC-USD exchange rate.
+    func getExchangeRateUSD(completion: @escaping (Result<NSDecimalNumber, Error>) -> Void)
+
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.

@@ -132,6 +132,7 @@ extension CompactBlockProcessor.Configuration {
             alias: alias,
             fsBlockCacheRoot: pathProvider.fsCacheURL,
             dataDb: pathProvider.dataDbURL,
+            torDir: pathProvider.torDirURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,

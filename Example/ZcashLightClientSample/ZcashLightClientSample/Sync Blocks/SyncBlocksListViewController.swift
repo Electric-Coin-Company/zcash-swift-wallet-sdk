@@ -102,6 +102,7 @@ class SyncBlocksListViewController: UIViewController {
             fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
             generalStorageURL: try! generalStorageURLHelper(),
             dataDbURL: try! dataDbURLHelper(),
+            torDirURL: try! torDirURLHelper(),
             endpoint: DemoAppConfig.endpoint,
             network: kZcashNetwork,
             spendParamsURL: try! spendParamsURLHelper(),

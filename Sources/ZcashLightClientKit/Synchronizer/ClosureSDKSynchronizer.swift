@@ -194,6 +194,12 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func getExchangeRateUSD(completion: @escaping (Result<NSDecimalNumber, Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.getExchangeRateUSD()
+        }
+    }
+
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.
