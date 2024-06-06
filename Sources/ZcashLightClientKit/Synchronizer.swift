@@ -309,6 +309,9 @@ public protocol Synchronizer: AnyObject {
     /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `accountIndex`
     func getAccountBalance(accountIndex: Int) async throws -> AccountBalance?
 
+    /// Fetches the latest ZEC-USD exchange rate.
+    func getExchangeRateUSD() async throws -> NSDecimalNumber
+
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant

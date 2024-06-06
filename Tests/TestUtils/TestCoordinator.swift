@@ -72,6 +72,7 @@ class TestCoordinator {
             fsBlockDbRoot: databases.fsCacheDbRoot,
             generalStorageURL: databases.generalStorageURL,
             dataDbURL: databases.dataDB,
+            torDirURL: databases.torDir,
             endpoint: endpoint,
             network: network,
             spendParamsURL: try __spendParamsURL(),
@@ -216,6 +217,7 @@ extension TestCoordinator {
             alias: config.alias,
             fsBlockCacheRoot: config.fsBlockCacheRoot,
             dataDb: config.dataDb,
+            torDir: config.torDir,
             spendParamsURL: config.spendParamsURL,
             outputParamsURL: config.outputParamsURL,
             saplingParamsSourceURL: config.saplingParamsSourceURL,
@@ -246,6 +248,7 @@ extension TestCoordinator {
 struct TemporaryTestDatabases {
     var fsCacheDbRoot: URL
     let generalStorageURL: URL
+    var torDir: URL
     var dataDB: URL
 }
 
@@ -257,6 +260,7 @@ enum TemporaryDbBuilder {
         return TemporaryTestDatabases(
             fsCacheDbRoot: tempUrl.appendingPathComponent("fs_cache_\(timestamp)"),
             generalStorageURL: tempUrl.appendingPathComponent("general_storage_\(timestamp)"),
+            torDir: tempUrl.appendingPathComponent("tor_\(timestamp)"),
             dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db")
         )
     }

@@ -60,6 +60,7 @@ class TransactionEnhancementTests: ZcashTestCase {
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
+            torDir: pathProvider.torDirURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
@@ -117,6 +118,7 @@ class TransactionEnhancementTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: pathProvider.dataDbURL,
+                torDirURL: pathProvider.torDirURL,
                 generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: pathProvider.spendParamsURL,
                 outputParamsURL: pathProvider.outputParamsURL

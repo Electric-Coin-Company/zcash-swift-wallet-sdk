@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `Synchronizer.getExchangeRateUSD() -> NSDecimalNumber`, which fetches the latest USD/ZEC
+  exchange rate. Prices are queried over Tor (to hide the wallet's IP address) on Binance,
+  Coinbase, and Gemini.
+
 # 2.1.9 - 2024-06-05
 
 ## Fixed

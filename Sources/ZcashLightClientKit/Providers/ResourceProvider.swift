@@ -31,6 +31,16 @@ public struct DefaultResourceProvider: ResourceProvider {
         }
     }
 
+    public var torDirURL: URL {
+        let constants = network.constants
+        do {
+            let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            return url.appendingPathComponent(constants.defaultTorDirName)
+        } catch {
+            return URL(fileURLWithPath: "file://\(constants.defaultTorDirName)")
+        }
+    }
+
     public var fsCacheURL: URL {
         let constants = network.constants
         do {

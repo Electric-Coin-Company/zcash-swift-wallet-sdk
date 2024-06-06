@@ -19,10 +19,14 @@ class GetBalanceViewController: UIViewController {
         self.title = "Account 0 Balance"
 
         Task { @MainActor in
-            let balanceText = (try? await synchronizer.getAccountBalance()?.saplingBalance.total().formattedString) ?? "0.0"
-            let verifiedText = (try? await synchronizer.getAccountBalance()?.saplingBalance.spendableValue.formattedString) ?? "0.0"
-            self.balance.text = "\(balanceText) ZEC"
-            self.verified.text = "\(verifiedText) ZEC"
+            let balance = try? await synchronizer.getAccountBalance()
+            let balanceText = (balance?.saplingBalance.total().formattedString) ?? "0.0"
+            let verifiedText = (balance?.saplingBalance.spendableValue.formattedString) ?? "0.0"
+            let usdZecRate = try await synchronizer.getExchangeRateUSD()
+            let usdBalance = (balance?.saplingBalance.total().decimalValue ?? 0).multiplying(by: usdZecRate)
+            let usdVerified = (balance?.saplingBalance.spendableValue.decimalValue ?? 0).multiplying(by: usdZecRate)
+            self.balance.text = "\(balanceText) ZEC\n\(usdBalance) USD\n\n(\(usdZecRate) USD/ZEC)"
+            self.verified.text = "\(verifiedText) ZEC\n\(usdVerified) USD"
         }
     }
 }

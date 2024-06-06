@@ -11,6 +11,7 @@ import Foundation
 Represents what's expected from a logging entity
 */
 public protocol Logger {
+    func maxLogLevel() -> OSLogger.LogLevel?
     func debug(_ message: String, file: StaticString, function: StaticString, line: Int)
     func info(_ message: String, file: StaticString, function: StaticString, line: Int)
     func event(_ message: String, file: StaticString, function: StaticString, line: Int)
@@ -44,6 +45,9 @@ extension Logger {
 A concrete logger implementation that logs nothing at all
  */
 struct NullLogger: Logger {
+    func maxLogLevel() -> OSLogger.LogLevel? {
+        nil
+    }
     func debug(_ message: String, file: StaticString, function: StaticString, line: Int) {}
     func info(_ message: String, file: StaticString, function: StaticString, line: Int) {}
     func event(_ message: String, file: StaticString, function: StaticString, line: Int) {}
