@@ -164,8 +164,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         let container = DIContainer()
         
@@ -183,8 +182,7 @@ public class Initializer {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
         
         self.init(
@@ -213,8 +211,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
@@ -230,8 +227,7 @@ public class Initializer {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
 
         self.init(
@@ -292,8 +288,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) -> (URLs, ZcashError?) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
@@ -313,8 +308,7 @@ public class Initializer {
             alias: alias,
             networkType: network.networkType,
             endpoint: endpoint,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
         
         return (updatedURLs, parsingError)

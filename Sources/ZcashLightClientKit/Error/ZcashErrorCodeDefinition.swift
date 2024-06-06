@@ -571,6 +571,9 @@ enum ZcashErrorDefinition {
     /// Can't create `Recipient` because input is invalid.
     // sourcery: code="ZWLTP0007"
     case recipientInvalidInput
+    /// Can't create `TexAddress` because input is invalid.
+    // sourcery: code="ZWLTP0008"
+    case texAddressInvalidInput
 
     // MARK: - WalletTransactionEncoder
 

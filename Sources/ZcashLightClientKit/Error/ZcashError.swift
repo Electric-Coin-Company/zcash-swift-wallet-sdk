@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.1.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -509,6 +509,9 @@ public enum ZcashError: Equatable, Error {
     /// Can't create `Recipient` because input is invalid.
     /// ZWLTP0007
     case recipientInvalidInput
+    /// Can't create `TexAddress` because input is invalid.
+    /// ZWLTP0008
+    case texAddressInvalidInput
     /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
     /// ZWLTE0001
     case walletTransEncoderCreateTransactionMissingSaplingParams
@@ -757,6 +760,7 @@ public enum ZcashError: Equatable, Error {
         case .saplingAddressInvalidInput: return "Can't create `SaplingAddress` because input is invalid."
         case .unifiedAddressInvalidInput: return "Can't create `UnifiedAddress` because input is invalid."
         case .recipientInvalidInput: return "Can't create `Recipient` because input is invalid."
+        case .texAddressInvalidInput: return "Can't create `TexAddress` because input is invalid."
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return "WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk."
         case .walletTransEncoderShieldFundsMissingSaplingParams: return "WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk."
         case .zatoshiDecode: return "Initiatilzation fo `Zatoshi` from a decoder failed."
@@ -937,6 +941,7 @@ public enum ZcashError: Equatable, Error {
         case .saplingAddressInvalidInput: return .saplingAddressInvalidInput
         case .unifiedAddressInvalidInput: return .unifiedAddressInvalidInput
         case .recipientInvalidInput: return .recipientInvalidInput
+        case .texAddressInvalidInput: return .texAddressInvalidInput
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return .walletTransEncoderCreateTransactionMissingSaplingParams
         case .walletTransEncoderShieldFundsMissingSaplingParams: return .walletTransEncoderShieldFundsMissingSaplingParams
         case .zatoshiDecode: return .zatoshiDecode

@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.4 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1070,6 +1070,24 @@ class LoggerMock: Logger {
 
     init(
     ) {
+    }
+
+    // MARK: - maxLogLevel
+
+    var maxLogLevelCallsCount = 0
+    var maxLogLevelCalled: Bool {
+        return maxLogLevelCallsCount > 0
+    }
+    var maxLogLevelReturnValue: OSLogger.LogLevel?
+    var maxLogLevelClosure: (() -> OSLogger.LogLevel?)?
+
+    func maxLogLevel() -> OSLogger.LogLevel? {
+        maxLogLevelCallsCount += 1
+        if let closure = maxLogLevelClosure {
+            return closure()
+        } else {
+            return maxLogLevelReturnValue
+        }
     }
 
     // MARK: - debug

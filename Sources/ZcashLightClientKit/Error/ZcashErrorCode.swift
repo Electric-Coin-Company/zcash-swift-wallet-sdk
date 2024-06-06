@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.1.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -289,6 +289,8 @@ public enum ZcashErrorCode: String {
     case unifiedAddressInvalidInput = "ZWLTP0006"
     /// Can't create `Recipient` because input is invalid.
     case recipientInvalidInput = "ZWLTP0007"
+    /// Can't create `TexAddress` because input is invalid.
+    case texAddressInvalidInput = "ZWLTP0008"
     /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
     case walletTransEncoderCreateTransactionMissingSaplingParams = "ZWLTE0001"
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
