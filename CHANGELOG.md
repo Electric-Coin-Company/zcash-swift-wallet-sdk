@@ -6,6 +6,19 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+- Further changes for compatibility with Xcode 15.3 and above. 
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2532500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2540000.json
+````
+
 # 2.1.9 - 2024-06-05
 
 ## Fixed
