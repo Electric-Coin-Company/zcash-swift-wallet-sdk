@@ -196,6 +196,12 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func getExchangeRateUSD() -> SinglePublisher<NSDecimalNumber, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.getExchangeRateUSD()
+        }
+    }
+
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }

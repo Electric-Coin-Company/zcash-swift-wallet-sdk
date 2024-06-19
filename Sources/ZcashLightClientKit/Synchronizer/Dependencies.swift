@@ -14,8 +14,7 @@ enum Dependencies {
         alias: ZcashSynchronizerAlias,
         networkType: NetworkType,
         endpoint: LightWalletEndpoint,
-        loggingPolicy: Initializer.LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: Initializer.LoggingPolicy = .default(.debug)
     ) {
         container.register(type: CheckpointSource.self, isSingleton: true) { _ in
             CheckpointSourceFactory.fromBundle(for: networkType)
@@ -35,6 +34,36 @@ enum Dependencies {
             return logger
         }
 
+        let rustLogging: RustLogging
+        switch loggingPolicy {
+        case .default(let logLevel):
+            switch logLevel {
+            case .debug:
+                rustLogging = RustLogging.debug
+            case .info, .event:
+                rustLogging = RustLogging.info
+            case .warning:
+                rustLogging = RustLogging.warn
+            case .error:
+                rustLogging = RustLogging.error
+            }
+        case .custom(let logger):
+            switch logger.maxLogLevel() {
+            case .debug:
+                rustLogging = RustLogging.debug
+            case .info, .event:
+                rustLogging = RustLogging.info
+            case .warning:
+                rustLogging = RustLogging.warn
+            case .error:
+                rustLogging = RustLogging.error
+            case .none:
+                rustLogging = RustLogging.off
+            }
+        case .noLogging:
+            rustLogging = RustLogging.off
+        }
+
         container.register(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in
             ZcashRustBackend(
                 dbData: urls.dataDbURL,
@@ -42,7 +71,7 @@ enum Dependencies {
                 spendParamsPath: urls.spendParamsURL,
                 outputParamsPath: urls.outputParamsURL,
                 networkType: networkType,
-                enableTracing: enableBackendTracing
+                logLevel: rustLogging
             )
         }
 

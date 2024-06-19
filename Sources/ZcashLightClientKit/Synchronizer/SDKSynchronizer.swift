@@ -508,6 +508,24 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
     }
 
+    public func getExchangeRateUSD() async throws -> NSDecimalNumber {
+        logger.info("Bootstrapping Tor client for fetching exchange rates")
+        let tor: TorClient
+        do {
+            tor = try await TorClient(torDir: initializer.torDirURL)
+        } catch {
+            logger.error("failed to bootstrap Tor client: \(error)")
+            throw error
+        }
+
+        do {
+            return try await tor.getExchangeRateUSD()
+        } catch {
+            logger.error("Failed to fetch exchange rate through Tor: \(error)")
+            throw error
+        }
+    }
+
     public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
         try await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
     }

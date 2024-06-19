@@ -1072,6 +1072,24 @@ class LoggerMock: Logger {
     ) {
     }
 
+    // MARK: - maxLogLevel
+
+    var maxLogLevelCallsCount = 0
+    var maxLogLevelCalled: Bool {
+        return maxLogLevelCallsCount > 0
+    }
+    var maxLogLevelReturnValue: OSLogger.LogLevel?
+    var maxLogLevelClosure: (() -> OSLogger.LogLevel?)?
+
+    func maxLogLevel() -> OSLogger.LogLevel? {
+        maxLogLevelCallsCount += 1
+        if let closure = maxLogLevelClosure {
+            return closure()
+        } else {
+            return maxLogLevelReturnValue
+        }
+    }
+
     // MARK: - debug
 
     var debugFileFunctionLineCallsCount = 0
@@ -1777,6 +1795,28 @@ class SynchronizerMock: Synchronizer {
             return try await closure(accountIndex)
         } else {
             return getAccountBalanceAccountIndexReturnValue
+        }
+    }
+
+    // MARK: - getExchangeRateUSD
+
+    var getExchangeRateUSDThrowableError: Error?
+    var getExchangeRateUSDCallsCount = 0
+    var getExchangeRateUSDCalled: Bool {
+        return getExchangeRateUSDCallsCount > 0
+    }
+    var getExchangeRateUSDReturnValue: Float64!
+    var getExchangeRateUSDClosure: (() async throws -> Float64)?
+
+    func getExchangeRateUSD() async throws -> Float64 {
+        if let error = getExchangeRateUSDThrowableError {
+            throw error
+        }
+        getExchangeRateUSDCallsCount += 1
+        if let closure = getExchangeRateUSDClosure {
+            return try await closure()
+        } else {
+            return getExchangeRateUSDReturnValue
         }
     }
 

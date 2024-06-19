@@ -64,6 +64,7 @@ class SynchronizerTests: ZcashTestCase {
                 fsBlockDbRoot: databases.fsCacheDbRoot,
                 generalStorageURL: testGeneralStorageDirectory,
                 dataDbURL: databases.dataDB,
+                torDirURL: databases.torDir,
                 endpoint: endpoint,
                 network: network,
                 spendParamsURL: try __spendParamsURL(),

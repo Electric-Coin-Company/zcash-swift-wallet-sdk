@@ -20,6 +20,7 @@ class InitializerOfflineTests: XCTestCase {
     private func makeInitializer(
         fsBlockDbRoot: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         generalStorageURL: URL,
         spendParamsURL: URL,
         outputParamsURL: URL,
@@ -30,6 +31,7 @@ class InitializerOfflineTests: XCTestCase {
             fsBlockDbRoot: fsBlockDbRoot,
             generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: .testnet),
             spendParamsURL: spendParamsURL,
@@ -54,6 +56,7 @@ class InitializerOfflineTests: XCTestCase {
     private func genericTestForURLsParsingFailures(
         fsBlockDbRoot: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         generalStorageURL: URL,
         spendParamsURL: URL,
         outputParamsURL: URL,
@@ -63,6 +66,7 @@ class InitializerOfflineTests: XCTestCase {
         let initializer = makeInitializer(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             generalStorageURL: generalStorageURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
@@ -85,6 +89,7 @@ class InitializerOfflineTests: XCTestCase {
         let initializer = makeInitializer(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -102,6 +107,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: invalidPathURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -113,6 +119,19 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: invalidPathURL,
+            torDirURL: validDirectoryURL,
+            generalStorageURL: validDirectoryURL,
+            spendParamsURL: validFileURL,
+            outputParamsURL: validFileURL,
+            alias: .default
+        )
+    }
+
+    func test__defaultAlias__invalidTorDirURL__errorIsGenerated() {
+        genericTestForURLsParsingFailures(
+            fsBlockDbRoot: validDirectoryURL,
+            dataDbURL: validFileURL,
+            torDirURL: invalidPathURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -124,6 +143,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: invalidPathURL,
             outputParamsURL: validFileURL,
@@ -135,6 +155,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: invalidPathURL,
@@ -146,6 +167,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: invalidPathURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -158,6 +180,7 @@ class InitializerOfflineTests: XCTestCase {
         let initializer = makeInitializer(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -175,6 +198,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: invalidPathURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -186,6 +210,19 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: invalidPathURL,
+            torDirURL: validDirectoryURL,
+            generalStorageURL: validDirectoryURL,
+            spendParamsURL: validFileURL,
+            outputParamsURL: validFileURL,
+            alias: .custom("alias")
+        )
+    }
+
+    func test__customAlias__invalidTorDirURL__errorIsGenerated() {
+        genericTestForURLsParsingFailures(
+            fsBlockDbRoot: validDirectoryURL,
+            dataDbURL: validFileURL,
+            torDirURL: invalidPathURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
@@ -197,6 +234,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: invalidPathURL,
             outputParamsURL: validFileURL,
@@ -208,6 +246,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: validDirectoryURL,
             spendParamsURL: validFileURL,
             outputParamsURL: invalidPathURL,
@@ -219,6 +258,7 @@ class InitializerOfflineTests: XCTestCase {
         genericTestForURLsParsingFailures(
             fsBlockDbRoot: validDirectoryURL,
             dataDbURL: validFileURL,
+            torDirURL: validDirectoryURL,
             generalStorageURL: invalidPathURL,
             spendParamsURL: validFileURL,
             outputParamsURL: validFileURL,
