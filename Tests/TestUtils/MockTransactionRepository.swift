@@ -73,6 +73,10 @@ extension MockTransactionRepository.Kind: Equatable {}
 
 // MARK: - TransactionRepository
 extension MockTransactionRepository: TransactionRepository {
+    func findForResubmission(upTo: ZcashLightClientKit.BlockHeight) async throws -> [ZcashLightClientKit.ZcashTransaction.Overview] {
+        []
+    }
+    
     func getTransactionOutputs(for rawID: Data) async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
         []
     }

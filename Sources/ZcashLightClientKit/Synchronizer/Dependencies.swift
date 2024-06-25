@@ -96,6 +96,25 @@ enum Dependencies {
         container.register(type: ZcashFileManager.self, isSingleton: true) { _ in
             FileManager.default
         }
+        
+        container.register(type: TransactionEncoder.self, isSingleton: true) { di in
+            let service = di.resolve(LightWalletService.self)
+            let logger = di.resolve(Logger.self)
+            let transactionRepository = di.resolve(TransactionRepository.self)
+            let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+
+            return WalletTransactionEncoder(
+                rustBackend: rustBackend,
+                dataDb: urls.dataDbURL,
+                fsBlockDbRoot: urls.fsBlockDbRoot,
+                service: service,
+                repository: transactionRepository,
+                outputParams: urls.outputParamsURL,
+                spendParams: urls.spendParamsURL,
+                networkType: networkType,
+                logger: logger
+            )
+        }
     }
     
     static func setupCompactBlockProcessor(

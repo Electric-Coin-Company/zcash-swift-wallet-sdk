@@ -247,6 +247,7 @@ class SendViewController: UIViewController {
                 KRProgressHUD.dismiss()
                 loggerProxy.info("transaction created: \(pendingTransaction)")
             } catch {
+                KRProgressHUD.dismiss()
                 fail(error)
                 loggerProxy.error("SEND FAILED: \(error)")
             }

@@ -28,7 +28,7 @@ final class EnhanceAction {
         if lastScannedHeight >= latestBlockHeight {
             await context.update(state: .clearCache)
         } else {
-            await context.update(state: .updateChainTip)
+            await context.update(state: .txResubmission)
         }
 
         return context

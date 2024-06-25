@@ -40,7 +40,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
 
             let nextContext = try await processSuggestedScanRangesActionAction.run(with: context) { _ in }
 
-            let acResult = nextContext.checkStateIs(.finished)
+            let acResult = nextContext.checkStateIs(.txResubmission)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testProcessSuggestedScanRangesAction_EmptyScanRanges is not expected to fail. \(error)")

@@ -19,6 +19,7 @@ protocol TransactionRepository {
     func findPendingTransactions(latestHeight: BlockHeight, offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview]
     func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview]
     func findSent(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview]
+    func findForResubmission(upTo: BlockHeight) async throws -> [ZcashTransaction.Overview]
     // sourcery: mockedName="findMemosForRawID"
     func findMemos(for rawID: Data) async throws -> [Memo]
     // sourcery: mockedName="findMemosForZcashTransaction"
