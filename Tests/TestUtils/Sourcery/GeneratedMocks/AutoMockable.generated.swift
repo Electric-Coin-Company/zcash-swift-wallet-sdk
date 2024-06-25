@@ -2116,6 +2116,30 @@ class TransactionRepositoryMock: TransactionRepository {
         }
     }
 
+    // MARK: - findForResubmission
+
+    var findForResubmissionUpToThrowableError: Error?
+    var findForResubmissionUpToCallsCount = 0
+    var findForResubmissionUpToCalled: Bool {
+        return findForResubmissionUpToCallsCount > 0
+    }
+    var findForResubmissionUpToReceivedUpTo: BlockHeight?
+    var findForResubmissionUpToReturnValue: [ZcashTransaction.Overview]!
+    var findForResubmissionUpToClosure: ((BlockHeight) async throws -> [ZcashTransaction.Overview])?
+
+    func findForResubmission(upTo: BlockHeight) async throws -> [ZcashTransaction.Overview] {
+        if let error = findForResubmissionUpToThrowableError {
+            throw error
+        }
+        findForResubmissionUpToCallsCount += 1
+        findForResubmissionUpToReceivedUpTo = upTo
+        if let closure = findForResubmissionUpToClosure {
+            return try await closure(upTo)
+        } else {
+            return findForResubmissionUpToReturnValue
+        }
+    }
+
     // MARK: - findMemos
 
     var findMemosForRawIDThrowableError: Error?

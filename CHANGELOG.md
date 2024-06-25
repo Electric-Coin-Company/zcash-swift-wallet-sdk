@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+
+### [#452] TX Resubmission-the wallet has to periodically resubmit unmined transactions
+The Compact block processor's state machine has been extended to check whether there are any unmined and unexpired transactions, and it attempts to resubmit such transactions every 5 minutes.
+
 # 2.1.10 - 2024-06-14
 
 ## Fixed
