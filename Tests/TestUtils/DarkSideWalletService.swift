@@ -191,6 +191,10 @@ class DarksideWalletService: LightWalletService {
         service.getSubtreeRoots(request)
     }
 
+    func addTreeState(_ treeState: TreeState) throws {
+        _ = try darksideService.addTreeState(treeState).response.wait()
+    }
+    
     func getTreeState(_ id: BlockID) async throws -> TreeState {
         try await service.getTreeState(id)
     }
