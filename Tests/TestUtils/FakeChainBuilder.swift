@@ -15,14 +15,14 @@ enum FakeChainBuilderError: Error {
 enum FakeChainBuilder {
     static let someOtherTxUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/t-shielded-spend.txt"
     static let txMainnetBlockUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/663150.txt"
-    
+
     static let testnetCanopyUpdateUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/1028400-1028600.txt"
-    
+
     static let testnetCanopyStartBlock = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/1013250.txt"
     static let testnetPreCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/pre-activation-txs/61088726aaa7c25b0568dd7bf19955f4a57f7173034e720c924107ff05cd3649.txt"
-    
+
     static let testnetPostCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/post-activation-txs/ecaa6c03709d70aa25446a81690b18ddb11daac96a03fe4b5cfd0d89a49fb963.txt"
-    
+
     static func buildSingleNoteChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String) throws {
         try darksideWallet.reset(
             saplingActivation: 663150,
@@ -31,14 +31,14 @@ enum FakeChainBuilder {
             branchID: branchID,
             chainName: chainName
         )
-        
+
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
-       
+
         try darksideWallet.stageBlocksCreate(from: 663151, count: 100)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
     }
-    
+
     static func buildChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String) throws {
         try darksideWallet.reset(
             saplingActivation: 663150,
@@ -47,7 +47,7 @@ enum FakeChainBuilder {
             branchID: branchID,
             chainName: chainName
         )
-        
+
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
 
 
@@ -69,6 +69,19 @@ enum FakeChainBuilder {
                 """
                 {
                   "network": "main",
+                  "height": "663187",
+                  "hash": "00000000027fa4bfd6c012325a44eef7211a6162b5979507f07603333e9b3068",
+                  "time": 1576824317,
+                  "saplingTree": "018d5b2b12a89cabbeb6c98bde09fbea143d49ea8e4dbf1d612e4906e73e1af96b001000018b01c7e7b2b183d022fc35e351e6423aee8885debc899036d0bc3b389c9f161501dba0595ce728b41452a9c595341074cf01e1152abe401db2b30a9ab007ad006e0001989561014441f9f9043e11c01e220730df2219c090fa02f58d278fb7f447271601fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
+                }
+                """)
+        )
+
+        try darksideWallet.addTreeState(
+            try TreeState(jsonString:
+                """
+                {
+                  "network": "main",
                   "height": "663188",
                   "hash": "0000000001ada1001f457eb76f2547912d3c4f35fa7ecf5061c7cede683467ff",
                   "time": 1576824544,
@@ -78,12 +91,14 @@ enum FakeChainBuilder {
         )
 
         try darksideWallet.stageBlocksCreate(from: 663151, count: 100)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
+
+        try setSubTreeRoots(service: darksideWallet)
     }
-    
+
     static func buildChainWithTxsFarFromEachOther(darksideWallet: DarksideWalletService, branchID: String, chainName: String, length: Int) throws {
         try darksideWallet.reset(
             saplingActivation: 663150,
@@ -92,16 +107,16 @@ enum FakeChainBuilder {
             branchID: branchID,
             chainName: chainName
         )
-        
+
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
-        
+
         try darksideWallet.stageBlocksCreate(from: 663151, count: length)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663974]!, at: 663974)
     }
-    
+
     static func buildChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String, length: Int) throws {
         try darksideWallet.reset(
             saplingActivation: 663150,
@@ -110,20 +125,20 @@ enum FakeChainBuilder {
             branchID: branchID,
             chainName: chainName
         )
-        
+
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
-        
+
         try darksideWallet.stageBlocksCreate(from: 663151, count: length)
         try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
         try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
         try darksideWallet.stageTransaction(from: txUrls[663202]!, at: 663202)
         try darksideWallet.stageTransaction(from: txUrls[663218]!, at: 663218)
         try darksideWallet.stageTransaction(from: txUrls[663229]!, at: 663229)
-        
+
         try darksideWallet.stageTransaction(from: txUrls[663953]!, at: 663953)
         try darksideWallet.stageTransaction(from: txUrls[663974]!, at: 663974)
     }
-    
+
     static func buildChain(
         darksideWallet: DarksideWalletService,
         birthday: BlockHeight,
@@ -146,7 +161,7 @@ enum FakeChainBuilder {
         try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
         try darksideWallet.stageTransaction(from: testnetPreCanopyTx, at: networkActivationHeight - ZcashSDK.expiryOffset)
     }
-    
+
     static func buildChainPostActivationFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, startSaplingTreeSize: UInt32, startOrchardTreeSize: UInt32, networkActivationHeight: BlockHeight, length: Int) throws {
         try darksideWallet.reset(
             saplingActivation: birthday,
@@ -160,7 +175,7 @@ enum FakeChainBuilder {
         try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
         try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + 1)
     }
-    
+
     static func buildChainMixedFunds(
         darksideWallet: DarksideWalletService,
         birthday: BlockHeight,
@@ -181,14 +196,14 @@ enum FakeChainBuilder {
             chainName: chainName,
             length: length
         )
-        
+
         try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + ZcashSDK.expiryOffset)
     }
-    
+
     static func buildTxUrl(for id: String) -> String {
         "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/\(id).txt"
     }
-    
+
     static let txUrls = [
         663174: buildTxUrl(for: "8f064d23c66dc36e32445e5f3b50e0f32ac3ddb78cff21fb521eb6c19c07c99a"),
         663188: buildTxUrl(for: "15a677b6770c5505fb47439361d3d3a7c21238ee1a6874fdedad18ae96850590"),
@@ -271,4 +286,34 @@ enum FakeChainBuilder {
         822410: buildTxUrl(for: "f3f8684be8d77367d099a38f30e3652410cdebe35c006d0599d86d8ec640867f"),
         828933: buildTxUrl(for: "1fd394257d1c10c8a70fb760cf73f6d0e96e61edcf1ffca6da12d733a59221a4")
     ]
+
+    static func setSubTreeRoots(service: DarksideWalletService) throws {
+        let subtreeRoots = try DarksideSubtreeRoots.with { subtreeRoots in
+            subtreeRoots.shieldedProtocol = .sapling
+            subtreeRoots.startIndex = 0
+            subtreeRoots.subtreeRoots = [
+                try .init(
+                    jsonString:
+                              """
+                              {
+                                "rootHash": "dUu1k+pC0jGn3fNnZA8Ju/WdwA8sHSADzDQODAFrWxM=",
+                                "completingBlockHash": "AAAAAACPmsBjbYHceVyw9Ulab9B06BWhnhmfDaSRUf4=",
+                                "completingBlockHeight": "558822"
+                              }
+                              """
+                ),
+                try .init(
+                    jsonString:
+                                    """
+                                    {
+                                      "rootHash": "A2VMPqy7m5PhIs9td7YG6uKWEPTzikd5hTaBl/1o4C0=",
+                                      "completingBlockHash": "AAAAAAIFzQaAI1LPzYkhgVvQqdc+ta/D7AnzXHGARqk=",
+                                      "completingBlockHeight": "670209"
+                                    }
+                                    """
+                )
+            ]
+        }
+        service.setSubtreeRoots(subtreeRoots)
+    }
 }
