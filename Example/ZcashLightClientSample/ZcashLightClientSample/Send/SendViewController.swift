@@ -244,12 +244,12 @@ class SendViewController: UIViewController {
                     // swiftlint:disable:next force_try
                     memo: try! self.memoField.text.asMemo()
                 )
-                KRProgressHUD.dismiss()
                 loggerProxy.info("transaction created: \(pendingTransaction)")
+                KRProgressHUD.dismiss()
             } catch {
+                loggerProxy.error("SEND FAILED: \(error)")
                 KRProgressHUD.dismiss()
                 fail(error)
-                loggerProxy.error("SEND FAILED: \(error)")
             }
         }
     }

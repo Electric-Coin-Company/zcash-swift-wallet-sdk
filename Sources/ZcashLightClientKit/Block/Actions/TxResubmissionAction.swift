@@ -32,8 +32,9 @@ extension TxResubmissionAction: Action {
         
         // find all candidates for the resubmission
         do {
+            logger.info("TxResubmissionAction check started at \(latestBlockHeight) height.")
             let transactions = try await transactionRepository.findForResubmission(upTo: latestBlockHeight)
-            
+                        
             // no candidates, update the time and continue with the next action
             if transactions.isEmpty {
                 latestResolvedTime = Date().timeIntervalSince1970
@@ -46,20 +47,20 @@ extension TxResubmissionAction: Action {
                     // resubmission
                     do {
                         for transaction in transactions {
+                            logger.info("TxResubmissionAction trying to resubmit transaction \(transaction.rawID.toHexStringTxId()).")
                             let encodedTransaction = try transaction.encodedTransaction()
                             
                             try await transactionEncoder.submit(transaction: encodedTransaction)
-                            logger.info("TxResubmissionAction trying to resubmit transaction")
                         }
                     } catch {
-                        logger.error("TxResubmissionAction failed to resubmit candidates")
+                        logger.error("TxResubmissionAction failed to resubmit candidates.")
                     }
                     
                     latestResolvedTime = Date().timeIntervalSince1970
                 }
             }
         } catch {
-            logger.error("TxResubmissionAction failed to find candidates")
+            logger.error("TxResubmissionAction failed to find candidates.")
         }
         
         if await context.prevState == .enhance {
