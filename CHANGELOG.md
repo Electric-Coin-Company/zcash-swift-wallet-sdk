@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.11 - 2024-07-03
+
 ## Added
 
 ### [#452] TX Resubmission-the wallet has to periodically resubmit unmined transactions
