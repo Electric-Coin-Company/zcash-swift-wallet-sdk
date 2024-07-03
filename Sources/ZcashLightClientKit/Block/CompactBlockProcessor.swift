@@ -228,6 +228,8 @@ actor CompactBlockProcessor {
                 action = SaplingParamsAction(container: container)
             case .clearCache:
                 action = ClearCacheAction(container: container)
+            case .txResubmission:
+                action = TxResubmissionAction(container: container)
             case .finished, .failed, .stopped, .idle:
                 return nil
             }
@@ -666,6 +668,8 @@ extension CompactBlockProcessor {
         case .failed:
             break
         case .stopped:
+            break
+        case .txResubmission:
             break
         }
     }

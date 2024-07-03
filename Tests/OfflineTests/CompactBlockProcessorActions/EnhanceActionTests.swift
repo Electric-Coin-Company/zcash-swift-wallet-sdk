@@ -46,7 +46,7 @@ final class EnhanceActionTests: ZcashTestCase {
         XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
     }
 
-    func testEnhanceAction_decideWhatToDoNext_UpdateChainTipExpected() async throws {
+    func testEnhanceAction_decideWhatToDoNext_txResubmissionExpected() async throws {
         let enhanceAction = setupAction()
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
@@ -55,7 +55,7 @@ final class EnhanceActionTests: ZcashTestCase {
 
         let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1500)
 
-        let acResult = nextContext.checkStateIs(.updateChainTip)
+        let acResult = nextContext.checkStateIs(.txResubmission)
         XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
     }
 

@@ -108,6 +108,18 @@ class TransactionSQLDAO: TransactionRepository {
         return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
+    func findForResubmission(upTo: BlockHeight) async throws -> [ZcashTransaction.Overview] {
+        let query = transactionsView
+            .filter(
+                ZcashTransaction.Overview.Column.minedHeight == nil &&
+                ZcashTransaction.Overview.Column.expiryHeight > upTo
+            )
+            .filterQueryFor(kind: .sent)
+            .limit(Int.max)
+
+        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+    }
+    
     func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
         let query = transactionsView
             .filterQueryFor(kind: .received)

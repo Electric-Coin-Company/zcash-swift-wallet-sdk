@@ -73,6 +73,7 @@ enum CBPState: CaseIterable {
     case fetchUTXO
     case handleSaplingParams
     case clearCache
+    case txResubmission
     case finished
     case failed
     case stopped

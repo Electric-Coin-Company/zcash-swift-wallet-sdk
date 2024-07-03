@@ -59,7 +59,7 @@ extension ProcessSuggestedScanRangesAction: Action {
 
             await context.update(state: .download)
         } else {
-            await context.update(state: .finished)
+            await context.update(state: .txResubmission)
         }
         
         return context
