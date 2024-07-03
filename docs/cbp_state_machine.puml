@@ -26,7 +26,13 @@ updateChainTip -[#green,bold]-> download : Processing of scan range continues
 
 processSuggestedScanRanges : ProcessSuggestedScanRangesAction
 processSuggestedScanRanges -[#green,bold]-> download : Scan range available to process
-processSuggestedScanRanges -[#green,bold]-> finished : Scan ranges FULLY processed
+processSuggestedScanRanges -[#green,bold]-> txResubmissionA : Scan ranges FULLY processed
+
+txResubmissionA : TxResubmissionAction
+txResubmissionA -[#green,bold]-> finished
+
+txResubmissionB : TxResubmissionAction
+txResubmissionB -[#green,bold]-> updateChainTip
 
 download : DownloadAction
 download -[#green,bold]-> scan
@@ -42,7 +48,7 @@ clearAlreadyScannedBlocks : ClearAlreadyScannedBlocksAction
 clearAlreadyScannedBlocks -[#green,bold]-> enhance
 
 enhance : EnhanceAction
-enhance -[#green,bold]-> updateChainTip : Range NOT finished
+enhance -[#green,bold]-> txResubmissionB : Range NOT finished
 enhance -[#green,bold]-> clearCache : Range finished, clear cache and check the scan ranges
 
 note right of enhance

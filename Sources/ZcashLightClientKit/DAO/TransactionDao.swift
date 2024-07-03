@@ -110,7 +110,6 @@ class TransactionSQLDAO: TransactionRepository {
 
     func findForResubmission(upTo: BlockHeight) async throws -> [ZcashTransaction.Overview] {
         let query = transactionsView
-            .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .filter(
                 ZcashTransaction.Overview.Column.minedHeight == nil &&
                 ZcashTransaction.Overview.Column.expiryHeight > upTo

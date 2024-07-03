@@ -34,7 +34,7 @@ extension TxResubmissionAction: Action {
         do {
             logger.info("TxResubmissionAction check started at \(latestBlockHeight) height.")
             let transactions = try await transactionRepository.findForResubmission(upTo: latestBlockHeight)
-                        
+
             // no candidates, update the time and continue with the next action
             if transactions.isEmpty {
                 latestResolvedTime = Date().timeIntervalSince1970
