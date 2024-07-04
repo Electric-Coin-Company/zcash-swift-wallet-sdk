@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.1.12 - 2024-07-04
+
 ## Fixed
 
 ### [#1462] Syncing is broken
