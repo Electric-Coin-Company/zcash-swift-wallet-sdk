@@ -52,6 +52,7 @@ enum FakeChainBuilder {
 
 
         try darksideWallet.addTreeState(
+            // swiftlint:disable line_length
             try TreeState(jsonString:
                 """
                 {
@@ -65,6 +66,7 @@ enum FakeChainBuilder {
         )
 
         try darksideWallet.addTreeState(
+            // swiftlint:disable line_length
             try TreeState(jsonString:
                 """
                 {
@@ -78,6 +80,7 @@ enum FakeChainBuilder {
         )
 
         try darksideWallet.addTreeState(
+            // swiftlint:disable line_length
             try TreeState(jsonString:
                 """
                 {

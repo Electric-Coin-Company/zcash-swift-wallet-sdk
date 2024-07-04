@@ -44,7 +44,7 @@ extension UpdateChainTipAction: Action {
             await downloader.stopDownload()
             try await updateChainTip(context, time: now)
             await context.update(state: .clearCache)
-        } else if await context.prevState == .enhance {
+        } else if await context.prevState == .txResubmission {
             await context.update(state: .download)
         }
         

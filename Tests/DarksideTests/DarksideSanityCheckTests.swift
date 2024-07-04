@@ -59,6 +59,7 @@ class DarksideSanityCheckTests: ZcashTestCase {
         let expectedLastBlock = (height: BlockHeight(663200), hash: "2fc7b4682f5ba6ba6f86e170b40f0aa9302e1d3becb2a6ee0db611ff87835e4a")
         
         try coordinator.service.addTreeState(
+            // swiftlint:disable line_length
             try TreeState(jsonString:
                 """
                 {
