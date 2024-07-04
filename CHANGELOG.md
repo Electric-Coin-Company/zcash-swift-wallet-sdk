@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+
+### [#1462] Syncing is broken
+The CompactBlockProcessor's state machine got stuck in some cases at the updateChainTip action.
+
 # 2.1.11 - 2024-07-03
 
 ## Added

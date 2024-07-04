@@ -91,7 +91,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
-            context.prevState = .enhance
+            context.prevState = .txResubmission
             context.underlyingLastChainTipUpdateTime = Date().timeIntervalSince1970
             context.updateLastChainTipUpdateTimeClosure = { _ in }
 
