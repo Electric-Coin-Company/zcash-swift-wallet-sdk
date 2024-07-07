@@ -367,6 +367,15 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - parameter seed: byte array of the seed
     func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
+    
+    func evaluateBestOf(
+        endpoints: [LightWalletEndpoint],
+        latencyThreshold: Double,
+        fetchThreshold: Double,
+        nBlocks: Int,
+        kServers: Int,
+        network: NetworkType
+    ) async -> [LightWalletEndpoint]
 }
 
 public enum SyncStatus: Equatable {

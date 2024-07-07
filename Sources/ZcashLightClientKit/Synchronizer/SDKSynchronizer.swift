@@ -652,6 +652,173 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.isSeedRelevantToAnyDerivedAccount(seed: seed)
     }
 
+    public func evaluateBestOf(
+        endpoints: [LightWalletEndpoint],
+        latencyThreshold: Double = 300.0,
+        fetchThreshold: Double = 60.0,
+        nBlocks: Int = 100,
+        kServers: Int = 3,
+        network: NetworkType = .mainnet
+    ) async -> [LightWalletEndpoint] {
+        struct Service {
+            let originalEndpoint: LightWalletEndpoint
+            let service: LightWalletGRPCService
+            let url: String
+        }
+        
+        struct CheckResult {
+            let id: String
+            let info: LightWalletdInfo?
+            let getInfoTime: TimeInterval
+            let latestBlockHeight: BlockHeight?
+            let latestBlockHeightTime: TimeInterval
+            let mean: TimeInterval
+            let service: Service
+            var blockTime: TimeInterval
+        }
+        
+        // Initialize services for the endpoints
+        let services = endpoints.map {
+            Service(
+                originalEndpoint: $0,
+                service: LightWalletGRPCService(
+                    host: $0.host,
+                    port: $0.port,
+                    secure: $0.secure,
+                    singleCallTimeout: 5000,
+                    streamingCallTimeout: Int64(fetchThreshold) * 1000
+                ),
+                url: "\($0.host):\($0.port)"
+            )
+        }
+
+        // Parallel part
+        var checkResults: [String: CheckResult] = [:]
+        
+        await withTaskGroup(of: CheckResult.self) { group in
+            for service in services {
+                group.addTask {
+                    let startTime = Date().timeIntervalSince1970
+                    let info = try? await service.service.getInfo()
+                    let markTime = Date().timeIntervalSince1970
+                    let latestBlockHeight = try? await service.service.latestBlockHeight()
+                    let endTime = Date().timeIntervalSince1970
+
+                    let getInfoTime = markTime - startTime
+                    let latestBlockHeightTime = endTime - markTime
+                    let mean = (getInfoTime + latestBlockHeightTime) / 2
+
+                    return CheckResult(
+                        id: service.url,
+                        info: info,
+                        getInfoTime: getInfoTime,
+                        latestBlockHeight: latestBlockHeight,
+                        latestBlockHeightTime: latestBlockHeightTime,
+                        mean: mean,
+                        service: service,
+                        blockTime: 0
+                    )
+                }
+            }
+            
+            var tmpResults: [String: CheckResult] = [:]
+            
+            for await result in group {
+                // rule out results where calls failed
+                guard let info = result.info, let _ = result.latestBlockHeight else {
+                    continue
+                }
+                
+                // rule out if mismatch of networks
+                guard (info.chainName == "main" && network == .mainnet) 
+                    || (info.chainName == "test" && network == .testnet) else {
+                    continue
+                }
+                
+                // rule out mismatch of consensus branch IDs
+                if let localBranch = await blockProcessor.consensusBranchIdFor(Int32(info.blockHeight)) {
+                    guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
+                        continue
+                    }
+                    
+                    guard remoteBranchID == localBranch else {
+                        continue
+                    }
+                } else {
+                    continue
+                }
+                
+                // rule out syncing server
+                guard info.blockHeight + 100 >= info.estimatedHeight else {
+                    continue
+                }
+                
+                tmpResults[result.id] = result
+            }
+
+            // sort the server responses by mean
+            let sortedServers = tmpResults.sorted {
+                $0.value.mean < $1.value.mean
+            }
+
+            // rule out all means above latencyThreshold
+            let sortedUnderThreshold = sortedServers.compactMap {
+                $0.value.mean < (latencyThreshold / 1000.0) ? $0 : nil
+            }
+
+            // retain only k servers
+            let sortedUnderThresholdKOnly = sortedUnderThreshold.prefix(3)
+
+            sortedUnderThresholdKOnly.forEach {
+                checkResults[$0.key] = $0.value
+            }
+        }
+
+        // Sequential part
+        var blockResults: [String: CheckResult] = [:]
+
+        for serviceDict in checkResults {
+            guard let info = serviceDict.value.info else {
+                continue
+            }
+            
+            let service = serviceDict.value.service
+            
+            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - 100), endHeight: BlockHeight(info.blockHeight))
+            
+            do {
+                let startTime = Date().timeIntervalSince1970
+                for try await block in stream {
+                    print("\(block.height)")
+                }
+                let endTime = Date().timeIntervalSince1970
+                
+                let blockTime = endTime - startTime
+
+                // rule out servers that can't fetch N blocks under the fetchThreshold
+                if blockTime < fetchThreshold {
+                    var value = serviceDict.value
+                    value.blockTime = blockTime
+                    
+                    blockResults[serviceDict.key] = value
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        // return what's left
+        let sortedServers = blockResults.sorted {
+            $0.value.blockTime < $1.value.blockTime
+        }
+
+        let finalResult = sortedServers.map {
+            $0.value.service.originalEndpoint
+        }
+
+        return finalResult
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
