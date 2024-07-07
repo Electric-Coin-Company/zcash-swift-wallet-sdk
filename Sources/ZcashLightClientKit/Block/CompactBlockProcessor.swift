@@ -286,6 +286,10 @@ extension CompactBlockProcessor {
     func latestHeight() async throws -> BlockHeight {
         try await blockDownloaderService.latestBlockHeight()
     }
+    
+    func consensusBranchIdFor(_ height: Int32) -> Int32? {
+        try? rustBackend.consensusBranchIdFor(height: height)
+    }
 }
 
 // MARK: - Rewind

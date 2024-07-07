@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+
+### [#1466] Choose the best server by testing responses from multiple hosts
+- Synchronizer's `evaluateBestOf(endpoints: [], ...) async -> [LightWalletEndpoint]` method takes a list of endpoints and evaluates top k best performant servers. 
+
 # 2.1.12 - 2024-07-04
 
 ## Fixed
