@@ -64,38 +64,6 @@ class ZcashRustBackendTests: XCTestCase {
         } catch { }
     }
 
-    func testIsValidTransparentAddressFalse() {
-        XCTAssertFalse(
-            ZcashKeyDerivationBackend(networkType: networkType).isValidTransparentAddress(
-                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
-            )
-        )
-    }
-    
-    func testIsValidTransparentAddressTrue() {
-        XCTAssertTrue(
-            ZcashKeyDerivationBackend(networkType: networkType).isValidTransparentAddress(
-                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7"
-            )
-        )
-    }
-    
-    func testIsValidSaplingAddressTrue() {
-        XCTAssertTrue(
-            ZcashKeyDerivationBackend(networkType: networkType).isValidSaplingAddress(
-                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
-            )
-        )
-    }
-    
-    func testIsValidSaplingAddressFalse() {
-        XCTAssertFalse(
-            ZcashKeyDerivationBackend(networkType: networkType).isValidSaplingAddress(
-                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7"
-            )
-        )
-    }
-
     func testListTransparentReceivers() async throws {
         let testVector = [TestVector](TestVector.testVectors![0 ... 2])
         let tempDBs = TemporaryDbBuilder.build()

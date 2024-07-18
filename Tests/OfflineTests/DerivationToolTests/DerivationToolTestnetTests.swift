@@ -96,6 +96,70 @@ class DerivationToolTestnetTests: XCTestCase {
         )
     }
 
+    func testIsValidTransparentAddressWrongNetwork() {
+        XCTAssertFalse(
+            derivationTool.isValidTransparentAddress(
+                "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
+            )
+        )
+    }
+
+    func testIsValidTransparentAddressFalse() {
+        XCTAssertFalse(
+            derivationTool.isValidTransparentAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
+            )
+        )
+    }
+
+    func testIsValidTransparentAddressTrue() {
+        XCTAssertTrue(
+            derivationTool.isValidTransparentAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7")
+        )
+    }
+
+    func testIsValidSaplingAddressTrue() {
+        XCTAssertTrue(
+            derivationTool.isValidSaplingAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
+            )
+        )
+    }
+
+    func testIsValidSaplingAddressWrongNetwork() {
+        XCTAssertFalse(
+            derivationTool.isValidSaplingAddress(
+                "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0"
+            )
+        )
+    }
+
+    func testIsValidSaplingAddressFalse() {
+        XCTAssertFalse(
+            derivationTool.isValidSaplingAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7")
+        )
+    }
+
+    func testIsValidUnifiedAddressTrue() {
+        XCTAssertTrue(
+            derivationTool.isValidUnifiedAddress(testRecipientAddress.encoding)
+        )
+    }
+
+    func testIsValidUnifiedAddressWrongNetwork() {
+        XCTAssertFalse(
+            derivationTool.isValidUnifiedAddress(
+                "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj"
+            )
+        )
+    }
+
+    func testIsValidUnifiedAddressFalse() {
+        XCTAssertFalse(
+            derivationTool.isValidUnifiedAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7")
+        )
+    }
+
     func testIsValidViewingKey() throws {
         XCTAssertTrue(
             ZcashKeyDerivationBackend(networkType: .testnet).isValidSaplingExtendedFullViewingKey(
