@@ -108,15 +108,23 @@ extension DerivationTool: KeyValidation {
     }
 
     public func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool {
-        backend.isValidUnifiedAddress(unifiedAddress)
+        DerivationTool.getAddressMetadata(unifiedAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.unified
+        } ?? false
     }
-    
+
     public func isValidTransparentAddress(_ tAddress: String) -> Bool {
-        backend.isValidTransparentAddress(tAddress)
+        DerivationTool.getAddressMetadata(tAddress).map {
+            $0.networkType == backend.networkType && (
+                $0.addressType == AddressType.p2pkh || $0.addressType == AddressType.p2sh
+            )
+        } ?? false
     }
-    
+
     public func isValidSaplingAddress(_ zAddress: String) -> Bool {
-        backend.isValidSaplingAddress(zAddress)
+        DerivationTool.getAddressMetadata(zAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.sapling
+        } ?? false
     }
 
     public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {

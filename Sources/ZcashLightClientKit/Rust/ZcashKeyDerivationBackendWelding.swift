@@ -25,11 +25,6 @@ protocol ZcashKeyDerivationBackendWelding {
     ///     - `rustRustReceiverTypecodesOnUnifiedAddressMalformed` if getting typecodes for unified address fails.
     func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
 
-    /// Validates the if the given string is a valid Sapling Address
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Returns: true when the address is valid. Returns false in any other case
-    func isValidSaplingAddress(_ address: String) -> Bool
-
     /// Validates the if the given string is a valid Sapling Extended Full Viewing Key
     /// - Parameter key: UTF-8 encoded String to validate
     /// - Returns: `true` when the Sapling Extended Full Viewing Key is valid. `false` in any other case
@@ -39,16 +34,6 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Returns: `true` when the Sapling Extended Spending Key is valid, false in any other case.
     /// - parameter key: String encoded Extended Spending Key
     func isValidSaplingExtendedSpendingKey(_ key: String) -> Bool
-
-    /// Validates the if the given string is a valid Transparent Address
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Returns: true when the address is valid and transparent. false in any other case
-    func isValidTransparentAddress(_ address: String) -> Bool
-
-    /// validates whether a string encoded address is a valid Unified Address.
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Returns: true when the address is valid and transparent. false in any other case
-    func isValidUnifiedAddress(_ address: String) -> Bool
 
     ///  verifies that the given string-encoded `UnifiedFullViewingKey` is valid.
     /// - Parameter ufvk: UTF-8 encoded String to validate
