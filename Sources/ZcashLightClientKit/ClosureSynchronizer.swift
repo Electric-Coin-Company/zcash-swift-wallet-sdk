@@ -129,8 +129,7 @@ public protocol ClosureSynchronizer {
 
     func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
 
-    /// Fetches the latest ZEC-USD exchange rate.
-    func getExchangeRateUSD(completion: @escaping (Result<NSDecimalNumber, Error>) -> Void)
+    func refreshExchangeRateUSD()
 
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't

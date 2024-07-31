@@ -8,25 +8,49 @@
 
 import UIKit
 import ZcashLightClientKit
+import Combine
 
 class GetBalanceViewController: UIViewController {
     @IBOutlet weak var balance: UILabel!
     @IBOutlet weak var verified: UILabel!
+
+    var cancellable: AnyCancellable?
+    
+    var accountBalance: AccountBalance?
+    var rate: FiatCurrencyResult?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         let synchronizer = AppDelegate.shared.sharedSynchronizer
         self.title = "Account 0 Balance"
 
-        Task { @MainActor in
-            let balance = try? await synchronizer.getAccountBalance()
-            let balanceText = (balance?.saplingBalance.total().formattedString) ?? "0.0"
-            let verifiedText = (balance?.saplingBalance.spendableValue.formattedString) ?? "0.0"
-            let usdZecRate = try await synchronizer.getExchangeRateUSD()
-            let usdBalance = (balance?.saplingBalance.total().decimalValue ?? 0).multiplying(by: usdZecRate)
-            let usdVerified = (balance?.saplingBalance.spendableValue.decimalValue ?? 0).multiplying(by: usdZecRate)
-            self.balance.text = "\(balanceText) ZEC\n\(usdBalance) USD\n\n(\(usdZecRate) USD/ZEC)"
-            self.verified.text = "\(verifiedText) ZEC\n\(usdVerified) USD"
+        Task { @MainActor [weak self] in
+            self?.accountBalance = try? await synchronizer.getAccountBalance()
+            self?.updateLabels()
+        }
+        
+        cancellable = synchronizer.exchangeRateUSDStream.sink { [weak self] result in
+            self?.rate = result
+            self?.updateLabels()
+        }
+        
+        synchronizer.refreshExchangeRateUSD()
+    }
+    
+    func updateLabels() {
+        DispatchQueue.main.async { [weak self] in
+            let balanceText = (self?.accountBalance?.saplingBalance.total().formattedString) ?? "0.0"
+            let verifiedText = (self?.accountBalance?.saplingBalance.spendableValue.formattedString) ?? "0.0"
+            
+            if let usdZecRate = self?.rate {
+                let usdBalance = (self?.accountBalance?.saplingBalance.total().decimalValue ?? 0).multiplying(by: usdZecRate.rate)
+                let usdVerified = (self?.accountBalance?.saplingBalance.spendableValue.decimalValue ?? 0).multiplying(by: usdZecRate.rate)
+                self?.balance.text = "\(balanceText) ZEC\n\(usdBalance) USD\n\n(\(usdZecRate.rate) USD/ZEC)"
+                self?.verified.text = "\(verifiedText) ZEC\n\(usdVerified) USD"
+            } else {
+                self?.balance.text = "\(balanceText) ZEC"
+                self?.verified.text = "\(verifiedText) ZEC"
+            }
         }
     }
 }
