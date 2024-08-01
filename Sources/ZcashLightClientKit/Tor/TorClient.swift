@@ -36,13 +36,16 @@ public class TorClient {
         zcashlc_free_tor_runtime(runtime)
     }
 
-    public func getExchangeRateUSD() async throws -> NSDecimalNumber {
+    public func getExchangeRateUSD() async throws -> FiatCurrencyResult {
         let rate = zcashlc_get_exchange_rate_usd(runtime)
 
         if rate.is_sign_negative {
             throw ZcashError.rustTorClientGet(lastErrorMessage(fallback: "`TorClient.get` failed with unknown error"))
         }
 
-        return NSDecimalNumber(mantissa: rate.mantissa, exponent: rate.exponent, isNegative: rate.is_sign_negative)
+        return FiatCurrencyResult(
+            rate: NSDecimalNumber(mantissa: rate.mantissa, exponent: rate.exponent, isNegative: rate.is_sign_negative),
+            date: Date()
+        )
     }
 }

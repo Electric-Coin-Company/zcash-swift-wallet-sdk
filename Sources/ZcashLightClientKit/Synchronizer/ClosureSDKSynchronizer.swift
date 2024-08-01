@@ -194,10 +194,8 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getExchangeRateUSD(completion: @escaping (Result<NSDecimalNumber, Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getExchangeRateUSD()
-        }
+    public func refreshExchangeRateUSD() {
+        synchronizer.refreshExchangeRateUSD()
     }
 
     /*

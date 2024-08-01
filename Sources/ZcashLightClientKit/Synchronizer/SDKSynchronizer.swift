@@ -22,6 +22,9 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
+    private let exchangeRateUSDSubject = CurrentValueSubject<FiatCurrencyResult?, Never>(nil)
+    public var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { exchangeRateUSDSubject.eraseToAnyPublisher() }
+    
     let metrics: SDKMetrics
     public let logger: Logger
 
@@ -508,21 +511,16 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
     }
 
-    public func getExchangeRateUSD() async throws -> NSDecimalNumber {
-        logger.info("Bootstrapping Tor client for fetching exchange rates")
-        let tor: TorClient
-        do {
-            tor = try await TorClient(torDir: initializer.torDirURL)
-        } catch {
-            logger.error("failed to bootstrap Tor client: \(error)")
-            throw error
-        }
+    /// Fetches the latest ZEC-USD exchange rate.
+    public func refreshExchangeRateUSD() {
+        Task {
+            logger.info("Bootstrapping Tor client for fetching exchange rates")
 
-        do {
-            return try await tor.getExchangeRateUSD()
-        } catch {
-            logger.error("Failed to fetch exchange rate through Tor: \(error)")
-            throw error
+            guard let tor = try? await TorClient(torDir: initializer.torDirURL) else {
+                return
+            }
+
+            exchangeRateUSDSubject.send(try? await tor.getExchangeRateUSD())
         }
     }
 

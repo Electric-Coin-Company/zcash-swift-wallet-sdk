@@ -1311,6 +1311,10 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingEventStream }
     }
     var underlyingEventStream: AnyPublisher<SynchronizerEvent, Never>!
+    var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> {
+        get { return underlyingExchangeRateUSDStream }
+    }
+    var underlyingExchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never>!
     var transactions: [ZcashTransaction.Overview] {
         get async { return underlyingTransactions }
     }
@@ -1798,26 +1802,17 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - getExchangeRateUSD
+    // MARK: - refreshExchangeRateUSD
 
-    var getExchangeRateUSDThrowableError: Error?
-    var getExchangeRateUSDCallsCount = 0
-    var getExchangeRateUSDCalled: Bool {
-        return getExchangeRateUSDCallsCount > 0
+    var refreshExchangeRateUSDCallsCount = 0
+    var refreshExchangeRateUSDCalled: Bool {
+        return refreshExchangeRateUSDCallsCount > 0
     }
-    var getExchangeRateUSDReturnValue: NSDecimalNumber!
-    var getExchangeRateUSDClosure: (() async throws -> NSDecimalNumber)?
+    var refreshExchangeRateUSDClosure: (() -> Void)?
 
-    func getExchangeRateUSD() async throws -> NSDecimalNumber {
-        if let error = getExchangeRateUSDThrowableError {
-            throw error
-        }
-        getExchangeRateUSDCallsCount += 1
-        if let closure = getExchangeRateUSDClosure {
-            return try await closure()
-        } else {
-            return getExchangeRateUSDReturnValue
-        }
+    func refreshExchangeRateUSD() {
+        refreshExchangeRateUSDCallsCount += 1
+        refreshExchangeRateUSDClosure!()
     }
 
     // MARK: - rewind
