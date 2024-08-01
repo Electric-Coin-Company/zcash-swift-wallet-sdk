@@ -36,6 +36,7 @@ class CompactBlockReorgTests: ZcashTestCase {
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
+            torDir: pathProvider.torDirURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
@@ -94,6 +95,7 @@ class CompactBlockReorgTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: processorConfig.dataDb,
+                torDirURL: processorConfig.torDir,
                 generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: processorConfig.spendParamsURL,
                 outputParamsURL: processorConfig.outputParamsURL

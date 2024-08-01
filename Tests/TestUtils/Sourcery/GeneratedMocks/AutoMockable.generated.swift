@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.4 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1072,6 +1072,24 @@ class LoggerMock: Logger {
     ) {
     }
 
+    // MARK: - maxLogLevel
+
+    var maxLogLevelCallsCount = 0
+    var maxLogLevelCalled: Bool {
+        return maxLogLevelCallsCount > 0
+    }
+    var maxLogLevelReturnValue: OSLogger.LogLevel?
+    var maxLogLevelClosure: (() -> OSLogger.LogLevel?)?
+
+    func maxLogLevel() -> OSLogger.LogLevel? {
+        maxLogLevelCallsCount += 1
+        if let closure = maxLogLevelClosure {
+            return closure()
+        } else {
+            return maxLogLevelReturnValue
+        }
+    }
+
     // MARK: - debug
 
     var debugFileFunctionLineCallsCount = 0
@@ -1293,6 +1311,10 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingEventStream }
     }
     var underlyingEventStream: AnyPublisher<SynchronizerEvent, Never>!
+    var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> {
+        get { return underlyingExchangeRateUSDStream }
+    }
+    var underlyingExchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never>!
     var transactions: [ZcashTransaction.Overview] {
         get async { return underlyingTransactions }
     }
@@ -1778,6 +1800,19 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getAccountBalanceAccountIndexReturnValue
         }
+    }
+
+    // MARK: - refreshExchangeRateUSD
+
+    var refreshExchangeRateUSDCallsCount = 0
+    var refreshExchangeRateUSDCalled: Bool {
+        return refreshExchangeRateUSDCallsCount > 0
+    }
+    var refreshExchangeRateUSDClosure: (() -> Void)?
+
+    func refreshExchangeRateUSD() {
+        refreshExchangeRateUSDCallsCount += 1
+        refreshExchangeRateUSDClosure!()
     }
 
     // MARK: - rewind

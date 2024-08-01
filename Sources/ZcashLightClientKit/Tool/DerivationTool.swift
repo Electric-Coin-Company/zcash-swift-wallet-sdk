@@ -127,6 +127,12 @@ extension DerivationTool: KeyValidation {
         } ?? false
     }
 
+    public func isValidTexAddress(_ texAddress: String) -> Bool {
+        DerivationTool.getAddressMetadata(texAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.tex
+        } ?? false
+    }
+
     public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {
         backend.isValidSaplingExtendedSpendingKey(extsk)
     }
@@ -160,6 +166,16 @@ extension UnifiedAddress {
     init(validatedEncoding: String, networkType: NetworkType) {
         self.encoding = validatedEncoding
         self.networkType = networkType
+    }
+}
+
+extension TexAddress {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
     }
 }
 

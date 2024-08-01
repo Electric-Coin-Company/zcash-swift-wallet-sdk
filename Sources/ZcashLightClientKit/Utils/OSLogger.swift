@@ -39,6 +39,10 @@ public class OSLogger: Logger {
         }
     }
 
+    public func maxLogLevel() -> LogLevel? {
+        self.level
+    }
+
     public func debug(
         _ message: String,
         file: StaticString = #file,

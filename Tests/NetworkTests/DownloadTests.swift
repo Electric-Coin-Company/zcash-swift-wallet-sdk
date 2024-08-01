@@ -23,6 +23,7 @@ class DownloadTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: try! __dataDbURL(),
+                torDirURL: try! __torDirURL(),
                 generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: try! __spendParamsURL(),
                 outputParamsURL: try! __outputParamsURL()

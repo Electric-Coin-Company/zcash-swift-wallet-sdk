@@ -129,7 +129,7 @@ public protocol CombineSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) -> SinglePublisher<RefreshedUTXOs, Error>
 
-    func getAccountBalance(accountIndex: Int) -> SinglePublisher<AccountBalance?, Error>
+    func refreshExchangeRateUSD()
 
     func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error>
     func wipe() -> CompletablePublisher<Error>

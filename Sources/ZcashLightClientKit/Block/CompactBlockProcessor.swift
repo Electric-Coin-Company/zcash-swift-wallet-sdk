@@ -56,6 +56,7 @@ actor CompactBlockProcessor {
         let saplingParamsSourceURL: SaplingParamsSourceURL
         let fsBlockCacheRoot: URL
         let dataDb: URL
+        let torDir: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
         let enhanceBatchSize: Int
@@ -79,6 +80,7 @@ actor CompactBlockProcessor {
             cacheDbURL: URL? = nil,
             fsBlockCacheRoot: URL,
             dataDb: URL,
+            torDir: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
@@ -94,6 +96,7 @@ actor CompactBlockProcessor {
             self.alias = alias
             self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
+            self.torDir = torDir
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
@@ -112,6 +115,7 @@ actor CompactBlockProcessor {
             alias: ZcashSynchronizerAlias,
             fsBlockCacheRoot: URL,
             dataDb: URL,
+            torDir: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
@@ -126,6 +130,7 @@ actor CompactBlockProcessor {
             self.alias = alias
             self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
+            self.torDir = torDir
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
@@ -151,6 +156,7 @@ actor CompactBlockProcessor {
                 alias: initializer.alias,
                 fsBlockCacheRoot: initializer.fsBlockDbRoot,
                 dataDb: initializer.dataDbURL,
+                torDir: initializer.torDirURL,
                 spendParamsURL: initializer.spendParamsURL,
                 outputParamsURL: initializer.outputParamsURL,
                 saplingParamsSourceURL: initializer.saplingParamsSourceURL,

@@ -22,6 +22,9 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
+    private let exchangeRateUSDSubject = CurrentValueSubject<FiatCurrencyResult?, Never>(nil)
+    public var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { exchangeRateUSDSubject.eraseToAnyPublisher() }
+    
     let metrics: SDKMetrics
     public let logger: Logger
 
@@ -506,6 +509,19 @@ public class SDKSynchronizer: Synchronizer {
 
     public func getAccountBalance(accountIndex: Int = 0) async throws -> AccountBalance? {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
+    }
+
+    /// Fetches the latest ZEC-USD exchange rate.
+    public func refreshExchangeRateUSD() {
+        Task {
+            logger.info("Bootstrapping Tor client for fetching exchange rates")
+
+            guard let tor = try? await TorClient(torDir: initializer.torDirURL) else {
+                return
+            }
+
+            exchangeRateUSDSubject.send(try? await tor.getExchangeRateUSD())
+        }
     }
 
     public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {

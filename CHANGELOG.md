@@ -6,6 +6,14 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `Synchronizer.exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never>`,
+  which returns the currently-cached USD/ZEC exchange rate, or `nil` if it has not yet been
+  fetched.
+- `Synchronizer.refreshExchangeRateUSD()`, which refreshes the rate returned by
+  `Synchronizer.exchangeRateUSDStream`. Prices are queried over Tor (to hide the wallet's
+  IP address).
+
 # 2.1.12 - 2024-07-04
 
 ## Fixed

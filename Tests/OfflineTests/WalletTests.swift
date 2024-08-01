@@ -45,6 +45,7 @@ class WalletTests: ZcashTestCase {
             fsBlockDbRoot: testTempDirectory,
             generalStorageURL: testGeneralStorageDirectory,
             dataDbURL: try __dataDbURL(),
+            torDirURL: try __torDirURL(),
             endpoint: LightWalletEndpointBuilder.default,
             network: network,
             spendParamsURL: try __spendParamsURL(),

@@ -196,6 +196,10 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func refreshExchangeRateUSD() {
+        synchronizer.refreshExchangeRateUSD()
+    }
+
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }

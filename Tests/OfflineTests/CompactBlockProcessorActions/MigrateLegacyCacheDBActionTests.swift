@@ -235,6 +235,7 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             cacheDbURL: underlyingCacheDbURL ?? defaultConfig.cacheDbURL,
             fsBlockCacheRoot: underlyingFsBlockCacheRoot ?? defaultConfig.fsBlockCacheRoot,
             dataDb: defaultConfig.dataDb,
+            torDir: defaultConfig.torDir,
             spendParamsURL: defaultConfig.spendParamsURL,
             outputParamsURL: defaultConfig.outputParamsURL,
             saplingParamsSourceURL: defaultConfig.saplingParamsSourceURL,

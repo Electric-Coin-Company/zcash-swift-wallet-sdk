@@ -124,6 +124,9 @@ public enum ZcashSDK {
     /// Default Name for LibRustZcash data.db
     public static let defaultDataDbName = "data.db"
 
+    /// Default Name for Tor data directory
+    public static let defaultTorDirName = "tor"
+
     /// Default Name for Compact Block file system based db
     public static let defaultFsCacheName = "fs_cache"
 
@@ -154,6 +157,9 @@ public protocol NetworkConstants {
     /// Default Name for LibRustZcash data.db
     static var defaultDataDbName: String { get }
 
+    /// Default Name for Tor data directory
+    static var defaultTorDirName: String { get }
+
     static var defaultFsBlockDbRootName: String { get }
 
     /// Default Name for Compact Block caches db
@@ -181,6 +187,9 @@ public enum ZcashSDKMainnetConstants: NetworkConstants {
     /// Default Name for LibRustZcash data.db
     public static let defaultDataDbName = "data.db"
 
+    /// Default Name for Tor data directory
+    public static let defaultTorDirName = "tor"
+
     public static let defaultFsBlockDbRootName = "fs_cache"
 
     /// Default Name for Compact Block caches db
@@ -196,6 +205,9 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
 
     /// Default Name for LibRustZcash data.db
     public static let defaultDataDbName = "data.db"
+
+    /// Default Name for Tor data directory
+    public static let defaultTorDirName = "tor"
 
     /// Default Name for Compact Block caches db
     public static let defaultCacheDbName = "caches.db"
