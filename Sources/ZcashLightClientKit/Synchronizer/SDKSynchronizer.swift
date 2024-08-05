@@ -27,6 +27,7 @@ public class SDKSynchronizer: Synchronizer {
     
     let metrics: SDKMetrics
     public let logger: Logger
+    var tor: TorClient?
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -85,12 +86,14 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
-        
+
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
         }
 
-        Task(priority: .high) { [weak self] in await self?.subscribeToProcessorEvents(blockProcessor) }
+        Task(priority: .high) { [weak self] in
+            await self?.subscribeToProcessorEvents(blockProcessor)
+        }
     }
 
     deinit {
@@ -513,14 +516,34 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
+        // ignore refresh request when one is already in flight
+        if let latestState = tor?.cachedValue?.state, latestState == .fetching {
+            return
+        }
+        
+        // broadcast cached value but update the state
+        if let cachedValue = tor?.cachedValue {
+            var fetchingState = cachedValue
+            fetchingState.state = .fetching
+            
+            exchangeRateUSDSubject.send(fetchingState)
+        }
+
         Task {
-            logger.info("Bootstrapping Tor client for fetching exchange rates")
+            do {
+                if tor == nil {
+                    logger.info("Bootstrapping Tor client for fetching exchange rates")
+                    tor = try await TorClient(torDir: initializer.torDirURL)
+                }
+                // broadcast new value in case of success
+                exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
+            } catch {
+                // broadcast cached value but update the state
+                var errorState = tor?.cachedValue
+                errorState?.state = .error
 
-            guard let tor = try? await TorClient(torDir: initializer.torDirURL) else {
-                return
+                exchangeRateUSDSubject.send(errorState)
             }
-
-            exchangeRateUSDSubject.send(try? await tor.getExchangeRateUSD())
         }
     }
 
