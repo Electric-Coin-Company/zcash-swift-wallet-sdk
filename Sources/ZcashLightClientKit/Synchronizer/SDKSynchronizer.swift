@@ -700,7 +700,7 @@ public class SDKSynchronizer: Synchronizer {
                         continue
                     }
                     
-                    guard remoteBranchID == localBranch else {
+                    guard remoteBranchID == localBranchID else {
                         continue
                     }
                 } else {
