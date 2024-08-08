@@ -736,7 +736,7 @@ public class SDKSynchronizer: Synchronizer {
                 }
                 
                 // rule out mismatch of consensus branch IDs
-                if let localBranch = await blockProcessor.consensusBranchIdFor(Int32(info.blockHeight)) {
+                if let localBranchID = await blockProcessor.consensusBranchIdFor(Int32(info.blockHeight)) {
                     guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
                         continue
                     }
