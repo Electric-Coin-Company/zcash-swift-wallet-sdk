@@ -10,6 +10,7 @@ import libzcashlc
 
 public class TorClient {
     private let runtime: OpaquePointer
+    public var cachedValue: FiatCurrencyResult?
 
     init(torDir: URL) async throws {
         // Ensure that the directory exists.
@@ -43,9 +44,14 @@ public class TorClient {
             throw ZcashError.rustTorClientGet(lastErrorMessage(fallback: "`TorClient.get` failed with unknown error"))
         }
 
-        return FiatCurrencyResult(
+        let newValue = FiatCurrencyResult(
+            date: Date(),
             rate: NSDecimalNumber(mantissa: rate.mantissa, exponent: rate.exponent, isNegative: rate.is_sign_negative),
-            date: Date()
+            state: .success
         )
+        
+        cachedValue = newValue
+        
+        return newValue
     }
 }
