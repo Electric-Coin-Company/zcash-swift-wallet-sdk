@@ -517,14 +517,15 @@ public class SDKSynchronizer: Synchronizer {
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
         // ignore refresh request when one is already in flight
-        if let latestState = tor?.cachedValue?.state, latestState == .fetching {
+        if let latestState = tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
             return
         }
         
         // broadcast cached value but update the state
-        if let cachedValue = tor?.cachedValue {
-            var fetchingState = cachedValue
+        if let cachedFiatCurrencyResult = tor?.cachedFiatCurrencyResult {
+            var fetchingState = cachedFiatCurrencyResult
             fetchingState.state = .fetching
+            tor?.cachedFiatCurrencyResult = fetchingState
             
             exchangeRateUSDSubject.send(fetchingState)
         }
@@ -539,8 +540,9 @@ public class SDKSynchronizer: Synchronizer {
                 exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
             } catch {
                 // broadcast cached value but update the state
-                var errorState = tor?.cachedValue
+                var errorState = tor?.cachedFiatCurrencyResult
                 errorState?.state = .error
+                tor?.cachedFiatCurrencyResult = errorState
 
                 exchangeRateUSDSubject.send(errorState)
             }

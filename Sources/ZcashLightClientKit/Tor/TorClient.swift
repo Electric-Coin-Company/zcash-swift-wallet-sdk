@@ -10,7 +10,7 @@ import libzcashlc
 
 public class TorClient {
     private let runtime: OpaquePointer
-    public var cachedValue: FiatCurrencyResult?
+    public var cachedFiatCurrencyResult: FiatCurrencyResult?
 
     init(torDir: URL) async throws {
         // Ensure that the directory exists.
@@ -50,7 +50,7 @@ public class TorClient {
             state: .success
         )
         
-        cachedValue = newValue
+        cachedFiatCurrencyResult = newValue
         
         return newValue
     }
