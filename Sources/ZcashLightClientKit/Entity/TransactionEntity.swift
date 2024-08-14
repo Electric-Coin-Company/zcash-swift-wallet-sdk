@@ -50,6 +50,7 @@ public enum ZcashTransaction {
         public let fee: Zatoshi?
         public let index: Int?
         public var isSentTransaction: Bool { value < Zatoshi(0) }
+        public var isShielding: Bool
         public let hasChange: Bool
         public let memoCount: Int
         public let minedHeight: BlockHeight?
@@ -156,6 +157,7 @@ extension ZcashTransaction.Overview {
         static let hasChange = Expression<Bool>("has_change")
         static let sentNoteCount = Expression<Int>("sent_note_count")
         static let receivedNoteCount = Expression<Int>("received_note_count")
+        static let isShielding = Expression<Bool>("is_shielding")
         static let memoCount = Expression<Int>("memo_count")
         static let blockTime = Expression<Int64?>("block_time")
         static let expiredUnmined = Expression<Bool?>("expired_unmined")
@@ -171,6 +173,7 @@ extension ZcashTransaction.Overview {
             self.minedHeight = try row.get(Column.minedHeight)
             self.rawID = Data(blob: try row.get(Column.rawID))
             self.receivedNoteCount = try row.get(Column.receivedNoteCount)
+            self.isShielding = try row.get(Column.isShielding)
             self.sentNoteCount = try row.get(Column.sentNoteCount)
             self.value = Zatoshi(try row.get(Column.value))
             self.isExpiredUmined = try row.get(Column.expiredUnmined)

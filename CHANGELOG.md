@@ -11,6 +11,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [#1466] Choose the best server by testing responses from multiple hosts
 - Synchronizer's `evaluateBestOf(endpoints: [], ...) async -> [LightWalletEndpoint]` method takes a list of endpoints and evaluates top k best performant servers. 
 
+- `TransactionEntity` extended to access `is_shielding` from the DB and provides the value to the clients. 
+
 # 2.2.1 - 2024-08-21
 
 ## Fixed
