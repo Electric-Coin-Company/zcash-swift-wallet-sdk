@@ -214,7 +214,11 @@ enum DarksideWalletDConstants: NetworkConstants {
     static var defaultDataDbName: String {
         ZcashSDKMainnetConstants.defaultDataDbName
     }
-    
+
+    static var defaultTorDirName: String {
+        ZcashSDKMainnetConstants.defaultTorDirName
+    }
+
     static var defaultCacheDbName: String {
         ZcashSDKMainnetConstants.defaultCacheDbName
     }

@@ -9,6 +9,21 @@
 import Foundation
 import libzcashlc
 
+enum RustLogging: String {
+    /// The logs are completely disabled.
+    case off
+    /// Logs very serious errors.
+    case error
+    /// Logs hazardous situations.
+    case warn
+    /// Logs useful information.
+    case info
+    /// Logs lower priority information.
+    case debug
+    /// Logs very low priority, often extremely verbose, information.
+    case trace
+}
+
 struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
     let minimumShieldingConfirmations: UInt32 = 1
@@ -22,7 +37,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     let networkType: NetworkType
 
-    static var tracingEnabled = false
+    static var rustInitialized = false
+
     /// Creates instance of `ZcashRustBackend`.
     /// - Parameters:
     ///   - dbData: `URL` pointing to file where data database will be.
@@ -32,9 +48,17 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     ///   - spendParamsPath: `URL` pointing to spend parameters file.
     ///   - outputParamsPath: `URL` pointing to output parameters file.
     ///   - networkType: Network type to use.
-    ///   - enableTracing: this sets up whether the tracing system will dump logs onto the OSLogger system or not.
-    ///   **Important note:** this will enable the tracing **for all instances** of ZcashRustBackend, not only for this one.
-    init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType, enableTracing: Bool = false) {
+    ///   - logLevel: this sets up whether the tracing system will dump logs onto the OSLogger system or not.
+    ///     **Important note:** this will enable the tracing **for all instances** of ZcashRustBackend, not only for this one.
+    ///     This is ignored after the first ZcashRustBackend instance is created.
+    init(
+        dbData: URL,
+        fsBlockDbRoot: URL,
+        spendParamsPath: URL,
+        outputParamsPath: URL,
+        networkType: NetworkType,
+        logLevel: RustLogging = RustLogging.off
+    ) {
         self.dbData = dbData.osStr()
         self.fsBlockDbRoot = fsBlockDbRoot.osPathStr()
         self.spendParamsPath = spendParamsPath.osPathStr()
@@ -42,9 +66,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         self.networkType = networkType
         self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
 
-        if enableTracing && !Self.tracingEnabled {
-            Self.tracingEnabled = true
-            Self.enableTracing()
+        if !Self.rustInitialized {
+            Self.rustInitialized = true
+            Self.initializeRust(logLevel: logLevel)
         }
     }
 
@@ -823,33 +847,33 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 }
 
 private extension ZcashRustBackend {
-    static func enableTracing() {
-        zcashlc_init_on_load(false)
-    }
-}
-
-private extension ZcashRustBackend {
-    nonisolated func lastErrorMessage(fallback: String) -> String {
-        let errorLen = zcashlc_last_error_length()
-        defer { zcashlc_clear_last_error() }
-
-        if errorLen > 0 {
-            let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
-            defer { error.deallocate() }
-
-            zcashlc_error_message_utf8(error, errorLen)
-            if let errorMessage = String(validatingUTF8: error) {
-                return errorMessage
-            } else {
-                return fallback
-            }
-        } else {
-            return fallback
+    static func initializeRust(logLevel: RustLogging) {
+        logLevel.rawValue.utf8CString.withUnsafeBufferPointer { levelPtr in
+            zcashlc_init_on_load(levelPtr.baseAddress)
         }
     }
 }
 
-private extension URL {
+nonisolated func lastErrorMessage(fallback: String) -> String {
+    let errorLen = zcashlc_last_error_length()
+    defer { zcashlc_clear_last_error() }
+
+    if errorLen > 0 {
+        let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
+        defer { error.deallocate() }
+
+        zcashlc_error_message_utf8(error, errorLen)
+        if let errorMessage = String(validatingUTF8: error) {
+            return errorMessage
+        } else {
+            return fallback
+        }
+    } else {
+        return fallback
+    }
+}
+
+extension URL {
     func osStr() -> (String, UInt) {
         let path = self.absoluteString
         return (path, UInt(path.lengthOfBytes(using: .utf8)))

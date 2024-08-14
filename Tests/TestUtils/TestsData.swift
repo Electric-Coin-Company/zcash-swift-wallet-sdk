@@ -17,6 +17,7 @@ class TestsData {
             fsBlockDbRoot: URL(fileURLWithPath: "/"),
             generalStorageURL: URL(fileURLWithPath: "/"),
             dataDbURL: URL(fileURLWithPath: "/"),
+            torDirURL: URL(fileURLWithPath: "/"),
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: networkType),
             spendParamsURL: URL(fileURLWithPath: "/"),

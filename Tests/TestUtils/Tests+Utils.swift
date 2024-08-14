@@ -96,6 +96,10 @@ func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }
 
+func __torDirURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("tor", isDirectory: true)
+}
+
 func __spendParamsURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("sapling-spend.params")
 }

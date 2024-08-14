@@ -101,6 +101,9 @@ public protocol Synchronizer: AnyObject {
     /// This stream is backed by `PassthroughSubject`. Check `SynchronizerEvent` to see which events may be emitted.
     var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
 
+    /// This stream emits the latest known USD/ZEC exchange rate, paired with the time it was queried. See `FiatCurrencyResult`.
+    var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { get }
+    
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -308,6 +311,9 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter accountIndex: the index of the account
     /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `accountIndex`
     func getAccountBalance(accountIndex: Int) async throws -> AccountBalance?
+
+    /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
+    func refreshExchangeRateUSD()
 
     /// Rescans the known blocks with the current keys.
     ///
