@@ -212,7 +212,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             dbData.1,
             txBytes,
             UInt(txBytes.count),
-            UInt32(minedHeight),
+            Int64(minedHeight),
             networkType.networkId
         )
 
@@ -843,6 +843,73 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return branchId
+    }
+    
+    @DBActor
+    func transactionDataRequests() async throws -> [TransactionDataRequest] {
+        let tDataRequestsPtr = zcashlc_transaction_data_requests(
+            dbData.0,
+            dbData.1,
+            networkType.networkId
+        )
+
+        guard let tDataRequestsPtr else {
+            throw ZcashError.rustTransactionDataRequests(lastErrorMessage(fallback: "`transactionDataRequests` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_transaction_data_requests(tDataRequestsPtr) }
+
+        var transactionDataRequests: [TransactionDataRequest] = []
+
+        for i in (0 ..< Int(tDataRequestsPtr.pointee.len)) {
+            let tDataRequestPtr = tDataRequestsPtr.pointee.ptr.advanced(by: i).pointee
+
+            var tDataRequest: TransactionDataRequest?
+            
+            if tDataRequestPtr.tag == 0 {
+                tDataRequest = TransactionDataRequest.getStatus(FfiTxId(tuple: tDataRequestPtr.get_status).array)
+            } else if tDataRequestPtr.tag == 1 {
+                tDataRequest = TransactionDataRequest.enhancement(FfiTxId(tuple: tDataRequestPtr.enhancement).array)
+            } else if tDataRequestPtr.tag == 2, let address = String(validatingUTF8: tDataRequestPtr.spends_from_address.address) {
+                tDataRequest = TransactionDataRequest.spendsFromAddress(
+                    SpendsFromAddress(
+                        address: address,
+                        blockRangeStart: tDataRequestPtr.spends_from_address.block_range_start,
+                        blockRangeEnd: tDataRequestPtr.spends_from_address.block_range_end
+                    )
+                )
+            }
+
+            if let tDataRequest {
+                transactionDataRequests.append(tDataRequest)
+            }
+        }
+
+        return transactionDataRequests
+    }
+    
+    @DBActor
+    func setTransactionStatus(txId: Data, status: TransactionStatus) async throws {
+        var transactionStatus = FfiTransactionStatus()
+        
+        switch status {
+        case .txidNotRecognized:
+            transactionStatus.tag = 0
+        case .notInMainChain:
+            transactionStatus.tag = 1
+        case .mined(let height):
+            transactionStatus.tag = 2
+            transactionStatus.mined = UInt32(height)
+        }
+
+        zcashlc_set_transaction_status(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            txId.bytes,
+            UInt(txId.bytes.count),
+            transactionStatus
+        )
     }
 }
 

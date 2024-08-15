@@ -193,7 +193,11 @@ extension LightWalletGRPCService: LightWalletService {
         
         do {
             let rawTx = try await compactTxStreamer.getTransaction(txFilter)
-            return ZcashTransaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
+            return ZcashTransaction.Fetched(
+                rawID: txId,
+                minedHeight: rawTx.height == UInt64.max ? BlockHeight(-1) : BlockHeight(rawTx.height),
+                raw: rawTx.data
+            )
         } catch {
             let serviceError = error.mapToServiceError()
             throw ZcashError.serviceFetchTransactionFailed(serviceError)
@@ -280,6 +284,21 @@ extension LightWalletGRPCService: LightWalletService {
         try await compactTxStreamer.getTreeState(id)
     }
 
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
+        let stream = compactTxStreamer.getTaddressTxids(request)
+        var iterator = stream.makeAsyncIterator()
+        
+        return AsyncThrowingStream() {
+            do {
+                guard let rawTransaction = try await iterator.next() else { return nil }
+                return rawTransaction
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceGetTaddressTxidsFailed(serviceError)
+            }
+        }
+    }
+    
     func closeConnection() {
         _ = channel.close()
     }

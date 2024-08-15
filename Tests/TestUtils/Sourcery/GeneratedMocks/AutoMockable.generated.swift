@@ -1000,6 +1000,26 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getTaddressTxids
+
+    var getTaddressTxidsCallsCount = 0
+    var getTaddressTxidsCalled: Bool {
+        return getTaddressTxidsCallsCount > 0
+    }
+    var getTaddressTxidsReceivedRequest: TransparentAddressBlockFilter?
+    var getTaddressTxidsReturnValue: AsyncThrowingStream<RawTransaction, Error>!
+    var getTaddressTxidsClosure: ((TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>)?
+
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
+        getTaddressTxidsCallsCount += 1
+        getTaddressTxidsReceivedRequest = request
+        if let closure = getTaddressTxidsClosure {
+            return closure(request)
+        } else {
+            return getTaddressTxidsReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -3061,6 +3081,47 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         } else {
             return latestCachedBlockHeightReturnValue
         }
+    }
+
+    // MARK: - transactionDataRequests
+
+    var transactionDataRequestsThrowableError: Error?
+    var transactionDataRequestsCallsCount = 0
+    var transactionDataRequestsCalled: Bool {
+        return transactionDataRequestsCallsCount > 0
+    }
+    var transactionDataRequestsReturnValue: [TransactionDataRequest]!
+    var transactionDataRequestsClosure: (() async throws -> [TransactionDataRequest])?
+
+    func transactionDataRequests() async throws -> [TransactionDataRequest] {
+        if let error = transactionDataRequestsThrowableError {
+            throw error
+        }
+        transactionDataRequestsCallsCount += 1
+        if let closure = transactionDataRequestsClosure {
+            return try await closure()
+        } else {
+            return transactionDataRequestsReturnValue
+        }
+    }
+
+    // MARK: - setTransactionStatus
+
+    var setTransactionStatusTxIdStatusThrowableError: Error?
+    var setTransactionStatusTxIdStatusCallsCount = 0
+    var setTransactionStatusTxIdStatusCalled: Bool {
+        return setTransactionStatusTxIdStatusCallsCount > 0
+    }
+    var setTransactionStatusTxIdStatusReceivedArguments: (txId: Data, status: TransactionStatus)?
+    var setTransactionStatusTxIdStatusClosure: ((Data, TransactionStatus) async throws -> Void)?
+
+    func setTransactionStatus(txId: Data, status: TransactionStatus) async throws {
+        if let error = setTransactionStatusTxIdStatusThrowableError {
+            throw error
+        }
+        setTransactionStatusTxIdStatusCallsCount += 1
+        setTransactionStatusTxIdStatusReceivedArguments = (txId: txId, status: status)
+        try await setTransactionStatusTxIdStatusClosure!(txId, status)
     }
 
 }

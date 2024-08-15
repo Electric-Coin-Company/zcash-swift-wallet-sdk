@@ -289,4 +289,21 @@ protocol ZcashRustBackendWelding {
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Returns `BlockHeight` of the latest cached block or `.empty` if no blocks are stored.
     func latestCachedBlockHeight() async throws -> BlockHeight
+
+    /// Returns an array of [`TransactionDataRequest`] values that describe information needed by
+    /// the wallet to complete its view of transaction history.
+    ///
+    /// Requests for the same transaction data may be returned repeatedly by successive data
+    /// requests. The caller of this method should consider the latest set of requests returned
+    /// by this method to be authoritative and to subsume that returned by previous calls.
+    func transactionDataRequests() async throws -> [TransactionDataRequest]
+
+    /// Updates the wallet backend with respect to the status of a specific transaction, from the
+    /// perspective of the main chain.
+    ///
+    /// Fully transparent transactions, and transactions that do not contain either shielded inputs
+    /// or shielded outputs belonging to the wallet, may not be discovered by the process of chain
+    /// scanning; as a consequence, the wallet must actively query to determine whether such
+    /// transactions have been mined.
+    func setTransactionStatus(txId: Data, status: TransactionStatus) async throws
 }

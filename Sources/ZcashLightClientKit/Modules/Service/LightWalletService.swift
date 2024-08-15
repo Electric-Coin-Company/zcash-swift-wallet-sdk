@@ -198,4 +198,6 @@ protocol LightWalletService: AnyObject {
     func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
 
     func getTreeState(_ id: BlockID) async throws -> TreeState
+    
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>
 }
