@@ -187,17 +187,31 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
         do {
             let rawTx = try await compactTxStreamer.getTransaction(txFilter)
-            return ZcashTransaction.Fetched(
-                rawID: txId,
-                minedHeight: rawTx.height == UInt64.max ? BlockHeight(-1) : BlockHeight(rawTx.height),
-                raw: rawTx.data
+            
+            let isNotMined = rawTx.height == 0 || rawTx.height > UInt32.max
+            
+            return (
+                tx:
+                    ZcashTransaction.Fetched(
+                        rawID: txId,
+                        minedHeight: isNotMined ? nil : UInt32(rawTx.height),
+                        raw: rawTx.data
+                    ),
+                status: isNotMined ? .notInMainChain : .mined(Int(rawTx.height))
             )
+        } catch let error as GRPCStatus {
+            if error.makeGRPCStatus().code == .notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceFetchTransactionFailed(serviceError)
+            }
         } catch {
             let serviceError = error.mapToServiceError()
             throw ZcashError.serviceFetchTransactionFailed(serviceError)

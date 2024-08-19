@@ -43,7 +43,7 @@ protocol BlockDownloaderService {
     Gets the transaction for the Id given
     - Parameter txId: Data representing the transaction Id
     */
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus)
 
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
@@ -111,7 +111,7 @@ extension BlockDownloaderServiceImpl: BlockDownloaderService {
         try await self.storage.latestHeight()
     }
     
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         try await lightwalletService.fetchTransaction(txId: txId)
     }
 }

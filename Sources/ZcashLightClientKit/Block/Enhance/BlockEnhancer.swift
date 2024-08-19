@@ -62,25 +62,6 @@ struct BlockEnhancerImpl {
     let metrics: SDKMetrics
     let service: LightWalletService
     let logger: Logger
-
-    private func enhance(txId: Data) async throws -> ZcashTransaction.Overview {
-        logger.debug("Zoom.... Enhance... Tx: \(txId.toHexStringTxId())")
-
-        let fetchedTransaction = try await blockDownloaderService.fetchTransaction(txId: txId)
-
-        if fetchedTransaction.minedHeight == -1 {
-            try await rustBackend.setTransactionStatus(txId: fetchedTransaction.rawID, status: .txidNotRecognized)
-        } else if fetchedTransaction.minedHeight == 0 {
-            try await rustBackend.setTransactionStatus(txId: fetchedTransaction.rawID, status: .notInMainChain)
-        } else if fetchedTransaction.minedHeight > 0 {
-            try await rustBackend.decryptAndStoreTransaction(
-                txBytes: fetchedTransaction.raw.bytes,
-                minedHeight: Int32(fetchedTransaction.minedHeight)
-            )
-        }
-
-        return try await transactionRepository.find(rawID: fetchedTransaction.rawID)
-    }
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
@@ -94,7 +75,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
         
         // fetch transactions
         do {
-            let startTime = Date()
             let transactionDataRequests = try await rustBackend.transactionDataRequests()
 
             guard !transactionDataRequests.isEmpty else {
@@ -102,10 +82,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 logger.sync("No transaction data requests detected.")
                 return nil
             }
-
-            let chainTipHeight = try await blockDownloaderService.latestBlockHeight()
-            let newlyMinedLowerBound = chainTipHeight - ZcashSDK.expiryOffset
-            let newlyMinedRange = newlyMinedLowerBound...chainTipHeight
 
             for index in 0 ..< transactionDataRequests.count {
                 let transactionDataRequest = transactionDataRequests[index]
@@ -115,29 +91,40 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     try Task.checkCancellation()
                     do {
                         switch transactionDataRequest {
-                        case .getStatus(let txId), .enhancement(let txId):
-                            let confirmedTx = try await enhance(txId: txId.data)
+                        case .getStatus(let txId):
+                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data)
                             retry = false
-                            
-                            let progress = EnhancementProgress(
-                                totalTransactions: transactionDataRequests.count,
-                                enhancedTransactions: index + 1,
-                                lastFoundTransaction: confirmedTx,
-                                range: range,
-                                newlyMined: confirmedTx.isSentTransaction && newlyMinedRange.contains(confirmedTx.minedHeight ?? 0)
-                            )
 
-                            await didEnhance(progress)
+                            if let fetchedTransaction = response.tx {
+                                try await rustBackend.setTransactionStatus(txId: fetchedTransaction.rawID, status: response.status)
+                            }
+                            
+                        case .enhancement(let txId):
+                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data)
+                            retry = false
+
+                            if response.status == .txidNotRecognized {
+                                try await rustBackend.setTransactionStatus(txId: txId.data, status: .txidNotRecognized)
+                            } else if let fetchedTransaction = response.tx {
+                                try await rustBackend.decryptAndStoreTransaction(
+                                    txBytes: fetchedTransaction.raw.bytes,
+                                    minedHeight: fetchedTransaction.minedHeight
+                                )
+                            }
+
                         case .spendsFromAddress(let sfa):
                             var filter = TransparentAddressBlockFilter()
                             filter.address = sfa.address
-                            filter.range = BlockRange(startHeight: Int(sfa.blockRangeStart), endHeight: Int(sfa.blockRangeEnd))
+                            filter.range = BlockRange(startHeight: Int(sfa.blockRangeStart), endHeight: Int(sfa.blockRangeEnd - 1))
                             let stream = service.getTaddressTxids(filter)
 
                             for try await rawTransaction in stream {
+                                let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max) 
+                                ? nil : UInt32(rawTransaction.height)
+
                                 try await rustBackend.decryptAndStoreTransaction(
                                     txBytes: rawTransaction.data.bytes,
-                                    minedHeight: Int32(rawTransaction.height)
+                                    minedHeight: minedHeight
                                 )
                             }
                             retry = false
@@ -151,12 +138,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     }
                 }
             }
-            
-            let endTime = Date()
-            let diff = endTime.timeIntervalSince1970 - startTime.timeIntervalSince1970
-            let logMsg = "Enhanced \(transactionDataRequests.count) transaction data requests in \(diff)"
-            logger.sync(logMsg)
-            metrics.actionDetail(logMsg, for: .enhance)
         } catch {
             logger.error("error enhancing transactions! \(error)")
             throw error

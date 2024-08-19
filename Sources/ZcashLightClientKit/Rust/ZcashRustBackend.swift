@@ -206,13 +206,13 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
         let result = zcashlc_decrypt_and_store_transaction(
             dbData.0,
             dbData.1,
             txBytes,
             UInt(txBytes.count),
-            Int64(minedHeight),
+            Int64(minedHeight ?? 0),
             networkType.networkId
         )
 

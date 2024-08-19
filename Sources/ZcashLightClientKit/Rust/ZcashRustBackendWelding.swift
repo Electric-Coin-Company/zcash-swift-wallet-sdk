@@ -55,7 +55,7 @@ protocol ZcashRustBackendWelding {
     /// - parameter tx:     the transaction to decrypt
     /// - parameter minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
     /// - Throws: `rustDecryptAndStoreTransaction`.
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws
 
     /// Returns the most-recently-generated unified payment address for the specified account.
     /// - parameter account: index of the given account
