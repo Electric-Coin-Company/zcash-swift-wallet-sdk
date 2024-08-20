@@ -102,14 +102,14 @@ class SyncBlocksListViewController: UIViewController {
             fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
             generalStorageURL: try! generalStorageURLHelper(),
             dataDbURL: try! dataDbURLHelper(),
+            torDirURL: try! torDirURLHelper(),
             endpoint: DemoAppConfig.endpoint,
             network: kZcashNetwork,
             spendParamsURL: try! spendParamsURLHelper(),
             outputParamsURL: try! outputParamsURLHelper(),
             saplingParamsSourceURL: SaplingParamsSourceURL.default,
             alias: data.alias,
-            loggingPolicy: .default(.debug),
-            enableBackendTracing: true
+            loggingPolicy: .default(.debug)
         )
 
         return SDKSynchronizer(initializer: initializer)

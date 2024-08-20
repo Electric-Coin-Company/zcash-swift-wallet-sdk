@@ -94,7 +94,7 @@ public enum ZcashTransaction {
     /// Used when fetching blocks from the lightwalletd
     struct Fetched {
         public let rawID: Data
-        public let minedHeight: BlockHeight
+        public let minedHeight: UInt32?
         public let raw: Data
     }
 }

@@ -89,13 +89,15 @@ public enum AddressType: Equatable {
     case p2sh
     case sapling
     case unified
-    
+    case tex
+
     var id: UInt32 {
         switch self {
         case .p2pkh:  return 0
         case .p2sh:  return 1
         case .sapling: return 2
         case .unified: return 3
+        case .tex: return 4
         }
     }
 }
@@ -107,6 +109,7 @@ extension AddressType {
         case 1: return .p2sh
         case 2: return .sapling
         case 3: return .unified
+        case 4: return .tex
         default: return nil
         }
     }
@@ -213,6 +216,35 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     }
 }
 
+/// A transparent-source-only (TEX) Address that can be encoded as a String
+///
+/// Transactions sent to this address are totally visible in the public
+/// ledger. See "Multiple transaction types" in https://z.cash/technology/
+///
+/// Transactions sent to this address must only have transparent inputs. See ZIP 320: https://zips.z.cash/zip-0320
+public struct TexAddress: Equatable, StringEncoded, Comparable {
+    let encoding: String
+
+    public var stringEncoded: String { encoding }
+
+    /// Initializes a new TexAddress from the provided string encoding
+    ///
+    ///  - parameter encoding: String encoding of the TEX address
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `texAddressInvalidInput`when the provided encoding is found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard DerivationTool(networkType: network).isValidTexAddress(encoding) else {
+            throw ZcashError.texAddressInvalidInput
+        }
+
+        self.encoding = encoding
+    }
+
+    public static func < (lhs: TexAddress, rhs: TexAddress) -> Bool {
+        return lhs.encoding < rhs.encoding
+    }
+}
+
 public enum TransactionRecipient: Equatable {
     case address(Recipient)
     case internalAccount(UInt32)
@@ -223,6 +255,7 @@ public enum Recipient: Equatable, StringEncoded {
     case transparent(TransparentAddress)
     case sapling(SaplingAddress)
     case unified(UnifiedAddress)
+    case tex(TexAddress)
 
     public var stringEncoded: String {
         switch self {
@@ -232,6 +265,8 @@ public enum Recipient: Equatable, StringEncoded {
             return zAddr.stringEncoded
         case .unified(let uAddr):
             return uAddr.stringEncoded
+        case .tex(let texAddr):
+            return texAddr.stringEncoded
         }
     }
 
@@ -246,6 +281,8 @@ public enum Recipient: Equatable, StringEncoded {
             self = .sapling(sapling)
         } else if let transparent = try? TransparentAddress(encoding: string, network: network) {
             self = .transparent(transparent)
+        } else if let tex = try? TexAddress(encoding: string, network: network) {
+            self = .tex(tex)
         } else {
             throw ZcashError.recipientInvalidInput
         }
@@ -259,6 +296,7 @@ public enum Recipient: Equatable, StringEncoded {
             case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), metadata.networkType)
             case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), metadata.networkType)
             case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded, networkType: metadata.networkType)), metadata.networkType)
+            case .tex: return (.tex(TexAddress(validatedEncoding: encoded)), metadata.networkType)
             }
         }
     }

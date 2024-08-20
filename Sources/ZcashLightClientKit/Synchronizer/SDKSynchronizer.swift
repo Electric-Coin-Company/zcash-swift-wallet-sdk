@@ -22,8 +22,12 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
+    private let exchangeRateUSDSubject = CurrentValueSubject<FiatCurrencyResult?, Never>(nil)
+    public var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { exchangeRateUSDSubject.eraseToAnyPublisher() }
+    
     let metrics: SDKMetrics
     public let logger: Logger
+    var tor: TorClient?
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -82,12 +86,14 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
-        
+
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
         }
 
-        Task(priority: .high) { [weak self] in await self?.subscribeToProcessorEvents(blockProcessor) }
+        Task(priority: .high) { [weak self] in
+            await self?.subscribeToProcessorEvents(blockProcessor)
+        }
     }
 
     deinit {
@@ -506,6 +512,41 @@ public class SDKSynchronizer: Synchronizer {
 
     public func getAccountBalance(accountIndex: Int = 0) async throws -> AccountBalance? {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(accountIndex)]
+    }
+
+    /// Fetches the latest ZEC-USD exchange rate.
+    public func refreshExchangeRateUSD() {
+        // ignore refresh request when one is already in flight
+        if let latestState = tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
+            return
+        }
+        
+        // broadcast cached value but update the state
+        if let cachedFiatCurrencyResult = tor?.cachedFiatCurrencyResult {
+            var fetchingState = cachedFiatCurrencyResult
+            fetchingState.state = .fetching
+            tor?.cachedFiatCurrencyResult = fetchingState
+            
+            exchangeRateUSDSubject.send(fetchingState)
+        }
+
+        Task {
+            do {
+                if tor == nil {
+                    logger.info("Bootstrapping Tor client for fetching exchange rates")
+                    tor = try await TorClient(torDir: initializer.torDirURL)
+                }
+                // broadcast new value in case of success
+                exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
+            } catch {
+                // broadcast cached value but update the state
+                var errorState = tor?.cachedFiatCurrencyResult
+                errorState?.state = .error
+                tor?.cachedFiatCurrencyResult = errorState
+
+                exchangeRateUSDSubject.send(errorState)
+            }
+        }
     }
 
     public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {

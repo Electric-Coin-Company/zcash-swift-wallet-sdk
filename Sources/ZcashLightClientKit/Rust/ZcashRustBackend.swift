@@ -9,6 +9,21 @@
 import Foundation
 import libzcashlc
 
+enum RustLogging: String {
+    /// The logs are completely disabled.
+    case off
+    /// Logs very serious errors.
+    case error
+    /// Logs hazardous situations.
+    case warn
+    /// Logs useful information.
+    case info
+    /// Logs lower priority information.
+    case debug
+    /// Logs very low priority, often extremely verbose, information.
+    case trace
+}
+
 struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
     let minimumShieldingConfirmations: UInt32 = 1
@@ -22,7 +37,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     let networkType: NetworkType
 
-    static var tracingEnabled = false
+    static var rustInitialized = false
+
     /// Creates instance of `ZcashRustBackend`.
     /// - Parameters:
     ///   - dbData: `URL` pointing to file where data database will be.
@@ -32,9 +48,17 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     ///   - spendParamsPath: `URL` pointing to spend parameters file.
     ///   - outputParamsPath: `URL` pointing to output parameters file.
     ///   - networkType: Network type to use.
-    ///   - enableTracing: this sets up whether the tracing system will dump logs onto the OSLogger system or not.
-    ///   **Important note:** this will enable the tracing **for all instances** of ZcashRustBackend, not only for this one.
-    init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType, enableTracing: Bool = false) {
+    ///   - logLevel: this sets up whether the tracing system will dump logs onto the OSLogger system or not.
+    ///     **Important note:** this will enable the tracing **for all instances** of ZcashRustBackend, not only for this one.
+    ///     This is ignored after the first ZcashRustBackend instance is created.
+    init(
+        dbData: URL,
+        fsBlockDbRoot: URL,
+        spendParamsPath: URL,
+        outputParamsPath: URL,
+        networkType: NetworkType,
+        logLevel: RustLogging = RustLogging.off
+    ) {
         self.dbData = dbData.osStr()
         self.fsBlockDbRoot = fsBlockDbRoot.osPathStr()
         self.spendParamsPath = spendParamsPath.osPathStr()
@@ -42,9 +66,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         self.networkType = networkType
         self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
 
-        if enableTracing && !Self.tracingEnabled {
-            Self.tracingEnabled = true
-            Self.enableTracing()
+        if !Self.rustInitialized {
+            Self.rustInitialized = true
+            Self.initializeRust(logLevel: logLevel)
         }
     }
 
@@ -182,13 +206,13 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
         let result = zcashlc_decrypt_and_store_transaction(
             dbData.0,
             dbData.1,
             txBytes,
             UInt(txBytes.count),
-            UInt32(minedHeight),
+            Int64(minedHeight ?? 0),
             networkType.networkId
         )
 
@@ -820,36 +844,106 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         return branchId
     }
-}
+    
+    @DBActor
+    func transactionDataRequests() async throws -> [TransactionDataRequest] {
+        let tDataRequestsPtr = zcashlc_transaction_data_requests(
+            dbData.0,
+            dbData.1,
+            networkType.networkId
+        )
 
-private extension ZcashRustBackend {
-    static func enableTracing() {
-        zcashlc_init_on_load(false)
+        guard let tDataRequestsPtr else {
+            throw ZcashError.rustTransactionDataRequests(lastErrorMessage(fallback: "`transactionDataRequests` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_transaction_data_requests(tDataRequestsPtr) }
+
+        var transactionDataRequests: [TransactionDataRequest] = []
+
+        for i in (0 ..< Int(tDataRequestsPtr.pointee.len)) {
+            let tDataRequestPtr = tDataRequestsPtr.pointee.ptr.advanced(by: i).pointee
+
+            var tDataRequest: TransactionDataRequest?
+            
+            if tDataRequestPtr.tag == 0 {
+                tDataRequest = TransactionDataRequest.getStatus(FfiTxId(tuple: tDataRequestPtr.get_status).array)
+            } else if tDataRequestPtr.tag == 1 {
+                tDataRequest = TransactionDataRequest.enhancement(FfiTxId(tuple: tDataRequestPtr.enhancement).array)
+            } else if tDataRequestPtr.tag == 2, let address = String(validatingUTF8: tDataRequestPtr.spends_from_address.address) {
+                let end = tDataRequestPtr.spends_from_address.block_range_end
+                let blockRangeEnd: UInt32? = end > UInt32.max || end == -1 ? nil : UInt32(end)
+                
+                tDataRequest = TransactionDataRequest.spendsFromAddress(
+                    SpendsFromAddress(
+                        address: address,
+                        blockRangeStart: tDataRequestPtr.spends_from_address.block_range_start,
+                        blockRangeEnd: blockRangeEnd
+                    )
+                )
+            }
+
+            if let tDataRequest {
+                transactionDataRequests.append(tDataRequest)
+            }
+        }
+
+        return transactionDataRequests
+    }
+    
+    @DBActor
+    func setTransactionStatus(txId: Data, status: TransactionStatus) async throws {
+        var transactionStatus = FfiTransactionStatus()
+        
+        switch status {
+        case .txidNotRecognized:
+            transactionStatus.tag = 0
+        case .notInMainChain:
+            transactionStatus.tag = 1
+        case .mined(let height):
+            transactionStatus.tag = 2
+            transactionStatus.mined = UInt32(height)
+        }
+
+        zcashlc_set_transaction_status(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            txId.bytes,
+            UInt(txId.bytes.count),
+            transactionStatus
+        )
     }
 }
 
 private extension ZcashRustBackend {
-    nonisolated func lastErrorMessage(fallback: String) -> String {
-        let errorLen = zcashlc_last_error_length()
-        defer { zcashlc_clear_last_error() }
-
-        if errorLen > 0 {
-            let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
-            defer { error.deallocate() }
-
-            zcashlc_error_message_utf8(error, errorLen)
-            if let errorMessage = String(validatingUTF8: error) {
-                return errorMessage
-            } else {
-                return fallback
-            }
-        } else {
-            return fallback
+    static func initializeRust(logLevel: RustLogging) {
+        logLevel.rawValue.utf8CString.withUnsafeBufferPointer { levelPtr in
+            zcashlc_init_on_load(levelPtr.baseAddress)
         }
     }
 }
 
-private extension URL {
+nonisolated func lastErrorMessage(fallback: String) -> String {
+    let errorLen = zcashlc_last_error_length()
+    defer { zcashlc_clear_last_error() }
+
+    if errorLen > 0 {
+        let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
+        defer { error.deallocate() }
+
+        zcashlc_error_message_utf8(error, errorLen)
+        if let errorMessage = String(validatingUTF8: error) {
+            return errorMessage
+        } else {
+            return fallback
+        }
+    } else {
+        return fallback
+    }
+}
+
+extension URL {
     func osStr() -> (String, UInt) {
         let path = self.absoluteString
         return (path, UInt(path.lengthOfBytes(using: .utf8)))

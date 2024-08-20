@@ -187,13 +187,35 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
         do {
             let rawTx = try await compactTxStreamer.getTransaction(txFilter)
-            return ZcashTransaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
+            
+            let isNotMined = rawTx.height == 0 || rawTx.height > UInt32.max
+            
+            return (
+                tx:
+                    ZcashTransaction.Fetched(
+                        rawID: txId,
+                        minedHeight: isNotMined ? nil : UInt32(rawTx.height),
+                        raw: rawTx.data
+                    ),
+                status: isNotMined ? .notInMainChain : .mined(Int(rawTx.height))
+            )
+        } catch let error as GRPCStatus {
+            if error.makeGRPCStatus().code == .notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("Transaction not found"), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions."), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceFetchTransactionFailed(serviceError)
+            }
         } catch {
             let serviceError = error.mapToServiceError()
             throw ZcashError.serviceFetchTransactionFailed(serviceError)
@@ -280,6 +302,21 @@ extension LightWalletGRPCService: LightWalletService {
         try await compactTxStreamer.getTreeState(id)
     }
 
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
+        let stream = compactTxStreamer.getTaddressTxids(request)
+        var iterator = stream.makeAsyncIterator()
+        
+        return AsyncThrowingStream() {
+            do {
+                guard let rawTransaction = try await iterator.next() else { return nil }
+                return rawTransaction
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceGetTaddressTxidsFailed(serviceError)
+            }
+        }
+    }
+    
     func closeConnection() {
         _ = channel.close()
     }

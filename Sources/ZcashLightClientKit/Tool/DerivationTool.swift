@@ -108,15 +108,29 @@ extension DerivationTool: KeyValidation {
     }
 
     public func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool {
-        backend.isValidUnifiedAddress(unifiedAddress)
+        DerivationTool.getAddressMetadata(unifiedAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.unified
+        } ?? false
     }
-    
+
     public func isValidTransparentAddress(_ tAddress: String) -> Bool {
-        backend.isValidTransparentAddress(tAddress)
+        DerivationTool.getAddressMetadata(tAddress).map {
+            $0.networkType == backend.networkType && (
+                $0.addressType == AddressType.p2pkh || $0.addressType == AddressType.p2sh
+            )
+        } ?? false
     }
-    
+
     public func isValidSaplingAddress(_ zAddress: String) -> Bool {
-        backend.isValidSaplingAddress(zAddress)
+        DerivationTool.getAddressMetadata(zAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.sapling
+        } ?? false
+    }
+
+    public func isValidTexAddress(_ texAddress: String) -> Bool {
+        DerivationTool.getAddressMetadata(texAddress).map {
+            $0.networkType == backend.networkType && $0.addressType == AddressType.tex
+        } ?? false
     }
 
     public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {
@@ -152,6 +166,16 @@ extension UnifiedAddress {
     init(validatedEncoding: String, networkType: NetworkType) {
         self.encoding = validatedEncoding
         self.networkType = networkType
+    }
+}
+
+extension TexAddress {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
     }
 }
 

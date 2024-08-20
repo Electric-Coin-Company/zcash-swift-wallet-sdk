@@ -13,6 +13,10 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     // MARK: Address metadata and validation
     static func getAddressMetadata(_ address: String) -> AddressMetadata? {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            return nil
+        }
+
         var networkId: UInt32 = 0
         var addrId: UInt32 = 0
         guard zcashlc_get_address_metadata(
@@ -63,14 +67,6 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         return typecodes
     }
 
-    func isValidSaplingAddress(_ address: String) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_sapling_address([CChar](address.utf8CString), networkType.networkId)
-    }
-
     func isValidSaplingExtendedFullViewingKey(_ key: String) -> Bool {
         guard !key.containsCStringNullBytesBeforeStringEnding() else {
             return false
@@ -85,22 +81,6 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         }
 
         return zcashlc_is_valid_sapling_extended_spending_key([CChar](key.utf8CString), networkType.networkId)
-    }
-
-    func isValidTransparentAddress(_ address: String) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_transparent_address([CChar](address.utf8CString), networkType.networkId)
-    }
-
-    func isValidUnifiedAddress(_ address: String) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_unified_address([CChar](address.utf8CString), networkType.networkId)
     }
 
     func isValidUnifiedFullViewingKey(_ key: String) -> Bool {

@@ -90,6 +90,7 @@ public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
         let dataDbURL: URL
+        let torDirURL: URL
         let generalStorageURL: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
@@ -115,6 +116,7 @@ public class Initializer {
     let fsBlockDbRoot: URL
     let generalStorageURL: URL
     let dataDbURL: URL
+    let torDirURL: URL
     let spendParamsURL: URL
     let outputParamsURL: URL
     let saplingParamsSourceURL: SaplingParamsSourceURL
@@ -158,14 +160,14 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         let container = DIContainer()
         
@@ -177,14 +179,14 @@ public class Initializer {
             fsBlockDbRoot: fsBlockDbRoot,
             generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             endpoint: endpoint,
             network: network,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
         
         self.init(
@@ -207,14 +209,14 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
@@ -224,14 +226,14 @@ public class Initializer {
             fsBlockDbRoot: fsBlockDbRoot,
             generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             endpoint: endpoint,
             network: network,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
 
         self.init(
@@ -264,6 +266,7 @@ public class Initializer {
         self.fsBlockDbRoot = urls.fsBlockDbRoot
         self.generalStorageURL = urls.generalStorageURL
         self.dataDbURL = urls.dataDbURL
+        self.torDirURL = urls.torDirURL
         self.endpoint = endpoint
         self.spendParamsURL = urls.spendParamsURL
         self.outputParamsURL = urls.outputParamsURL
@@ -286,18 +289,19 @@ public class Initializer {
         fsBlockDbRoot: URL,
         generalStorageURL: URL,
         dataDbURL: URL,
+        torDirURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
-        loggingPolicy: LoggingPolicy = .default(.debug),
-        enableBackendTracing: Bool = false
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) -> (URLs, ZcashError?) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
+            torDirURL: torDirURL,
             generalStorageURL: generalStorageURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL
@@ -313,8 +317,7 @@ public class Initializer {
             alias: alias,
             networkType: network.networkType,
             endpoint: endpoint,
-            loggingPolicy: loggingPolicy,
-            enableBackendTracing: enableBackendTracing
+            loggingPolicy: loggingPolicy
         )
         
         return (updatedURLs, parsingError)
@@ -362,6 +365,10 @@ public class Initializer {
             return .failure(.initializerCantUpdateURLWithAlias(urls.dataDbURL))
         }
 
+        guard let updatedTorDirURL = urls.torDirURL.updateLastPathComponent(with: alias) else {
+            return .failure(.initializerCantUpdateURLWithAlias(urls.torDirURL))
+        }
+
         guard let updatedSpendParamsURL = urls.spendParamsURL.updateLastPathComponent(with: alias) else {
             return .failure(.initializerCantUpdateURLWithAlias(urls.spendParamsURL))
         }
@@ -378,6 +385,7 @@ public class Initializer {
             URLs(
                 fsBlockDbRoot: updatedFsBlockDbRoot,
                 dataDbURL: updatedDataDbURL,
+                torDirURL: updatedTorDirURL,
                 generalStorageURL: updatedGeneralStorageURL,
                 spendParamsURL: updatedSpendParamsURL,
                 outputParamsURL: updateOutputParamsURL

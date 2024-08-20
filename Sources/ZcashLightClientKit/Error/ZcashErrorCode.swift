@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.1.7 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -41,6 +41,8 @@ public enum ZcashErrorCode: String {
     case serviceBlockStreamFailed = "ZSRVC0000"
     /// LightWalletService.getSubtreeRoots failed.
     case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
+    /// LightWalletService.getTaddressTxids failed.
+    case serviceGetTaddressTxidsFailed = "ZSRVC0010"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.
@@ -185,6 +187,12 @@ public enum ZcashErrorCode: String {
     case rustPutOrchardSubtreeRootsAllocationProblem = "ZRUST0060"
     /// Error from rust layer when calling ZcashRustBackend.putOrchardSubtreeRoots
     case rustPutOrchardSubtreeRoots = "ZRUST0061"
+    /// Error from rust layer when calling TorClient.init
+    case rustTorClientInit = "ZRUST0062"
+    /// Error from rust layer when calling TorClient.get
+    case rustTorClientGet = "ZRUST0063"
+    /// Error from rust layer when calling ZcashRustBackend.transactionDataRequests
+    case rustTransactionDataRequests = "ZRUST0064"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
@@ -289,6 +297,8 @@ public enum ZcashErrorCode: String {
     case unifiedAddressInvalidInput = "ZWLTP0006"
     /// Can't create `Recipient` because input is invalid.
     case recipientInvalidInput = "ZWLTP0007"
+    /// Can't create `TexAddress` because input is invalid.
+    case texAddressInvalidInput = "ZWLTP0008"
     /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
     case walletTransEncoderCreateTransactionMissingSaplingParams = "ZWLTE0001"
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.

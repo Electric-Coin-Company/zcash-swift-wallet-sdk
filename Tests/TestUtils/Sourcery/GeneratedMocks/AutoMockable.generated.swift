@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.4 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -1000,6 +1000,26 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getTaddressTxids
+
+    var getTaddressTxidsCallsCount = 0
+    var getTaddressTxidsCalled: Bool {
+        return getTaddressTxidsCallsCount > 0
+    }
+    var getTaddressTxidsReceivedRequest: TransparentAddressBlockFilter?
+    var getTaddressTxidsReturnValue: AsyncThrowingStream<RawTransaction, Error>!
+    var getTaddressTxidsClosure: ((TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>)?
+
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
+        getTaddressTxidsCallsCount += 1
+        getTaddressTxidsReceivedRequest = request
+        if let closure = getTaddressTxidsClosure {
+            return closure(request)
+        } else {
+            return getTaddressTxidsReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -1070,6 +1090,24 @@ class LoggerMock: Logger {
 
     init(
     ) {
+    }
+
+    // MARK: - maxLogLevel
+
+    var maxLogLevelCallsCount = 0
+    var maxLogLevelCalled: Bool {
+        return maxLogLevelCallsCount > 0
+    }
+    var maxLogLevelReturnValue: OSLogger.LogLevel?
+    var maxLogLevelClosure: (() -> OSLogger.LogLevel?)?
+
+    func maxLogLevel() -> OSLogger.LogLevel? {
+        maxLogLevelCallsCount += 1
+        if let closure = maxLogLevelClosure {
+            return closure()
+        } else {
+            return maxLogLevelReturnValue
+        }
     }
 
     // MARK: - debug
@@ -1293,6 +1331,10 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingEventStream }
     }
     var underlyingEventStream: AnyPublisher<SynchronizerEvent, Never>!
+    var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> {
+        get { return underlyingExchangeRateUSDStream }
+    }
+    var underlyingExchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never>!
     var transactions: [ZcashTransaction.Overview] {
         get async { return underlyingTransactions }
     }
@@ -1778,6 +1820,19 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getAccountBalanceAccountIndexReturnValue
         }
+    }
+
+    // MARK: - refreshExchangeRateUSD
+
+    var refreshExchangeRateUSDCallsCount = 0
+    var refreshExchangeRateUSDCalled: Bool {
+        return refreshExchangeRateUSDCallsCount > 0
+    }
+    var refreshExchangeRateUSDClosure: (() -> Void)?
+
+    func refreshExchangeRateUSD() {
+        refreshExchangeRateUSDCallsCount += 1
+        refreshExchangeRateUSDClosure!()
     }
 
     // MARK: - rewind
@@ -3026,6 +3081,47 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         } else {
             return latestCachedBlockHeightReturnValue
         }
+    }
+
+    // MARK: - transactionDataRequests
+
+    var transactionDataRequestsThrowableError: Error?
+    var transactionDataRequestsCallsCount = 0
+    var transactionDataRequestsCalled: Bool {
+        return transactionDataRequestsCallsCount > 0
+    }
+    var transactionDataRequestsReturnValue: [TransactionDataRequest]!
+    var transactionDataRequestsClosure: (() async throws -> [TransactionDataRequest])?
+
+    func transactionDataRequests() async throws -> [TransactionDataRequest] {
+        if let error = transactionDataRequestsThrowableError {
+            throw error
+        }
+        transactionDataRequestsCallsCount += 1
+        if let closure = transactionDataRequestsClosure {
+            return try await closure()
+        } else {
+            return transactionDataRequestsReturnValue
+        }
+    }
+
+    // MARK: - setTransactionStatus
+
+    var setTransactionStatusTxIdStatusThrowableError: Error?
+    var setTransactionStatusTxIdStatusCallsCount = 0
+    var setTransactionStatusTxIdStatusCalled: Bool {
+        return setTransactionStatusTxIdStatusCallsCount > 0
+    }
+    var setTransactionStatusTxIdStatusReceivedArguments: (txId: Data, status: TransactionStatus)?
+    var setTransactionStatusTxIdStatusClosure: ((Data, TransactionStatus) async throws -> Void)?
+
+    func setTransactionStatus(txId: Data, status: TransactionStatus) async throws {
+        if let error = setTransactionStatusTxIdStatusThrowableError {
+            throw error
+        }
+        setTransactionStatusTxIdStatusCallsCount += 1
+        setTransactionStatusTxIdStatusReceivedArguments = (txId: txId, status: status)
+        try await setTransactionStatusTxIdStatusClosure!(txId, status)
     }
 
 }
