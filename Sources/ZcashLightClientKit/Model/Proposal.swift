@@ -35,7 +35,7 @@ public extension Proposal {
     /// passed to `Synchronizer.createProposedTransactions`. It should never be called in
     /// production code.
     static func testOnlyFakeProposal(totalFee: UInt64) -> Self {
-        var ffiProposal = FfiProposal()
+        let ffiProposal = FfiProposal()
         var balance = FfiTransactionBalance()
 
         balance.feeRequired = totalFee

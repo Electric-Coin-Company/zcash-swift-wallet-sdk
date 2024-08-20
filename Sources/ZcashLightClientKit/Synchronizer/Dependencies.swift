@@ -193,6 +193,7 @@ enum Dependencies {
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
             let transactionRepository = di.resolve(TransactionRepository.self)
             let metrics = di.resolve(SDKMetrics.self)
+            let service = di.resolve(LightWalletService.self)
             let logger = di.resolve(Logger.self)
 
             return BlockEnhancerImpl(
@@ -200,6 +201,7 @@ enum Dependencies {
                 rustBackend: rustBackend,
                 transactionRepository: transactionRepository,
                 metrics: metrics,
+                service: service,
                 logger: logger
             )
         }

@@ -41,6 +41,8 @@ public enum ZcashErrorCode: String {
     case serviceBlockStreamFailed = "ZSRVC0000"
     /// LightWalletService.getSubtreeRoots failed.
     case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
+    /// LightWalletService.getTaddressTxids failed.
+    case serviceGetTaddressTxidsFailed = "ZSRVC0010"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.
@@ -189,6 +191,8 @@ public enum ZcashErrorCode: String {
     case rustTorClientInit = "ZRUST0062"
     /// Error from rust layer when calling TorClient.get
     case rustTorClientGet = "ZRUST0063"
+    /// Error from rust layer when calling ZcashRustBackend.transactionDataRequests
+    case rustTransactionDataRequests = "ZRUST0064"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
