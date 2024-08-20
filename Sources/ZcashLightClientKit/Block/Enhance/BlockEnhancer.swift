@@ -113,9 +113,15 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
 
                         case .spendsFromAddress(let sfa):
+                            guard let blockRangeEnd = sfa.blockRangeEnd else {
+                                logger.error("spendsFromAddress \(sfa) is missing blockRangeEnd, ignoring the request.")
+                                continue
+                            }
+                            
                             var filter = TransparentAddressBlockFilter()
                             filter.address = sfa.address
-                            filter.range = BlockRange(startHeight: Int(sfa.blockRangeStart), endHeight: Int(sfa.blockRangeEnd - 1))
+                            filter.range = BlockRange(startHeight: Int(sfa.blockRangeStart), endHeight: Int(blockRangeEnd - 1))
+
                             let stream = service.getTaddressTxids(filter)
 
                             for try await rawTransaction in stream {

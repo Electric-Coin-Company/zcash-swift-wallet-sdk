@@ -30,7 +30,7 @@ extension UpdateSubtreeRootsAction: Action {
         
         logger.debug("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
         let stream = service.getSubtreeRoots(request)
-        
+
         var saplingRoots: [SubtreeRoot] = []
         
         do {
@@ -39,6 +39,8 @@ extension UpdateSubtreeRootsAction: Action {
             }
         } catch ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut) {
             throw ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
+        } catch {
+            await context.update(state: .updateChainTip)
         }
 
         logger.debug("Sapling tree has \(saplingRoots.count) subtrees")

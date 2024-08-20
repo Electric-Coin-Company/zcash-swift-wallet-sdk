@@ -208,6 +208,10 @@ extension LightWalletGRPCService: LightWalletService {
         } catch let error as GRPCStatus {
             if error.makeGRPCStatus().code == .notFound {
                 return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("Transaction not found"), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions."), notFound {
+                return (tx: nil, .txidNotRecognized)
             } else {
                 let serviceError = error.mapToServiceError()
                 throw ZcashError.serviceFetchTransactionFailed(serviceError)

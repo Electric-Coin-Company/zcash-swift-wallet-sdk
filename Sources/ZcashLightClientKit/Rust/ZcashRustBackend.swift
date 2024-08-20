@@ -871,11 +871,14 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             } else if tDataRequestPtr.tag == 1 {
                 tDataRequest = TransactionDataRequest.enhancement(FfiTxId(tuple: tDataRequestPtr.enhancement).array)
             } else if tDataRequestPtr.tag == 2, let address = String(validatingUTF8: tDataRequestPtr.spends_from_address.address) {
+                let end = tDataRequestPtr.spends_from_address.block_range_end
+                let blockRangeEnd: UInt32? = end > UInt32.max || end == -1 ? nil : UInt32(end)
+                
                 tDataRequest = TransactionDataRequest.spendsFromAddress(
                     SpendsFromAddress(
                         address: address,
                         blockRangeStart: tDataRequestPtr.spends_from_address.block_range_start,
-                        blockRangeEnd: tDataRequestPtr.spends_from_address.block_range_end
+                        blockRangeEnd: blockRangeEnd
                     )
                 )
             }

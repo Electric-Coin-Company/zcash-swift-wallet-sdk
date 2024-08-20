@@ -10,7 +10,7 @@ import Foundation
 struct SpendsFromAddress: Equatable {
     let address: String
     let blockRangeStart: UInt32
-    let blockRangeEnd: Int64
+    let blockRangeEnd: UInt32?
 }
 
 enum TransactionDataRequest: Equatable {
