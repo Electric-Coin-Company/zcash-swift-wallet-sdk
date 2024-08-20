@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.0 - 2024-08-20
+
 ## Added
 - `Synchronizer.exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never>`,
   which returns the currently-cached USD/ZEC exchange rate, or `nil` if it has not yet been
@@ -26,7 +28,7 @@ Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2562500.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2610000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2617500.json
 ````
 
 # 2.1.12 - 2024-07-04
