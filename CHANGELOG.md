@@ -6,6 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.1 - 2024-08-21
+
+## Fixed
+- This release fixes an error in database migration logic that could cause problems
+  when upgrading certain wallets from versions in the 2.1.x range.
+
 # 2.2.0 - 2024-08-20
 
 ## Added
