@@ -10,6 +10,51 @@
       }
     },
     {
+      "identity" : "kractivityindicatorview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krimpedance/KRActivityIndicatorView.git",
+      "state" : {
+        "revision" : "925de8a9c15d9d7c2ca746dbe198549241b8b2b2",
+        "version" : "3.0.8"
+      }
+    },
+    {
+      "identity" : "krprogresshud",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krimpedance/KRProgressHUD.git",
+      "state" : {
+        "revision" : "2d6b0246682fce2c8e226235c9cd6065d0b95e00",
+        "version" : "3.4.8"
+      }
+    },
+    {
+      "identity" : "mnemonicswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/zcash-hackworks/MnemonicSwift.git",
+      "state" : {
+        "revision" : "716a2c32ac2bbd8a1499ac834077df42b75edc85",
+        "version" : "2.2.4"
+      }
+    },
+    {
+      "identity" : "notificationbubbles",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pacu/NotificationBubbles.git",
+      "state" : {
+        "revision" : "ae6d47f3a415c9eec5daa8e04d040c0e68654f00",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "paginatedtableview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dh-ecc/PaginatedTableView",
+      "state" : {
+        "branch" : "master",
+        "revision" : "a3fd9f079d6c9ac3095ee3ef2369a68c29ba04db"
+      }
+    },
+    {
       "identity" : "sqlite.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/stephencelis/SQLite.swift.git",
@@ -34,6 +79,15 @@
       "state" : {
         "revision" : "ee97538f5b81ae89698fd95938896dec5217b148",
         "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "60f13f60c4d093691934dc6cfdf5f508ada1f894",
+        "version" : "2.6.0"
       }
     },
     {

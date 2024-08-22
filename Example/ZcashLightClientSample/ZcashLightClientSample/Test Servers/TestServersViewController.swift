@@ -55,13 +55,13 @@ class TestServersViewController: UIViewController {
         
         var counter = 1
         endpoints.forEach {
-            resultStr += "\(counter). \($0.host):\($0.port)\n"
+            resultStr = "\(resultStr) \(counter). \($0.host):\($0.port)\n"
             counter += 1
         }
         
-        resultStr += "\n"
+        resultStr = "\(resultStr) \n"
         
-        resultStr += "time to evaluate all: \(Date().timeIntervalSince1970 - startTime)s"
+        resultStr = "\(resultStr) time to evaluate all: \(Date().timeIntervalSince1970 - startTime)s"
         
         resultsLabel.text = resultStr
     }
