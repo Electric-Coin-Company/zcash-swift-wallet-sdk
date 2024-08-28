@@ -654,8 +654,8 @@ public class SDKSynchronizer: Synchronizer {
 
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThreshold: Double = 300.0,
-        fetchThreshold: Double = 60.0,
+        latencyThresholdMillis: Double = 300.0,
+        fetchThresholdSeconds: Double = 60.0,
         nBlocks: Int = 100,
         kServers: Int = 3,
         network: NetworkType = .mainnet
@@ -686,7 +686,7 @@ public class SDKSynchronizer: Synchronizer {
                     port: $0.port,
                     secure: $0.secure,
                     singleCallTimeout: 5000,
-                    streamingCallTimeout: Int64(fetchThreshold) * 1000
+                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000
                 ),
                 url: "\($0.host):\($0.port)"
             )
@@ -736,34 +736,34 @@ public class SDKSynchronizer: Synchronizer {
                 }
                 
                 // rule out mismatch of consensus branch IDs
-                if let localBranchID = await blockProcessor.consensusBranchIdFor(Int32(info.blockHeight)) {
-                    guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
-                        continue
-                    }
-                    
-                    guard remoteBranchID == localBranchID else {
-                        continue
-                    }
-                } else {
+                guard let localBranchID = await blockProcessor.consensusBranchIdFor(Int32(info.blockHeight)) else {
+                    continue
+                }
+
+                guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
                     continue
                 }
                 
+                guard remoteBranchID == localBranchID else {
+                    continue
+                }
+
                 // rule out syncing server
-                guard info.blockHeight + 100 >= info.estimatedHeight else {
+                guard info.blockHeight + UInt64(nBlocks) >= info.estimatedHeight else {
                     continue
                 }
                 
                 tmpResults[result.id] = result
             }
 
-            // sort the server responses by mean
-            let sortedServers = tmpResults.sorted {
-                $0.value.mean < $1.value.mean
+            // rule out all means above latencyThreshold
+            let sortedUnderThreshold = tmpResults.compactMap {
+                $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
             }
 
-            // rule out all means above latencyThreshold
-            let sortedUnderThreshold = sortedServers.compactMap {
-                $0.value.mean < (latencyThreshold / 1000.0) ? $0 : nil
+            // sort the server responses by mean
+            let sortedServers = sortedUnderThreshold.sorted {
+                $0.value.mean < $1.value.mean
             }
 
             // retain only k servers
@@ -796,7 +796,7 @@ public class SDKSynchronizer: Synchronizer {
                 let blockTime = endTime - startTime
 
                 // rule out servers that can't fetch N blocks under the fetchThreshold
-                if blockTime < fetchThreshold {
+                if blockTime < fetchThresholdSeconds {
                     var value = serviceDict.value
                     value.blockTime = blockTime
                     

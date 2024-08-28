@@ -370,8 +370,8 @@ public protocol Synchronizer: AnyObject {
     
     func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThreshold: Double,
-        fetchThreshold: Double,
+        latencyThresholdMillis: Double,
+        fetchThresholdSeconds: Double,
         nBlocks: Int,
         kServers: Int,
         network: NetworkType
