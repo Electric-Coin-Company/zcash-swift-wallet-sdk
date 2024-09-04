@@ -652,11 +652,19 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.isSeedRelevantToAnyDerivedAccount(seed: seed)
     }
 
+    /// Takes the list of endpoints and runs it through a series of checks to evaluate its performance.
+    /// - Parameters:
+    ///    - endpoints: Array of endpoints to evaluate.
+    ///    - latencyThresholdMillis: The mean latency of `getInfo` and `getTheLatestHeight` calls must be below this threshold. The default is 300 ms.
+    ///    - fetchThresholdSeconds: The time to download 100 blocks from the stream must be below this threshold. The default is 60 seconds.
+    ///    - amountOfBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
+    ///    - kServers: The expected number of endpoints in the output. The default is 3.
+    ///    - network: Mainnet or testnet. The default is mainnet.
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         latencyThresholdMillis: Double = 300.0,
         fetchThresholdSeconds: Double = 60.0,
-        nBlocks: Int = 100,
+        amountOfBlocksToFetch: UInt64 = 100,
         kServers: Int = 3,
         network: NetworkType = .mainnet
     ) async -> [LightWalletEndpoint] {
@@ -748,8 +756,11 @@ public class SDKSynchronizer: Synchronizer {
                     continue
                 }
 
-                // rule out syncing server
-                guard info.blockHeight + UInt64(nBlocks) >= info.estimatedHeight else {
+                // Rule out servers that are syncing, stuck, or probably on the wrong fork.
+                // To avoid falsely ruling out all servers this can only be a very loose check
+                // (i.e. `ZcashSDK.syncedThresholdBlocks` should not be too small),
+                // because `info.estimatedHeight` may be quite inaccurate.
+                guard info.blockHeight + ZcashSDK.syncedThresholdBlocks >= info.estimatedHeight else {
                     continue
                 }
                 
@@ -757,12 +768,12 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             // rule out all means above latencyThreshold
-            let sortedUnderThreshold = tmpResults.compactMap {
+            let underThreshold = tmpResults.compactMap {
                 $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
             }
 
             // sort the server responses by mean
-            let sortedServers = sortedUnderThreshold.sorted {
+            let sortedUnderThreshold = underThreshold.sorted {
                 $0.value.mean < $1.value.mean
             }
 
@@ -784,7 +795,7 @@ public class SDKSynchronizer: Synchronizer {
             
             let service = serviceDict.value.service
             
-            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - 100), endHeight: BlockHeight(info.blockHeight))
+            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - amountOfBlocksToFetch), endHeight: BlockHeight(info.blockHeight))
             
             do {
                 let startTime = Date().timeIntervalSince1970
@@ -795,7 +806,7 @@ public class SDKSynchronizer: Synchronizer {
                 
                 let blockTime = endTime - startTime
 
-                // rule out servers that can't fetch N blocks under the fetchThreshold
+                // rule out servers that can't fetch 100 blocks under fetchThresholdSeconds
                 if blockTime < fetchThresholdSeconds {
                     var value = serviceDict.value
                     value.blockTime = blockTime

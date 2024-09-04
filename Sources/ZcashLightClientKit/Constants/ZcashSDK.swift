@@ -147,6 +147,9 @@ public enum ZcashSDK {
     public static let outputParamFilename = "sapling-output.params"
     // swiftlint:disable:next force_unwrapping
     public static let outputParamFileURL = URL(string: cloudParameterURL)!.appendingPathComponent(outputParamFilename)
+
+    /// A constant that helps determine if a server’s chain tip is so far away from the estimated height that we consider the server out of sync
+    public static let syncedThresholdBlocks = UInt64(288)
 }
 
 public protocol NetworkConstants {
