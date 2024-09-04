@@ -656,15 +656,15 @@ public class SDKSynchronizer: Synchronizer {
     /// - Parameters:
     ///    - endpoints: Array of endpoints to evaluate.
     ///    - latencyThresholdMillis: The mean latency of `getInfo` and `getTheLatestHeight` calls must be below this threshold. The default is 300 ms.
-    ///    - fetchThresholdSeconds: The time to download 100 blocks from the stream must be below this threshold. The default is 60 seconds.
-    ///    - amountOfBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
+    ///    - fetchThresholdSeconds: The time to download `nBlocksToFetch` blocks from the stream must be below this threshold. The default is 60 seconds.
+    ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
     ///    - kServers: The expected number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         latencyThresholdMillis: Double = 300.0,
         fetchThresholdSeconds: Double = 60.0,
-        amountOfBlocksToFetch: UInt64 = 100,
+        nBlocksToFetch: UInt64 = 100,
         kServers: Int = 3,
         network: NetworkType = .mainnet
     ) async -> [LightWalletEndpoint] {
@@ -795,15 +795,21 @@ public class SDKSynchronizer: Synchronizer {
             
             let service = serviceDict.value.service
             
-            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - amountOfBlocksToFetch), endHeight: BlockHeight(info.blockHeight))
+            guard info.blockHeight >= nBlocksToFetch else {
+                continue
+            }
+            
+            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - nBlocksToFetch), endHeight: BlockHeight(info.blockHeight))
             
             do {
                 let startTime = Date().timeIntervalSince1970
                 for try await block in stream {
-                    print("\(block.height)")
+                    if Date().timeIntervalSince1970 - startTime > fetchThresholdSeconds {
+                        break
+                    }
                 }
+
                 let endTime = Date().timeIntervalSince1970
-                
                 let blockTime = endTime - startTime
 
                 // rule out servers that can't fetch 100 blocks under fetchThresholdSeconds
