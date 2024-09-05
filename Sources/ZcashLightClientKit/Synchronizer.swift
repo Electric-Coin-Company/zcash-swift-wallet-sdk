@@ -380,7 +380,7 @@ public protocol Synchronizer: AnyObject {
         endpoints: [LightWalletEndpoint],
         latencyThresholdMillis: Double,
         fetchThresholdSeconds: Double,
-        nBlocksToFetch: Int,
+        nBlocksToFetch: UInt64,
         kServers: Int,
         network: NetworkType
     ) async -> [LightWalletEndpoint]

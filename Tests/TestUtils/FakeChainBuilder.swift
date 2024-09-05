@@ -50,7 +50,6 @@ enum FakeChainBuilder {
 
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
 
-
         try darksideWallet.addTreeState(
             // swiftlint:disable line_length
             try TreeState(jsonString:

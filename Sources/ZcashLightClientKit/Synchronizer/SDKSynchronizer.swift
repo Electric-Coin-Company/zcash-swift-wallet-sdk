@@ -733,7 +733,7 @@ public class SDKSynchronizer: Synchronizer {
             
             for await result in group {
                 // rule out results where calls failed
-                guard let info = result.info, let _ = result.latestBlockHeight else {
+                guard let info = result.info, result.latestBlockHeight != nil else {
                     continue
                 }
                 
@@ -803,16 +803,18 @@ public class SDKSynchronizer: Synchronizer {
             
             do {
                 let startTime = Date().timeIntervalSince1970
-                for try await block in stream {
-                    if Date().timeIntervalSince1970 - startTime > fetchThresholdSeconds {
+                var endTime = startTime
+                for try await _ in stream {
+                    endTime = Date().timeIntervalSince1970
+                    if endTime - startTime >= fetchThresholdSeconds {
                         break
                     }
                 }
 
-                let endTime = Date().timeIntervalSince1970
+                endTime = Date().timeIntervalSince1970
                 let blockTime = endTime - startTime
 
-                // rule out servers that can't fetch 100 blocks under fetchThresholdSeconds
+                // rule out servers that can't fetch `nBlocksToFetch` blocks under fetchThresholdSeconds
                 if blockTime < fetchThresholdSeconds {
                     var value = serviceDict.value
                     value.blockTime = blockTime
