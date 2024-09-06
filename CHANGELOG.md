@@ -6,12 +6,24 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.2 - 2024-09-06
+
 ## Added
 
 ### [#1466] Choose the best server by testing responses from multiple hosts
 - Synchronizer's `evaluateBestOf(endpoints: [], ...) async -> [LightWalletEndpoint]` method takes a list of endpoints and evaluates top k best performant servers. 
 
 - `TransactionEntity` extended to access `is_shielding` from the DB and provides the value to the clients. 
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2620000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2635000.json
+````
 
 # 2.2.1 - 2024-08-21
 
