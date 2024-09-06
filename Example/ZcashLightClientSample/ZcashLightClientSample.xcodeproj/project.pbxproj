@@ -53,6 +53,8 @@
 		343CB69829CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343CB69629CDC05D0063BF41 /* SyncBlocksListViewController.swift */; };
 		34CC8FD029CDC212001E06E9 /* SynchronizerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */; };
 		34CC8FD129CDC212001E06E9 /* SynchronizerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */; };
+		9EEFA3BF2C380DB900467ABC /* TestServersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEFA3BE2C380DB900467ABC /* TestServersViewController.swift */; };
+		9EEFA3C02C380DB900467ABC /* TestServersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEFA3BE2C380DB900467ABC /* TestServersViewController.swift */; };
 		F94912632790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */; };
 		F9D63D1F27CD114A00F4DC5F /* ZcashLightClientKit in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D1E27CD114A00F4DC5F /* ZcashLightClientKit */; };
 		F9D63D2227CD125300F4DC5F /* KRProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D2127CD125300F4DC5F /* KRProgressHUD */; };
@@ -103,6 +105,7 @@
 		34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizerCell.swift; sourceTree = "<group>"; };
 		372CC57DB80CC242BA556A30 /* Pods_ZcashLightClientSampleUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		541D36743362A797BF085D14 /* Pods_ZcashLightClientSample_Mainnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample_Mainnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9EEFA3BE2C380DB900467ABC /* TestServersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestServersViewController.swift; sourceTree = "<group>"; };
 		EBA186B246C4205F9BF71EED /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ZcashLightClientSample-Mainnet-Info.plist"; sourceTree = SOURCE_ROOT; };
 		F9D63D1D27CD103E00F4DC5F /* ZcashLightClientKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ZcashLightClientKit; path = ../..; sourceTree = "<group>"; };
@@ -219,6 +222,7 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				9EEFA3BD2C380D7900467ABC /* Test Servers */,
 				0D76121426B1D5D7001CA417 /* Constants */,
 				0D1BE47D2581933C00F78BE3 /* Get UTXOs */,
 				0D6CE8BB252E3C1A0005D707 /* Sapling Parameters */,
@@ -298,6 +302,14 @@
 				0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */,
 			);
 			path = "Paginated Transactions";
+			sourceTree = "<group>";
+		};
+		9EEFA3BD2C380D7900467ABC /* Test Servers */ = {
+			isa = PBXGroup;
+			children = (
+				9EEFA3BE2C380DB900467ABC /* TestServersViewController.swift */,
+			);
+			path = "Test Servers";
 			sourceTree = "<group>";
 		};
 		F93EF550279077B70063E43A /* Frameworks */ = {
@@ -528,6 +540,7 @@
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
 				34CC8FD029CDC212001E06E9 /* SynchronizerCell.swift in Sources */,
 				343CB69729CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */,
+				9EEFA3BF2C380DB900467ABC /* TestServersViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -560,6 +573,7 @@
 				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,
 				34CC8FD129CDC212001E06E9 /* SynchronizerCell.swift in Sources */,
 				343CB69829CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */,
+				9EEFA3C02C380DB900467ABC /* TestServersViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

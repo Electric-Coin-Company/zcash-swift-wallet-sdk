@@ -367,6 +367,23 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - parameter seed: byte array of the seed
     func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
+    
+    /// Takes the list of endpoints and runs it through a series of checks to evaluate its performance.
+    /// - Parameters:
+    ///    - endpoints: Array of endpoints to evaluate.
+    ///    - latencyThresholdMillis: The mean latency of `getInfo` and `getTheLatestHeight` calls must be below this threshold. The default is 300 ms.
+    ///    - fetchThresholdSeconds: The time to download `nBlocksToFetch` blocks from the stream must be below this threshold. The default is 60 seconds.
+    ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
+    ///    - kServers: The expected number of endpoints in the output. The default is 3.
+    ///    - network: Mainnet or testnet. The default is mainnet.
+    func evaluateBestOf(
+        endpoints: [LightWalletEndpoint],
+        latencyThresholdMillis: Double,
+        fetchThresholdSeconds: Double,
+        nBlocksToFetch: UInt64,
+        kServers: Int,
+        network: NetworkType
+    ) async -> [LightWalletEndpoint]
 }
 
 public enum SyncStatus: Equatable {
