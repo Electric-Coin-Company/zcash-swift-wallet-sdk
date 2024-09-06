@@ -811,7 +811,6 @@ public class SDKSynchronizer: Synchronizer {
                     }
                 }
 
-                endTime = Date().timeIntervalSince1970
                 let blockTime = endTime - startTime
 
                 // rule out servers that can't fetch `nBlocksToFetch` blocks under fetchThresholdSeconds
