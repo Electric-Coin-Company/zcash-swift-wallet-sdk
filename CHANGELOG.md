@@ -6,6 +6,23 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.3 - 2024-09-17
+
+## Changed
+
+### [#1488] Resolve build issues with SQLight
+- SQLight's `Expression` is no longer a unique identifier, namespace needed to be added as a prefix to it. Buildability solved with `SQLight.Expression` instead.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2637500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2647500.json
+````
+
 # 2.2.2 - 2024-09-06
 
 ## Added
