@@ -10,8 +10,8 @@ import SQLite
 
 class TransactionSQLDAO: TransactionRepository {
     enum NotesTableStructure {
-        static let transactionID = Expression<Int>("tx")
-        static let memo = Expression<Blob>("memo")
+        static let transactionID = SQLite.Expression<Int>("tx")
+        static let memo = SQLite.Expression<Blob>("memo")
     }
 
     let dbProvider: ConnectionProvider
