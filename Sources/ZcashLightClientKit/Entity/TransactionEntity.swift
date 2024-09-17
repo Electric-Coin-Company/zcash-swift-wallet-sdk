@@ -102,15 +102,15 @@ public enum ZcashTransaction {
 
 extension ZcashTransaction.Output {
     enum Column {
-        static let rawID = Expression<Blob>("txid")
-        static let pool = Expression<Int>("output_pool")
-        static let index = Expression<Int>("output_index")
-        static let toAccount = Expression<Int?>("to_account_id")
-        static let fromAccount = Expression<Int?>("from_account_id")
-        static let toAddress = Expression<String?>("to_address")
-        static let value = Expression<Int64>("value")
-        static let isChange = Expression<Bool>("is_change")
-        static let memo = Expression<Blob?>("memo")
+        static let rawID = SQLite.Expression<Blob>("txid")
+        static let pool = SQLite.Expression<Int>("output_pool")
+        static let index = SQLite.Expression<Int>("output_index")
+        static let toAccount = SQLite.Expression<Int?>("to_account_id")
+        static let fromAccount = SQLite.Expression<Int?>("from_account_id")
+        static let toAddress = SQLite.Expression<String?>("to_address")
+        static let value = SQLite.Expression<Int64>("value")
+        static let isChange = SQLite.Expression<Bool>("is_change")
+        static let memo = SQLite.Expression<Blob?>("memo")
     }
 
     init(row: Row) throws {
@@ -146,21 +146,21 @@ extension ZcashTransaction.Output {
 
 extension ZcashTransaction.Overview {
     enum Column {
-        static let accountId = Expression<Int>("account_id")
-        static let minedHeight = Expression<BlockHeight?>("mined_height")
-        static let index = Expression<Int?>("tx_index")
-        static let rawID = Expression<Blob>("txid")
-        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
-        static let raw = Expression<Blob?>("raw")
-        static let value = Expression<Int64>("account_balance_delta")
-        static let fee = Expression<Int64?>("fee_paid")
-        static let hasChange = Expression<Bool>("has_change")
-        static let sentNoteCount = Expression<Int>("sent_note_count")
-        static let receivedNoteCount = Expression<Int>("received_note_count")
-        static let isShielding = Expression<Bool>("is_shielding")
-        static let memoCount = Expression<Int>("memo_count")
-        static let blockTime = Expression<Int64?>("block_time")
-        static let expiredUnmined = Expression<Bool?>("expired_unmined")
+        static let accountId = SQLite.Expression<Int>("account_id")
+        static let minedHeight = SQLite.Expression<BlockHeight?>("mined_height")
+        static let index = SQLite.Expression<Int?>("tx_index")
+        static let rawID = SQLite.Expression<Blob>("txid")
+        static let expiryHeight = SQLite.Expression<BlockHeight?>("expiry_height")
+        static let raw = SQLite.Expression<Blob?>("raw")
+        static let value = SQLite.Expression<Int64>("account_balance_delta")
+        static let fee = SQLite.Expression<Int64?>("fee_paid")
+        static let hasChange = SQLite.Expression<Bool>("has_change")
+        static let sentNoteCount = SQLite.Expression<Int>("sent_note_count")
+        static let receivedNoteCount = SQLite.Expression<Int>("received_note_count")
+        static let isShielding = SQLite.Expression<Bool>("is_shielding")
+        static let memoCount = SQLite.Expression<Int>("memo_count")
+        static let blockTime = SQLite.Expression<Int64?>("block_time")
+        static let expiredUnmined = SQLite.Expression<Bool?>("expired_unmined")
     }
 
     init(row: Row) throws {
