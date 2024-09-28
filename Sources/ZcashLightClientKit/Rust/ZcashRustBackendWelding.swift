@@ -21,6 +21,17 @@ public enum DbInitResult {
     case seedNotRelevant
 }
 
+/// Enumeration of potential return states for database rewind.
+///
+public enum RewindResult {
+    /// The rewind succeeded. The associated block height indicates the maximum height of
+    /// stored block data retained by the database; this may be less than the block height that
+    /// was requested.
+    case success(BlockHeight)
+    /// The rewind did not succeed but the caller may re-attempt given the associated block height.
+    case requestedHeightTooLow(BlockHeight)
+}
+
 protocol ZcashRustBackendWelding {
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Int32]
@@ -63,18 +74,6 @@ protocol ZcashRustBackendWelding {
     ///     - `rustGetCurrentAddress` if rust layer returns error.
     ///     - `rustGetCurrentAddressInvalidAddress` if generated unified address isn't valid.
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress
-
-    /// Wallets might need to be rewound because of a reorg, or by user request.
-    /// There are times where the wallet could get out of sync for many reasons and
-    /// users might be asked to rescan their wallets in order to fix that. This function
-    /// returns the nearest height where a rewind is possible. Currently pruning gets rid
-    /// of sapling witnesses older than 100 blocks. So in order to reconstruct the witness
-    /// tree that allows to spend notes from the given wallet the rewind can't be more than
-    /// 100 blocks or back to the oldest unspent note that this wallet contains.
-    /// - parameter height: height you would like to rewind to.
-    /// - Returns: the blockheight of the nearest rewind height.
-    /// - Throws: `rustGetNearestRewindHeight`.
-    func getNearestRewindHeight(height: Int32) async throws -> Int32
 
     /// Returns a newly-generated unified payment address for the specified account, with the next available diversifier.
     /// - parameter account: index of the given account
@@ -123,11 +122,11 @@ protocol ZcashRustBackendWelding {
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter height: height to rewind to.
     /// - Throws: `rustRewindToHeight` if rust layer returns error.
-    func rewindToHeight(height: Int32) async throws
+    func rewindToHeight(height: BlockHeight) async throws -> RewindResult
 
     /// Resets the state of the FsBlock database to only contain block and transaction information up to the given height.
     /// - Note: this does not delete the files. Only rolls back the database.
-    /// - parameter height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use `getNearestRewindHeight` when unsure
+    /// - parameter height: height to rewind to. This should be the height returned by a successful `rewindToHeight` call.
     /// - Throws: `rustRewindCacheToHeight` if rust layer returns error.
     func rewindCacheToHeight(height: Int32) async throws
 

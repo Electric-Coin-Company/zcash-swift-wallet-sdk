@@ -30,14 +30,28 @@ extension RewindAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        guard let rewindHeight = await context.requestedRewindHeight else {
+        guard let requestedRewindHeight = await context.requestedRewindHeight else {
             return await update(context: context)
         }
+        var rewindHeight = BlockHeight(requestedRewindHeight)
         
         logger.debug("Executing rewind.")
+        let rewindResult = try await rustBackend.rewindToHeight(height: rewindHeight)
+        switch rewindResult {
+        case let .success(height):
+            rewindHeight = height
+        case let .requestedHeightTooLow(safeHeight):
+            let retryResult = try await rustBackend.rewindToHeight(height: safeHeight)
+            switch retryResult {
+            case let .success(height):
+                rewindHeight = height
+            default:
+                throw ZcashError.rustRewindToHeight(Int32(safeHeight), lastErrorMessage(fallback: "`rewindToHeight` unable to rewind"))
+            }
+        }
+
         await downloader.rewind(latestDownloadedBlockHeight: rewindHeight)
-        try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
-        
+
         // clear cache
         try await downloaderService.rewind(to: rewindHeight)
         

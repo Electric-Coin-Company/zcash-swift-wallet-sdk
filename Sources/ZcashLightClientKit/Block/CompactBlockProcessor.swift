@@ -320,22 +320,22 @@ extension CompactBlockProcessor {
     private func doRewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Executing rewind.")
         let lastDownloaded = await latestBlocksDataProvider.maxScannedHeight
-        let height = Int32(context.height ?? lastDownloaded)
-
-        let nearestHeight: Int32
+        var rewindHeight = BlockHeight(Int32(context.height ?? lastDownloaded) - 10)
         do {
-            nearestHeight = try await rustBackend.getNearestRewindHeight(height: height)
-        } catch {
-            await failure(error)
-            return await context.completion(.failure(error))
-        }
-
-        // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
-        let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
-
-        do {
-            try await rewindDownloadBlockAction(to: BlockHeight(rewindHeight))
-            try await rustBackend.rewindToHeight(height: rewindHeight)
+            let rewindResult = try await rustBackend.rewindToHeight(height: rewindHeight)
+            switch rewindResult {
+            case let .success(height):
+                rewindHeight = height
+            case let .requestedHeightTooLow(safeHeight):
+                let retryResult = try await rustBackend.rewindToHeight(height: safeHeight)
+                switch retryResult {
+                case let .success(height):
+                    rewindHeight = height
+                default:
+                    throw ZcashError.rustRewindToHeight(Int32(safeHeight), lastErrorMessage(fallback: "`rewindToHeight` unable to rewind"))
+                }
+            }
+            try await rewindDownloadBlockAction(to: rewindHeight)
         } catch {
             await failure(error)
             return await context.completion(.failure(error))
