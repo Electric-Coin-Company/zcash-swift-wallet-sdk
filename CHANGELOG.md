@@ -6,6 +6,14 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.4 - 2024-10-07
+
+## Fixed
+- This release fixes a potential source of corruption in wallet note commitment
+  trees related to incorrect handling of chain reorgs. It includes a database
+  migration that will repair the corrupted database state of any wallet
+  affected by this corner case.
+
 ## Checkpoints
 
 Mainnet
