@@ -1027,7 +1027,7 @@ extension FfiScanProgress {
     /// Converts an [`FfiScanProgress`] into a [`ScanProgress`].
     func toScanProgress() -> ScanProgress {
         .init(
-            numerator: self.numerator,
+            numerator: min(self.numerator, self.denominator),
             denominator: self.denominator
         )
     }
