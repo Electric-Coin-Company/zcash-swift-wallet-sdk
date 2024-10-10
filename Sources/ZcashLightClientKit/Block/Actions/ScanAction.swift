@@ -75,8 +75,9 @@ extension ScanAction: Action {
             if progressReportReducer == 0 {
                 // report scan progress only if it's available
                 if let scanProgress = try? await rustBackend.getWalletSummary()?.scanProgress {
+                    logger.debug("progress ratio: \(scanProgress.numerator)/\(scanProgress.denominator)")
                     let progress = try scanProgress.progress()
-                    logger.debug("progress: \(progress)")
+                    logger.debug("progress float: \(progress)")
                     await didUpdate(.syncProgress(progress))
                 }
                 progressReportReducer = Constants.reportDelay
