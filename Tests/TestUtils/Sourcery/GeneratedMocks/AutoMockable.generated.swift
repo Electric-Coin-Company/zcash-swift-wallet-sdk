@@ -393,10 +393,10 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
         return fetchTransactionTxIdCallsCount > 0
     }
     var fetchTransactionTxIdReceivedTxId: Data?
-    var fetchTransactionTxIdReturnValue: ZcashTransaction.Fetched!
-    var fetchTransactionTxIdClosure: ((Data) async throws -> ZcashTransaction.Fetched)?
+    var fetchTransactionTxIdReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
+    var fetchTransactionTxIdClosure: ((Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
 
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         if let error = fetchTransactionTxIdThrowableError {
             throw error
         }
@@ -867,10 +867,10 @@ class LightWalletServiceMock: LightWalletService {
         return fetchTransactionTxIdCallsCount > 0
     }
     var fetchTransactionTxIdReceivedTxId: Data?
-    var fetchTransactionTxIdReturnValue: ZcashTransaction.Fetched!
-    var fetchTransactionTxIdClosure: ((Data) async throws -> ZcashTransaction.Fetched)?
+    var fetchTransactionTxIdReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
+    var fetchTransactionTxIdClosure: ((Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
 
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         if let error = fetchTransactionTxIdThrowableError {
             throw error
         }
@@ -1916,6 +1916,26 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - evaluateBestOf
+
+    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount = 0
+    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCalled: Bool {
+        return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount > 0
+    }
+    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments: (endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType)?
+    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue: [LightWalletEndpoint]!
+    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure: (([LightWalletEndpoint], Double, Double, UInt64, Int, NetworkType) async -> [LightWalletEndpoint])?
+
+    func evaluateBestOf(endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType) async -> [LightWalletEndpoint] {
+        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount += 1
+        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments = (endpoints: endpoints, latencyThresholdMillis: latencyThresholdMillis, fetchThresholdSeconds: fetchThresholdSeconds, nBlocksToFetch: nBlocksToFetch, kServers: kServers, network: network)
+        if let closure = evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure {
+            return await closure(endpoints, latencyThresholdMillis, fetchThresholdSeconds, nBlocksToFetch, kServers, network)
+        } else {
+            return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
@@ -2475,10 +2495,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var decryptAndStoreTransactionTxBytesMinedHeightCalled: Bool {
         return decryptAndStoreTransactionTxBytesMinedHeightCallsCount > 0
     }
-    var decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments: (txBytes: [UInt8], minedHeight: Int32)?
-    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], Int32) async throws -> Void)?
+    var decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments: (txBytes: [UInt8], minedHeight: UInt32?)?
+    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], UInt32?) async throws -> Void)?
 
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
         if let error = decryptAndStoreTransactionTxBytesMinedHeightThrowableError {
             throw error
         }
@@ -2508,30 +2528,6 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(account)
         } else {
             return getCurrentAddressAccountReturnValue
-        }
-    }
-
-    // MARK: - getNearestRewindHeight
-
-    var getNearestRewindHeightHeightThrowableError: Error?
-    var getNearestRewindHeightHeightCallsCount = 0
-    var getNearestRewindHeightHeightCalled: Bool {
-        return getNearestRewindHeightHeightCallsCount > 0
-    }
-    var getNearestRewindHeightHeightReceivedHeight: Int32?
-    var getNearestRewindHeightHeightReturnValue: Int32!
-    var getNearestRewindHeightHeightClosure: ((Int32) async throws -> Int32)?
-
-    func getNearestRewindHeight(height: Int32) async throws -> Int32 {
-        if let error = getNearestRewindHeightHeightThrowableError {
-            throw error
-        }
-        getNearestRewindHeightHeightCallsCount += 1
-        getNearestRewindHeightHeightReceivedHeight = height
-        if let closure = getNearestRewindHeightHeightClosure {
-            return try await closure(height)
-        } else {
-            return getNearestRewindHeightHeightReturnValue
         }
     }
 
@@ -2686,16 +2682,21 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var rewindToHeightHeightCalled: Bool {
         return rewindToHeightHeightCallsCount > 0
     }
-    var rewindToHeightHeightReceivedHeight: Int32?
-    var rewindToHeightHeightClosure: ((Int32) async throws -> Void)?
+    var rewindToHeightHeightReceivedHeight: BlockHeight?
+    var rewindToHeightHeightReturnValue: RewindResult!
+    var rewindToHeightHeightClosure: ((BlockHeight) async throws -> RewindResult)?
 
-    func rewindToHeight(height: Int32) async throws {
+    func rewindToHeight(height: BlockHeight) async throws -> RewindResult {
         if let error = rewindToHeightHeightThrowableError {
             throw error
         }
         rewindToHeightHeightCallsCount += 1
         rewindToHeightHeightReceivedHeight = height
-        try await rewindToHeightHeightClosure!(height)
+        if let closure = rewindToHeightHeightClosure {
+            return try await closure(height)
+        } else {
+            return rewindToHeightHeightReturnValue
+        }
     }
 
     // MARK: - rewindCacheToHeight
