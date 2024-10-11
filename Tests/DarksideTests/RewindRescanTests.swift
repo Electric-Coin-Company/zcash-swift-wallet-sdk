@@ -190,13 +190,6 @@ class RewindRescanTests: ZcashTestCase {
         // rewind to birthday
         let targetHeight: BlockHeight = newChaintTip - 8000
 
-        do {
-            _ = try await coordinator.synchronizer.initializer.rustBackend.getNearestRewindHeight(height: Int32(targetHeight))
-        } catch {
-            XCTFail("get nearest height failed error: \(error)")
-            return
-        }
-
         let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
 
         try await withCheckedThrowingContinuation { continuation in

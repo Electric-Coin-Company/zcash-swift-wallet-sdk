@@ -81,7 +81,6 @@ class RustBackendMockHelper {
         rustBackendMock.createAccountSeedTreeStateRecoverUntilThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
         rustBackendMock.getMemoTxIdOutputPoolOutputIndexReturnValue = nil
         rustBackendMock.initDataDbSeedReturnValue = .seedRequired
-        rustBackendMock.getNearestRewindHeightHeightReturnValue = -1
         rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }
         rustBackendMock.proposeTransferAccountToValueMemoThrowableError = ZcashError.rustCreateToAddress("mocked error")
         rustBackendMock.proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError = ZcashError.rustShieldFunds("mocked error")
