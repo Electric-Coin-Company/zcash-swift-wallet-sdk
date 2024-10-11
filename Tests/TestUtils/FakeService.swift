@@ -21,6 +21,10 @@ struct MockCancellable: CancellableCall {
 }
 
 class MockLightWalletService: LightWalletService {
+    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter) -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
+        service.getTaddressTxids(request)
+    }
+    
     var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
         get { service.connectionStateChange }
         set { service.connectionStateChange = newValue }
@@ -75,8 +79,8 @@ class MockLightWalletService: LightWalletService {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
     
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
-        return ZcashTransaction.Fetched(rawID: Data(), minedHeight: -1, raw: Data())
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+        return (nil, .txidNotRecognized)
     }
     
     func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {

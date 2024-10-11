@@ -99,7 +99,9 @@ final class RewindActionTests: ZcashTestCase {
             return -1026109260
         }
         
-        rustBackendMock.rewindToHeightHeightClosure = { _ in }
+        rustBackendMock.rewindToHeightHeightClosure = { height in
+            return RewindResult.success(height)
+        }
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in blockDownloaderServiceMock }

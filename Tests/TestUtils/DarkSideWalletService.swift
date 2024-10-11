@@ -38,6 +38,10 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter) -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
+        service.getTaddressTxids(request)
+    }
+    
     var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
         get { service.connectionStateChange }
         set { service.connectionStateChange = newValue }
@@ -183,7 +187,7 @@ class DarksideWalletService: LightWalletService {
         try await service.submit(spendTransaction: spendTransaction)
     }
     
-    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         try await service.fetchTransaction(txId: txId)
     }
 
