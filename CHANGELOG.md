@@ -6,6 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.5 - 2024-10-10
+
+## Fixed
+- This release fixes a bug in scan progress calculation that could result in
+  occasionally reporting scan progress values greater than 100%.
+
 # 2.2.4 - 2024-10-07
 
 ## Fixed
