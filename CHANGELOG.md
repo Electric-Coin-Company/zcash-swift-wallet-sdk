@@ -6,6 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.6 - 2024-10-22
+
+## Fixed
+- This release fixes a bug in wallet reorg handling that could result in a crash
+  under certain circumstances.
+
 # 2.2.5 - 2024-10-10
 
 ## Fixed
