@@ -269,8 +269,8 @@ public enum ZcashErrorCode: String {
     case checkpointCantLoadFromDisk = "ZCHKP0001"
     /// Failed to decode `Checkpoint` object.
     case checkpointDecode = "ZCHKP0002"
-    /// Invalid account when trying to derive spending key
-    case derivationToolSpendingKeyInvalidAccount = "ZDRVT0001"
+    /// Invalid account when trying to derive a key
+    case derivationToolInvalidAccount = "ZDRVT0001"
     /// Creation of the table for unspent transaction output failed.
     case unspentTransactionOutputDAOCreateTable = "ZUTOD0001"
     /// SQLite query failed when storing unspent transaction output.

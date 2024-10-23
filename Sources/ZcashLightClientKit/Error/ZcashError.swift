@@ -479,9 +479,9 @@ public enum ZcashError: Equatable, Error {
     /// Failed to decode `Checkpoint` object.
     /// ZCHKP0002
     case checkpointDecode(_ error: Error)
-    /// Invalid account when trying to derive spending key
+    /// Invalid account when trying to derive a key
     /// ZDRVT0001
-    case derivationToolSpendingKeyInvalidAccount
+    case derivationToolInvalidAccount
     /// Creation of the table for unspent transaction output failed.
     /// - `sqliteError` is error produced by SQLite library.
     /// ZUTOD0001
@@ -768,7 +768,7 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo."
         case .checkpointCantLoadFromDisk: return "Failed to load JSON with checkpoint from disk."
         case .checkpointDecode: return "Failed to decode `Checkpoint` object."
-        case .derivationToolSpendingKeyInvalidAccount: return "Invalid account when trying to derive spending key"
+        case .derivationToolInvalidAccount: return "Invalid account when trying to derive a key"
         case .unspentTransactionOutputDAOCreateTable: return "Creation of the table for unspent transaction output failed."
         case .unspentTransactionOutputDAOStore: return "SQLite query failed when storing unspent transaction output."
         case .unspentTransactionOutputDAOClearAll: return "SQLite query failed when removing all the unspent transation outputs."
@@ -953,7 +953,7 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return .memoBytesInvalidUTF8
         case .checkpointCantLoadFromDisk: return .checkpointCantLoadFromDisk
         case .checkpointDecode: return .checkpointDecode
-        case .derivationToolSpendingKeyInvalidAccount: return .derivationToolSpendingKeyInvalidAccount
+        case .derivationToolInvalidAccount: return .derivationToolInvalidAccount
         case .unspentTransactionOutputDAOCreateTable: return .unspentTransactionOutputDAOCreateTable
         case .unspentTransactionOutputDAOStore: return .unspentTransactionOutputDAOStore
         case .unspentTransactionOutputDAOClearAll: return .unspentTransactionOutputDAOClearAll

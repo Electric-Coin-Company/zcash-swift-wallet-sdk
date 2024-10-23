@@ -532,9 +532,9 @@ enum ZcashErrorDefinition {
 
     // MARK: - DerivationTool
 
-    /// Invalid account when trying to derive spending key
+    /// Invalid account when trying to derive a key
     // sourcery: code="ZDRVT0001"
-    case derivationToolSpendingKeyInvalidAccount
+    case derivationToolInvalidAccount
 
     // MARK: - UnspentTransactionOutputDAO
 
