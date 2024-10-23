@@ -109,7 +109,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         defer { zcashlc_free_binary_key(binaryKeyPtr) }
 
         guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw ZcashError.rustDeriveUnifiedSpendingKey(lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
+            throw ZcashError.rustDeriveUnifiedSpendingKey(
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
         }
 
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
@@ -123,7 +124,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
                 networkType.networkId
             ) else {
                 throw ZcashError.rustDeriveUnifiedFullViewingKey(
-                    lastErrorMessage(fallback: "`deriveUnifiedFullViewingKey` failed with unknown error")
+                    ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedFullViewingKey` failed with unknown error")
                 )
             }
 
@@ -173,7 +174,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     // MARK: Error Handling
 
-    private func lastErrorMessage(fallback: String) -> String {
+    private static func lastErrorMessage(fallback: String) -> String {
         let errorLen = zcashlc_last_error_length()
         defer { zcashlc_clear_last_error() }
 
