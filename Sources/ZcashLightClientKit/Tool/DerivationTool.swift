@@ -48,6 +48,33 @@ public protocol KeyDeriving {
     func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
 
     static func getAddressMetadata(_ addr: String) -> AddressMetadata?
+
+    /// Derives and returns a ZIP 32 Arbitrary Key from the given seed at the "wallet level", i.e.
+    /// directly from the seed with no ZIP 32 path applied.
+    ///
+    /// The resulting key will be the same across all networks (Zcash mainnet, Zcash testnet,
+    /// OtherCoin mainnet, and so on). You can think of it as a context-specific seed fingerprint
+    /// that can be used as (static) key material.
+    ///
+    /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
+    /// - Parameter seed: `[Uint8]` seed bytes
+    /// - Parameter accountNumber: `Int` with the account number
+    /// - Throws:
+    ///     - `derivationToolInvalidAccount` if the `accountIndex` is invalid.
+    ///     - some `ZcashError.rust*` error if the derivation fails.
+    /// - Returns a `[Uint8]`
+    static func deriveArbitraryWalletKey(contextString: [UInt8], seed: [UInt8]) throws -> [UInt8]
+
+    /// Derives and returns a ZIP 32 Arbitrary Key from the given seed at the account level.
+    ///
+    /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
+    /// - Parameter seed: `[Uint8]` seed bytes
+    /// - Parameter accountNumber: `Int` with the account number
+    /// - Throws:
+    ///     - `derivationToolInvalidAccount` if the `accountIndex` is invalid.
+    ///     - some `ZcashError.rust*` error if the derivation fails.
+    /// - Returns a `[Uint8]`
+    func deriveArbitraryAccountKey(contextString: [UInt8], seed: [UInt8], accountIndex: Int) throws -> [UInt8]
 }
 
 public class DerivationTool: KeyDeriving {
@@ -89,6 +116,38 @@ public class DerivationTool: KeyDeriving {
     public func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
         return try backend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
             .map { UnifiedAddress.ReceiverTypecodes(typecode: $0) }
+    }
+
+    /// Derives and returns a ZIP 32 Arbitrary Key from the given seed at the "wallet level", i.e.
+    /// directly from the seed with no ZIP 32 path applied.
+    ///
+    /// The resulting key will be the same across all networks (Zcash mainnet, Zcash testnet,
+    /// OtherCoin mainnet, and so on). You can think of it as a context-specific seed fingerprint
+    /// that can be used as (static) key material.
+    ///
+    /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
+    /// - Parameter seed: `[Uint8]` seed bytes
+    /// - Parameter accountNumber: `Int` with the account number
+    /// - Throws:
+    ///     - `derivationToolInvalidAccount` if the `accountIndex` is invalid.
+    ///     - some `ZcashError.rust*` error if the derivation fails.
+    /// - Returns a `[Uint8]`
+    public static func deriveArbitraryWalletKey(contextString: [UInt8], seed: [UInt8]) throws -> [UInt8] {
+        return try ZcashKeyDerivationBackend.deriveArbitraryWalletKey(contextString: contextString, from: seed)
+    }
+
+    /// Derives and returns a ZIP 32 Arbitrary Key from the given seed at the account level.
+    ///
+    /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
+    /// - Parameter seed: `[Uint8]` seed bytes
+    /// - Parameter accountNumber: `Int` with the account number
+    /// - Throws:
+    ///     - `derivationToolInvalidAccount` if the `accountIndex` is invalid.
+    ///     - some `ZcashError.rust*` error if the derivation fails.
+    /// - Returns a `[Uint8]`
+    public func deriveArbitraryAccountKey(contextString: [UInt8], seed: [UInt8], accountIndex: Int) throws -> [UInt8] {
+        guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else { throw ZcashError.derivationToolInvalidAccount }
+        return try backend.deriveArbitraryAccountKey(contextString: contextString, from: seed, accountIndex: accountIndex)
     }
 }
 
