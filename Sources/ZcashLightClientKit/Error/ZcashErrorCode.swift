@@ -193,6 +193,10 @@ public enum ZcashErrorCode: String {
     case rustTorClientGet = "ZRUST0063"
     /// Error from rust layer when calling ZcashRustBackend.transactionDataRequests
     case rustTransactionDataRequests = "ZRUST0064"
+    /// Error from rust layer when calling ZcashRustBackend.deriveArbitraryWalletKey
+    case rustDeriveArbitraryWalletKey = "ZRUST0065"
+    /// Error from rust layer when calling ZcashRustBackend.deriveArbitraryAccountKey
+    case rustDeriveArbitraryAccountKey = "ZRUST0066"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
@@ -269,8 +273,8 @@ public enum ZcashErrorCode: String {
     case checkpointCantLoadFromDisk = "ZCHKP0001"
     /// Failed to decode `Checkpoint` object.
     case checkpointDecode = "ZCHKP0002"
-    /// Invalid account when trying to derive spending key
-    case derivationToolSpendingKeyInvalidAccount = "ZDRVT0001"
+    /// Invalid account when trying to derive a key
+    case derivationToolInvalidAccount = "ZDRVT0001"
     /// Creation of the table for unspent transaction output failed.
     case unspentTransactionOutputDAOCreateTable = "ZUTOD0001"
     /// SQLite query failed when storing unspent transaction output.

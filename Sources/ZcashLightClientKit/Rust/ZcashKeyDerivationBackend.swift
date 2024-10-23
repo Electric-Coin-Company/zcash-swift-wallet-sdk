@@ -109,7 +109,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         defer { zcashlc_free_binary_key(binaryKeyPtr) }
 
         guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw ZcashError.rustDeriveUnifiedSpendingKey(lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
+            throw ZcashError.rustDeriveUnifiedSpendingKey(
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
         }
 
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
@@ -123,7 +124,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
                 networkType.networkId
             ) else {
                 throw ZcashError.rustDeriveUnifiedFullViewingKey(
-                    lastErrorMessage(fallback: "`deriveUnifiedFullViewingKey` failed with unknown error")
+                    ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedFullViewingKey` failed with unknown error")
                 )
             }
 
@@ -171,9 +172,66 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         return TransparentAddress(validatedEncoding: transparentReceiverStr)
     }
 
+    static func deriveArbitraryWalletKey(
+        contextString: [UInt8],
+        from seed: [UInt8]
+    ) throws -> [UInt8] {
+        let boxedSlicePtr = contextString.withUnsafeBufferPointer { contextStringBufferPtr in
+            seed.withUnsafeBufferPointer { seedBufferPtr in
+                return zcashlc_derive_arbitrary_wallet_key(
+                    contextStringBufferPtr.baseAddress,
+                    UInt(contextString.count),
+                    seedBufferPtr.baseAddress,
+                    UInt(seed.count)
+                )
+            }
+        }
+
+        defer { zcashlc_free_boxed_slice(boxedSlicePtr) }
+
+        guard let key = boxedSlicePtr?.pointee else {
+            throw ZcashError.rustDeriveArbitraryWalletKey(
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryWalletKey` failed with unknown error"))
+        }
+
+        return key.ptr.toByteArray(
+            length: Int(key.len)
+        )
+    }
+
+    func deriveArbitraryAccountKey(
+        contextString: [UInt8],
+        from seed: [UInt8],
+        accountIndex: Int32
+    ) throws -> [UInt8] {
+        let boxedSlicePtr = contextString.withUnsafeBufferPointer { contextStringBufferPtr in
+            seed.withUnsafeBufferPointer { seedBufferPtr in
+                return zcashlc_derive_arbitrary_account_key(
+                    contextStringBufferPtr.baseAddress,
+                    UInt(contextString.count),
+                    seedBufferPtr.baseAddress,
+                    UInt(seed.count),
+                    accountIndex,
+                    networkType.networkId
+                )
+            }
+        }
+
+        defer { zcashlc_free_boxed_slice(boxedSlicePtr) }
+
+        guard let key = boxedSlicePtr?.pointee else {
+            throw ZcashError.rustDeriveArbitraryAccountKey(
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryAccountKey` failed with unknown error"))
+        }
+
+        return key.ptr.toByteArray(
+            length: Int(key.len)
+        )
+    }
+
     // MARK: Error Handling
 
-    private func lastErrorMessage(fallback: String) -> String {
+    private static func lastErrorMessage(fallback: String) -> String {
         let errorLen = zcashlc_last_error_length()
         defer { zcashlc_clear_last_error() }
 
