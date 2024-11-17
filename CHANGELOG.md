@@ -10,6 +10,27 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DerivationTool.deriveArbitraryWalletKey`
 - `DerivationTool.deriveArbitraryAccountKey`
 
+## Changed
+- `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accpt a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2675000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2717500.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3010000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3070000.json
+````
+
 # 2.2.6 - 2024-10-22
 
 ## Fixed
