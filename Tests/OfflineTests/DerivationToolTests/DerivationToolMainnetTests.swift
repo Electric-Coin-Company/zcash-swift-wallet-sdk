@@ -136,4 +136,22 @@ class DerivationToolMainnetTests: XCTestCase {
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {
 //        XCTAssertThrowsError(try derivationTool.isValidExtendedSpendingKey("secret-extended-key-test1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6lk8xce3d4jw7s8ln5yjp6fqv2g0nzue2hc0kv5t004vklvlenncscq9flwh5vf5qnv0hnync72n7gjn70u47765v3kyrxytx50g730svvmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqe49swv"))
 //    }
+
+    func testDeriveArbitraryWalletKeyTestVector() throws {
+        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
+        let contextString = [UInt8]("Zcash test vectors".utf8)
+        let seed = Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!.bytes
+        let expectedKey = Data(fromHexEncodedString: "e9da8806409dc3c3ebd1fc2a71c879c13dd7aa93ede803bf1a83414b9d3b158a")!.bytes
+        let key = try DerivationTool.deriveArbitraryWalletKey(contextString: contextString, seed: seed)
+        XCTAssertEqual(key, expectedKey)
+    }
+
+    func testDeriveArbitraryAccountKeyTestVector() throws {
+        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
+        let contextString = [UInt8]("Zcash test vectors".utf8)
+        let seed = Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!.bytes
+        let expectedKey = Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!.bytes
+        let key = try DerivationTool(networkType: .mainnet).deriveArbitraryAccountKey(contextString: contextString, seed: seed, accountIndex: 0)
+        XCTAssertEqual(key, expectedKey)
+    }
 }

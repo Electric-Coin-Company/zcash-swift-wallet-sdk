@@ -27,7 +27,6 @@ enum RustLogging: String {
 struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
     let minimumShieldingConfirmations: UInt32 = 1
-    let useZIP317Fees = true
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
@@ -162,8 +161,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             value,
             memo?.bytes,
             networkType.networkId,
-            minimumConfirmations,
-            useZIP317Fees
+            minimumConfirmations
         )
 
         guard let proposal else {
@@ -189,8 +187,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             account,
             [CChar](uri.utf8CString),
             networkType.networkId,
-            minimumConfirmations,
-            useZIP317Fees
+            minimumConfirmations
         )
 
         guard let proposal else {
@@ -763,8 +760,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
             networkType.networkId,
-            minimumShieldingConfirmations,
-            useZIP317Fees
+            minimumShieldingConfirmations
         )
 
         guard let proposal else {
