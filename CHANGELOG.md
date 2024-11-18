@@ -11,7 +11,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DerivationTool.deriveArbitraryAccountKey`
 
 ## Changed
-- `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accpt a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.
+- `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accept a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.
+- The spelling of the `.transparent` alternative of `Entity.TransactionEntity.ZcashTransaction.Output.Pool` has been corrected from `.transaparent`.
 
 ## Checkpoints
 
