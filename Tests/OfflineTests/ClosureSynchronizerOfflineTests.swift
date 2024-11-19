@@ -184,14 +184,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetSaplingAddressSucceed() {
-        synchronizerMock.getSaplingAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        synchronizerMock.getSaplingAddressAccountClosure = { account in
+            XCTAssertEqual(account, Account(3))
             return self.data.saplingAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getSaplingAddress(accountIndex: 3) { result in
+        synchronizer.getSaplingAddress(account: Account(3)) { result in
             switch result {
             case let .success(address):
                 XCTAssertEqual(address, self.data.saplingAddress)
@@ -205,13 +205,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetSaplingAddressThrowsError() {
-        synchronizerMock.getSaplingAddressAccountIndexClosure = { _ in
+        synchronizerMock.getSaplingAddressAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getSaplingAddress(accountIndex: 3) { result in
+        synchronizer.getSaplingAddress(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -224,14 +224,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetUnifiedAddressSucceed() {
-        synchronizerMock.getUnifiedAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        synchronizerMock.getUnifiedAddressAccountClosure = { account in
+            XCTAssertEqual(account, Account(3))
             return self.data.unifiedAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getUnifiedAddress(accountIndex: 3) { result in
+        synchronizer.getUnifiedAddress(account: Account(3)) { result in
             switch result {
             case let .success(address):
                 XCTAssertEqual(address, self.data.unifiedAddress)
@@ -245,13 +245,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetUnifiedAddressThrowsError() {
-        synchronizerMock.getUnifiedAddressAccountIndexClosure = { _ in
+        synchronizerMock.getUnifiedAddressAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getUnifiedAddress(accountIndex: 3) { result in
+        synchronizer.getUnifiedAddress(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -264,14 +264,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentAddressSucceed() {
-        synchronizerMock.getTransparentAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        synchronizerMock.getTransparentAddressAccountClosure = { account in
+            XCTAssertEqual(account, Account(3))
             return self.data.transparentAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentAddress(accountIndex: 3) { result in
+        synchronizer.getTransparentAddress(account: Account(3)) { result in
             switch result {
             case let .success(address):
                 XCTAssertEqual(address, self.data.transparentAddress)
@@ -285,13 +285,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentAddressThrowsError() {
-        synchronizerMock.getTransparentAddressAccountIndexClosure = { _ in
+        synchronizerMock.getTransparentAddressAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentAddress(accountIndex: 3) { result in
+        synchronizer.getTransparentAddress(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -640,14 +640,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     func testGetTransparentBalanceSucceed() {
         let expectedBalance = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(200))
 
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, Account(3))
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -661,13 +661,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -696,14 +696,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             unshielded: .zero
         )
         
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, Account(3))
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -717,13 +717,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -752,14 +752,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             unshielded: .zero
         )
         
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, Account(3))
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -773,13 +773,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountBalanceAccountClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3) { result in
+        synchronizer.getAccountBalance(account: Account(3)) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")

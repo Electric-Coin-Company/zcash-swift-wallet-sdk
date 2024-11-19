@@ -85,7 +85,7 @@ public enum ZcashTransaction {
         public let rawID: Data
         public let pool: Pool
         public let index: Int
-        public let fromAccount: Int?
+        public let fromAccount: Account?
         public let recipient: TransactionRecipient
         public let value: Zatoshi
         public let isChange: Bool
@@ -118,7 +118,11 @@ extension ZcashTransaction.Output {
             rawID = Data(blob: try row.get(Column.rawID))
             pool = .init(rawValue: try row.get(Column.pool))
             index = try row.get(Column.index)
-            fromAccount = try row.get(Column.fromAccount)
+            if let accountId = try row.get(Column.fromAccount) {
+                fromAccount = Account(Int32(accountId))
+            } else {
+                fromAccount = nil
+            }
             value = Zatoshi(try row.get(Column.value))
             isChange = try row.get(Column.isChange)
             

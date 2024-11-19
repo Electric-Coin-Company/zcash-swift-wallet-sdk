@@ -31,13 +31,13 @@ public protocol CombineSynchronizer {
     func start(retry: Bool) -> CompletablePublisher<Error>
     func stop()
 
-    func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error>
-    func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error>
-    func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error>
+    func getSaplingAddress(account: Account) -> SinglePublisher<SaplingAddress, Error>
+    func getUnifiedAddress(account: Account) -> SinglePublisher<UnifiedAddress, Error>
+    func getTransparentAddress(account: Account) -> SinglePublisher<TransparentAddress, Error>
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter account: the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -45,7 +45,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Int,
+        account: Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -53,7 +53,7 @@ public protocol CombineSynchronizer {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter account: the account for which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -67,7 +67,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Int,
+        account: Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -110,7 +110,7 @@ public protocol CombineSynchronizer {
 
     func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Int
+        account: Account
     ) -> SinglePublisher<Proposal, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

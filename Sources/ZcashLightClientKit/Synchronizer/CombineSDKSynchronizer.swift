@@ -51,56 +51,56 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error> {
+    public func getSaplingAddress(account: Account) -> SinglePublisher<SaplingAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getSaplingAddress(account: account)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error> {
+    public func getUnifiedAddress(account: Account) -> SinglePublisher<UnifiedAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getUnifiedAddress(account: account)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error> {
+    public func getTransparentAddress(account: Account) -> SinglePublisher<TransparentAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getTransparentAddress(account: account)
         }
     }
 
     public func proposeTransfer(
-        accountIndex: Int,
+        account: Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
     ) -> SinglePublisher<Proposal, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+            try await self.synchronizer.proposeTransfer(account: account, recipient: recipient, amount: amount, memo: memo)
         }
     }
 
     public func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Int
+        account: Account
     ) -> SinglePublisher<Proposal, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.proposefulfillingPaymentURI(
                 uri,
-                accountIndex: accountIndex
+                account: account
             )
         }
     }
 
     public func proposeShielding(
-        accountIndex: Int,
+        account: Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil
     ) -> SinglePublisher<Proposal?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.proposeShielding(
-                accountIndex: accountIndex,
+                account: account,
                 shieldingThreshold: shieldingThreshold,
                 memo: memo,
                 transparentReceiver: transparentReceiver
@@ -190,9 +190,9 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getAccountBalance(accountIndex: Int) -> SinglePublisher<AccountBalance?, Error> {
+    public func getAccountBalance(account: Account) -> SinglePublisher<AccountBalance?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountBalance(account: account)
         }
     }
 

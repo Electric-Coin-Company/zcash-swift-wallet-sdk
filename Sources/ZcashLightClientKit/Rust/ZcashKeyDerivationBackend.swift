@@ -95,13 +95,13 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     func deriveUnifiedSpendingKey(
         from seed: [UInt8],
-        accountIndex: Int32
+        account: Account
     ) throws -> UnifiedSpendingKey {
         let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
                 UInt(seed.count),
-                accountIndex,
+                account.id,
                 networkType.networkId
             )
         }
@@ -202,7 +202,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
     func deriveArbitraryAccountKey(
         contextString: [UInt8],
         from seed: [UInt8],
-        accountIndex: Int32
+        account: Account
     ) throws -> [UInt8] {
         let boxedSlicePtr = contextString.withUnsafeBufferPointer { contextStringBufferPtr in
             seed.withUnsafeBufferPointer { seedBufferPtr in
@@ -211,7 +211,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
                     UInt(contextString.count),
                     seedBufferPtr.baseAddress,
                     UInt(seed.count),
-                    accountIndex,
+                    account.id,
                     networkType.networkId
                 )
             }

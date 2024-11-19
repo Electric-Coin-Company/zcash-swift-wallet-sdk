@@ -11,9 +11,9 @@ protocol SentNoteEntity {
     var id: Int { get }
     var transactionId: Int { get }
     var outputIndex: Int { get }
-    var fromAccount: Int { get }
+    var fromAccount: Account { get }
     var toAddress: String? { get }
-    var toAccount: Int? { get }
+    var toAccount: Account? { get }
     var value: Int { get }
     var memo: Data? { get }
 }

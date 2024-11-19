@@ -34,7 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var sharedViewingKey: UnifiedFullViewingKey {
         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         let spendingKey = try! derivationTool
-            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, account: Account(0))
 
         return try! derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
     }

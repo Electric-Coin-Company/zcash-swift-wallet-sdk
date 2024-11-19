@@ -52,38 +52,38 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
+    public func getSaplingAddress(account: Account, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getSaplingAddress(account: account)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+    public func getUnifiedAddress(account: Account, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getUnifiedAddress(account: account)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
+    public func getTransparentAddress(account: Account, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getTransparentAddress(account: account)
         }
     }
 
     public func proposeTransfer(
-        accountIndex: Int,
+        account: Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
         completion: @escaping (Result<Proposal, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+            try await self.synchronizer.proposeTransfer(account: account, recipient: recipient, amount: amount, memo: memo)
         }
     }
 
     public func proposeShielding(
-        accountIndex: Int,
+        account: Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil,
@@ -91,7 +91,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.proposeShielding(
-                accountIndex: accountIndex,
+                account: account,
                 shieldingThreshold: shieldingThreshold,
                 memo: memo,
                 transparentReceiver: transparentReceiver
@@ -188,9 +188,9 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
+    public func getAccountBalance(account: Account, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountBalance(account: account)
         }
     }
 

@@ -72,7 +72,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listAccounts() async throws -> [Int32] {
+    func listAccounts() async throws -> [Account] {
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
@@ -85,11 +85,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_accounts(accountsPtr) }
 
-        var accounts: [Int32] = []
+        var accounts: [Account] = []
 
         for i in (0 ..< Int(accountsPtr.pointee.len)) {
             let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
-            accounts.append(Int32(account.account_index))
+            accounts.append(Account(Int32(account.account_index)))
         }
 
         return accounts
@@ -148,7 +148,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeTransfer(
-        account: Int32,
+        account: Account,
         to address: String,
         value: Int64,
         memo: MemoBytes?
@@ -156,7 +156,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             [CChar](address.utf8CString),
             value,
             memo?.bytes,
@@ -179,12 +179,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func proposeTransferFromURI(
         _ uri: String,
-        account: Int32
+        account: Account
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             [CChar](uri.utf8CString),
             networkType.networkId,
             minimumConfirmations
@@ -219,11 +219,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
+    func getCurrentAddress(account: Account) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             networkType.networkId
         )
 
@@ -241,11 +241,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(account: Account) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             networkType.networkId
         )
 
@@ -281,22 +281,22 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getTransparentBalance(account: Int32) async throws -> Int64 {
-        guard account >= 0 else {
-            throw ZcashError.rustGetTransparentBalanceNegativeAccount(Int(account))
+    func getTransparentBalance(account: Account) async throws -> Int64 {
+        guard account.id >= 0 else {
+            throw ZcashError.rustGetTransparentBalanceNegativeAccount(Int(account.id))
         }
 
         let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            account
+            account.id
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetTransparentBalance(
-                Int(account),
-                lastErrorMessage(fallback: "Error getting Total Transparent balance from account \(account)")
+                Int(account.id),
+                lastErrorMessage(fallback: "Error getting Total Transparent balance from account \(account.id)")
             )
         }
 
@@ -304,23 +304,23 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
-        guard account >= 0 else {
-            throw ZcashError.rustGetVerifiedTransparentBalanceNegativeAccount(Int(account))
+    func getVerifiedTransparentBalance(account: Account) async throws -> Int64 {
+        guard account.id >= 0 else {
+            throw ZcashError.rustGetVerifiedTransparentBalanceNegativeAccount(Int(account.id))
         }
 
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            account,
+            account.id,
             minimumShieldingConfirmations
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalance(
-                Int(account),
-                lastErrorMessage(fallback: "Error getting verified transparent balance from account \(account)")
+                Int(account.id),
+                lastErrorMessage(fallback: "Error getting verified transparent balance from account \(account.id)")
             )
         }
 
@@ -424,11 +424,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
+    func listTransparentReceivers(account: Account) async throws -> [TransparentAddress] {
         let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             networkType.networkId
         )
 
@@ -747,7 +747,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeShielding(
-        account: Int32,
+        account: Account,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
@@ -755,7 +755,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_shielding(
             dbData.0,
             dbData.1,
-            account,
+            account.id,
             memo?.bytes,
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },

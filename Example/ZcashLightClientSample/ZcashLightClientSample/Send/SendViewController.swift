@@ -103,11 +103,13 @@ class SendViewController: UIViewController {
     }
     
     func updateBalance() async {
+        let account = Account(0)
+        
         balanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.total() ?? .zero
+            balance: (try? await synchronizer.getAccountBalance(account: account))?.saplingBalance.total() ?? .zero
         )
         verifiedBalanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+            balance: (try? await synchronizer.getAccountBalance(account: account))?.saplingBalance.spendableValue ?? .zero
         )
     }
     
@@ -122,7 +124,7 @@ class SendViewController: UIViewController {
     func maxFundsOn() {
         Task { @MainActor in
             let fee = Zatoshi(10000)
-            let max: Zatoshi = ((try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero) - fee
+            let max: Zatoshi = ((try? await synchronizer.getAccountBalance(account: Account(0)))?.saplingBalance.spendableValue ?? .zero) - fee
             amountTextField.text = format(balance: max)
             amountTextField.isEnabled = false
         }
@@ -144,12 +146,12 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountBalance(account: Account(0)))?.saplingBalance.spendableValue ?? .zero
         return balance > .zero
     }
     
     func isAmountValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountBalance(account: Account(0)))?.saplingBalance.spendableValue ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),
@@ -228,7 +230,7 @@ class SendViewController: UIViewController {
             }
 
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0) else {
+            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, account: Account(0)) else {
                 loggerProxy.error("NO SPENDING KEY")
                 return
             }
