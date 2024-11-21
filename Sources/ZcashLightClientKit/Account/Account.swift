@@ -6,7 +6,7 @@
 //
 
 public struct Account: Equatable, Codable, Hashable {
-    let id: Int32
+    public let id: Int32
     
     public init(_ id: Int32) {
         self.id = id
