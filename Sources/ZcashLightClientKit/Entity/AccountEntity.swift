@@ -9,18 +9,18 @@ import Foundation
 import SQLite
 
 protocol AccountEntity {
-    var account: Account { get }
+    var account: Zip32Account { get }
     var ufvk: String { get }
 }
 
 struct DbAccount: AccountEntity, Encodable, Decodable {
-    let account: Account
+    let account: Zip32Account
     let ufvk: String
 }
 
 extension DbAccount: Hashable {
     func hash(into hasher: inout Hasher) {
-        hasher.combine(account.id)
+        hasher.combine(account.index)
         hasher.combine(ufvk)
     }
     

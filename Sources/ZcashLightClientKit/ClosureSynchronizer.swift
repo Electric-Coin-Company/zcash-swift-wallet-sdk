@@ -32,9 +32,9 @@ public protocol ClosureSynchronizer {
     func start(retry: Bool, completion: @escaping (Error?) -> Void)
     func stop()
 
-    func getSaplingAddress(account: Account, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
-    func getUnifiedAddress(account: Account, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
-    func getTransparentAddress(account: Account, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
+    func getSaplingAddress(account: Zip32Account, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
+    func getUnifiedAddress(account: Zip32Account, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
+    func getTransparentAddress(account: Zip32Account, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -46,7 +46,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        account: Account,
+        account: Zip32Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
@@ -69,7 +69,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        account: Account,
+        account: Zip32Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?,
@@ -127,7 +127,7 @@ public protocol ClosureSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
-    func getAccountBalance(account: Account, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
+    func getAccountBalance(account: Zip32Account, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
 
     func refreshExchangeRateUSD()
 

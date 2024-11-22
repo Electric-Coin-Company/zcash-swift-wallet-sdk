@@ -146,17 +146,17 @@ public protocol Synchronizer: AnyObject {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter account: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(account: Account) async throws -> SaplingAddress
+    func getSaplingAddress(account: Zip32Account) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
     /// - Parameter account: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(account: Account) async throws -> UnifiedAddress
+    func getUnifiedAddress(account: Zip32Account) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
     /// - Parameter account: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(account: Account) async throws -> TransparentAddress
+    func getTransparentAddress(account: Zip32Account) async throws -> TransparentAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -168,7 +168,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        account: Account,
+        account: Zip32Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -190,7 +190,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        account: Account,
+        account: Zip32Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -228,7 +228,7 @@ public protocol Synchronizer: AnyObject {
         memo: Memo?
     ) async throws -> ZcashTransaction.Overview
 
-    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI using the given `account.id`
+    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI using the given `account.index`
     ///  - Parameter uri: a valid ZIP-321 payment URI
     ///  - Parameter account: the account index that allows spends to occur.
     ///
@@ -236,7 +236,7 @@ public protocol Synchronizer: AnyObject {
     /// `SynchronizerErrors.notPrepared`.
     func proposefulfillingPaymentURI(
         _ uri: String,
-        account: Account
+        account: Zip32Account
     ) async throws -> Proposal
 
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
@@ -309,8 +309,8 @@ public protocol Synchronizer: AnyObject {
 
     /// Account balances from the given account index
     /// - Parameter account: the index of the account
-    /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `account.id`
-    func getAccountBalance(account: Account) async throws -> AccountBalance?
+    /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `account.index`
+    func getAccountBalance(account: Zip32Account) async throws -> AccountBalance?
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()

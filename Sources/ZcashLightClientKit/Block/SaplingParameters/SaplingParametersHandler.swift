@@ -14,7 +14,7 @@ struct SaplingParametersHandlerConfig {
 }
 
 protocol SaplingParametersHandler {
-    func handleIfNeeded() async throws
+    func handleIfNeeded(account: Zip32Account) async throws
 }
 
 struct SaplingParametersHandlerImpl {
@@ -24,14 +24,14 @@ struct SaplingParametersHandlerImpl {
 }
 
 extension SaplingParametersHandlerImpl: SaplingParametersHandler {
-    func handleIfNeeded() async throws {
+    func handleIfNeeded(account: Zip32Account) async throws {
         try Task.checkCancellation()
 
         do {
             let totalSaplingBalance =
                 try await rustBackend.getWalletSummary()?.accountBalances[0]?.saplingBalance.total().amount
                 ?? 0
-            let totalTransparentBalance = try await rustBackend.getTransparentBalance(account: Account(0))
+            let totalTransparentBalance = try await rustBackend.getTransparentBalance(account: account)
 
             // Download Sapling parameters only if sapling funds are detected.
             guard totalSaplingBalance > 0 || totalTransparentBalance > 0 else { return }

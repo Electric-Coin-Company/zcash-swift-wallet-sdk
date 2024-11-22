@@ -44,7 +44,7 @@ public enum ZcashTransaction {
             }
         }
 
-        public let accountId: Int
+        public let accountId: AccountId
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
@@ -85,7 +85,7 @@ public enum ZcashTransaction {
         public let rawID: Data
         public let pool: Pool
         public let index: Int
-        public let fromAccount: Account?
+        public let fromAccount: AccountId?
         public let recipient: TransactionRecipient
         public let value: Zatoshi
         public let isChange: Bool
@@ -119,7 +119,7 @@ extension ZcashTransaction.Output {
             pool = .init(rawValue: try row.get(Column.pool))
             index = try row.get(Column.index)
             if let accountId = try row.get(Column.fromAccount) {
-                fromAccount = Account(Int32(accountId))
+                fromAccount = AccountId(accountId)
             } else {
                 fromAccount = nil
             }
@@ -169,7 +169,7 @@ extension ZcashTransaction.Overview {
 
     init(row: Row) throws {
         do {
-            self.accountId = try row.get(Column.accountId)
+            self.accountId = AccountId(try row.get(Column.accountId))
             self.expiryHeight = try row.get(Column.expiryHeight)
             self.index = try row.get(Column.index)
             self.hasChange = try row.get(Column.hasChange)

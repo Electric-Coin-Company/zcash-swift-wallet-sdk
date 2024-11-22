@@ -31,9 +31,9 @@ public protocol CombineSynchronizer {
     func start(retry: Bool) -> CompletablePublisher<Error>
     func stop()
 
-    func getSaplingAddress(account: Account) -> SinglePublisher<SaplingAddress, Error>
-    func getUnifiedAddress(account: Account) -> SinglePublisher<UnifiedAddress, Error>
-    func getTransparentAddress(account: Account) -> SinglePublisher<TransparentAddress, Error>
+    func getSaplingAddress(account: Zip32Account) -> SinglePublisher<SaplingAddress, Error>
+    func getUnifiedAddress(account: Zip32Account) -> SinglePublisher<UnifiedAddress, Error>
+    func getTransparentAddress(account: Zip32Account) -> SinglePublisher<TransparentAddress, Error>
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -45,7 +45,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        account: Account,
+        account: Zip32Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -67,7 +67,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        account: Account,
+        account: Zip32Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -110,7 +110,7 @@ public protocol CombineSynchronizer {
 
     func proposefulfillingPaymentURI(
         _ uri: String,
-        account: Account
+        account: Zip32Account
     ) -> SinglePublisher<Proposal, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

@@ -26,7 +26,7 @@ class GetUTXOsViewController: UIViewController {
         let synchronizer = SDKSynchronizer.shared
         
         Task { @MainActor in
-            let account = Account(0)
+            let account = Zip32Account(0)
             let tAddress = (try? await synchronizer.getTransparentAddress(account: account))?.stringEncoded ?? "no t-address found"
             
             self.transparentAddressLabel.text = tAddress
@@ -43,7 +43,7 @@ class GetUTXOsViewController: UIViewController {
         do {
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
             
-            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, account: Account(0))
+            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
             
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
             

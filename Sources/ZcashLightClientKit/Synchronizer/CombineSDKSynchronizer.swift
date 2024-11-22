@@ -51,26 +51,26 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(account: Account) -> SinglePublisher<SaplingAddress, Error> {
+    public func getSaplingAddress(account: Zip32Account) -> SinglePublisher<SaplingAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getSaplingAddress(account: account)
         }
     }
 
-    public func getUnifiedAddress(account: Account) -> SinglePublisher<UnifiedAddress, Error> {
+    public func getUnifiedAddress(account: Zip32Account) -> SinglePublisher<UnifiedAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getUnifiedAddress(account: account)
         }
     }
 
-    public func getTransparentAddress(account: Account) -> SinglePublisher<TransparentAddress, Error> {
+    public func getTransparentAddress(account: Zip32Account) -> SinglePublisher<TransparentAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getTransparentAddress(account: account)
         }
     }
 
     public func proposeTransfer(
-        account: Account,
+        account: Zip32Account,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -82,7 +82,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
 
     public func proposefulfillingPaymentURI(
         _ uri: String,
-        account: Account
+        account: Zip32Account
     ) -> SinglePublisher<Proposal, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.proposefulfillingPaymentURI(
@@ -93,7 +93,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
     }
 
     public func proposeShielding(
-        account: Account,
+        account: Zip32Account,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil
@@ -190,7 +190,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getAccountBalance(account: Account) -> SinglePublisher<AccountBalance?, Error> {
+    public func getAccountBalance(account: Zip32Account) -> SinglePublisher<AccountBalance?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getAccountBalance(account: account)
         }

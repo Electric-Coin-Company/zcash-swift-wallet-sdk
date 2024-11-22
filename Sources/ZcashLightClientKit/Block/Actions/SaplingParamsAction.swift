@@ -22,7 +22,8 @@ extension SaplingParamsAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         logger.debug("Fetching sapling parameters")
-        try await saplingParametersHandler.handleIfNeeded()
+        // TODO: This is hardcoded Zip32Account for index 0, must be updated
+        try await saplingParametersHandler.handleIfNeeded(account: Zip32Account(0))
         
         await context.update(state: .updateSubtreeRoots)
         
