@@ -661,11 +661,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
 
-        var accountBalances: [UInt32: AccountBalance] = [:]
+        var accountBalances: [Zip32AccountIndex: AccountBalance] = [:]
 
         for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
             let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
-            accountBalances[accountBalance.account_id] = accountBalance.toAccountBalance()
+            accountBalances[Zip32AccountIndex(accountBalance.account_id)] = accountBalance.toAccountBalance()
         }
 
         return WalletSummary(

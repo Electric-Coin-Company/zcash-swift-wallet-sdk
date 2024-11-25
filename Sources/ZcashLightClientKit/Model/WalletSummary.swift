@@ -49,7 +49,7 @@ struct ScanProgress: Equatable {
 }
 
 struct WalletSummary: Equatable {
-    let accountBalances: [UInt32: AccountBalance]
+    let accountBalances: [Zip32AccountIndex: AccountBalance]
     let chainTipHeight: BlockHeight
     let fullyScannedHeight: BlockHeight
     let scanProgress: ScanProgress?

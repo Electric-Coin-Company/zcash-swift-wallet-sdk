@@ -512,7 +512,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance? {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances[accountIndex.index]
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances[accountIndex]
     }
 
     /// Fetches the latest ZEC-USD exchange rate.
