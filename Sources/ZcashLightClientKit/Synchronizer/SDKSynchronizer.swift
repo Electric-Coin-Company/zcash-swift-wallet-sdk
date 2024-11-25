@@ -28,6 +28,9 @@ public class SDKSynchronizer: Synchronizer {
     let metrics: SDKMetrics
     public let logger: Logger
     var tor: TorClient?
+    // TODO: [#1512] Only one instance of hardcoded account index has been removed in deeper levels and moved here, needs to be resolved i 1512
+    // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1512
+    private var accountIndex = Zip32AccountIndex(0)
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -265,7 +268,7 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Synchronizer methods
 
-    public func proposeTransfer(account: Zip32Account, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
+    public func proposeTransfer(accountIndex: Zip32AccountIndex, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
         try throwIfUnprepared()
 
         if case Recipient.transparent = recipient, memo != nil {
@@ -273,7 +276,7 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         let proposal = try await transactionEncoder.proposeTransfer(
-            account: account,
+            accountIndex: accountIndex,
             recipient: recipient.stringEncoded,
             amount: amount,
             memoBytes: memo?.asMemoBytes()
@@ -283,7 +286,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func proposeShielding(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil
@@ -291,7 +294,7 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
 
         return try await transactionEncoder.proposeShielding(
-            account: account,
+            accountIndex: accountIndex,
             shieldingThreshold: shieldingThreshold,
             memoBytes: memo.asMemoBytes(),
             transparentReceiver: transparentReceiver?.stringEncoded
@@ -300,13 +303,13 @@ public class SDKSynchronizer: Synchronizer {
 
     public func proposefulfillingPaymentURI(
         _ uri: String,
-        account: Zip32Account
+        accountIndex: Zip32AccountIndex
     ) async throws -> Proposal {
         do {
             try throwIfUnprepared()
             return try await transactionEncoder.proposeFulfillingPaymentFromURI(
                 uri,
-                account: account
+                accountIndex: accountIndex
             )
         } catch ZcashError.rustCreateToAddress(let error) {
             throw ZcashError.rustProposeTransferFromURI(error)
@@ -394,9 +397,7 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
 
         // let's see if there are funds to shield
-        let account = Zip32Account(Int32(spendingKey.account))
-
-        guard let tBalance = try await self.getAccountBalance(account: account)?.unshielded else {
+        guard let tBalance = try await self.getAccountBalance(accountIndex: spendingKey.accountIndex)?.unshielded else {
             throw ZcashError.synchronizerSpendingKeyDoesNotBelongToTheWallet
         }
 
@@ -406,7 +407,7 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         guard let proposal = try await transactionEncoder.proposeShielding(
-            account: account,
+            accountIndex: spendingKey.accountIndex,
             shieldingThreshold: shieldingThreshold,
             memoBytes: memo.asMemoBytes(),
             transparentReceiver: nil
@@ -441,7 +442,7 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             let proposal = try await transactionEncoder.proposeTransfer(
-                account: Zip32Account(Int32(spendingKey.account)),
+                accountIndex: spendingKey.accountIndex,
                 recipient: recipient.stringEncoded,
                 amount: zatoshi,
                 memoBytes: memo?.asMemoBytes()
@@ -510,9 +511,8 @@ public class SDKSynchronizer: Synchronizer {
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
 
-    // TODO: This is hardcoded Zip32Account for index 0, must be updated
-    public func getAccountBalance(account: Zip32Account = Zip32Account(0)) async throws -> AccountBalance? {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances[UInt32(account.index)]
+    public func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance? {
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances[accountIndex.index]
     }
 
     /// Fetches the latest ZEC-USD exchange rate.
@@ -550,16 +550,16 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func getUnifiedAddress(account: Zip32Account) async throws -> UnifiedAddress {
-        try await blockProcessor.getUnifiedAddress(account: account)
+    public func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+        try await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
     }
 
-    public func getSaplingAddress(account: Zip32Account) async throws -> SaplingAddress {
-        try await blockProcessor.getSaplingAddress(account: account)
+    public func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress {
+        try await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
     }
 
-    public func getTransparentAddress(account: Zip32Account) async throws -> TransparentAddress {
-        try await blockProcessor.getTransparentAddress(account: account)
+    public func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress {
+        try await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
 
     // MARK: Rewind
@@ -923,10 +923,10 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: notify state
 
-    private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
+    private func snapshotState(status: InternalSyncStatus, accountIndex: Zip32AccountIndex) async -> SynchronizerState {
         await SynchronizerState(
             syncSessionID: syncSession.value,
-            accountBalance: try? await getAccountBalance(),
+            accountBalance: try? await getAccountBalance(accountIndex: accountIndex),
             internalSyncStatus: status,
             latestBlockHeight: latestBlocksDataProvider.latestBlockHeight
         )
@@ -951,7 +951,7 @@ public class SDKSynchronizer: Synchronizer {
             if SessionTicker.live.isNewSyncSession(oldStatus, newStatus) {
                 await self.syncSession.newSession(with: self.syncSessionIDGenerator)
             }
-            newState = await snapshotState(status: newStatus)
+            newState = await snapshotState(status: newStatus, accountIndex: accountIndex)
         }
 
         latestState = newState

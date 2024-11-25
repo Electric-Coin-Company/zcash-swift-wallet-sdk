@@ -144,23 +144,23 @@ public protocol Synchronizer: AnyObject {
     func stop()
 
     /// Gets the sapling shielded address for the given account.
-    /// - Parameter account: the account whose address is of interest. By default, the first account is used.
+    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(account: Zip32Account) async throws -> SaplingAddress
+    func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
-    /// - Parameter account: the account whose address is of interest. By default, the first account is used.
+    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(account: Zip32Account) async throws -> UnifiedAddress
+    func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
-    /// - Parameter account: the account whose address is of interest. By default, the first account is used.
+    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(account: Zip32Account) async throws -> TransparentAddress
+    func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter account: the account from which to transfer funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -168,7 +168,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -176,7 +176,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter account: the account for which to shield funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account for which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -190,7 +190,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -228,15 +228,15 @@ public protocol Synchronizer: AnyObject {
         memo: Memo?
     ) async throws -> ZcashTransaction.Overview
 
-    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI using the given `account.index`
+    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI by spending from the ZIP 32 account with the given index.
     ///  - Parameter uri: a valid ZIP-321 payment URI
-    ///  - Parameter account: the account index that allows spends to occur.
+    ///  - Parameter accountIndex: the ZIP 32 index of the account providing spend authority.
     ///
     /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposefulfillingPaymentURI(
         _ uri: String,
-        account: Zip32Account
+        accountIndex: Zip32AccountIndex
     ) async throws -> Proposal
 
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
@@ -310,7 +310,7 @@ public protocol Synchronizer: AnyObject {
     /// Account balances from the given account index
     /// - Parameter account: the index of the account
     /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `account.index`
-    func getAccountBalance(account: Zip32Account) async throws -> AccountBalance?
+    func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance?
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()

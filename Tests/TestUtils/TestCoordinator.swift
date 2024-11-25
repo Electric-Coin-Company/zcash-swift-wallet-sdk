@@ -86,7 +86,7 @@ class TestCoordinator {
         
         self.spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: Environment.seedBytes,
-            account: Account(0)
+            accountIndex: Zip32AccountIndex(0)
         )
         
         self.viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)

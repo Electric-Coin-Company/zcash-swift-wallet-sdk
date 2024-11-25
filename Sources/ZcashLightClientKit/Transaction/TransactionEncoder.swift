@@ -21,7 +21,7 @@ public enum TransactionEncoderError: Error {
 protocol TransactionEncoder {
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter account: the account from which to transfer funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
     /// - Parameter recipient: string containing the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -29,7 +29,7 @@ protocol TransactionEncoder {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?
@@ -37,7 +37,7 @@ protocol TransactionEncoder {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter account: the account for which to shield funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -51,7 +51,7 @@ protocol TransactionEncoder {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String?
@@ -84,7 +84,7 @@ protocol TransactionEncoder {
     ///     - Some `ZcashError.rust*` if the creation of transaction fails.
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        account: Zip32Account
+        accountIndex: Zip32AccountIndex
     ) async throws -> Proposal
 
     /// submits a transaction to the Zcash peer-to-peer network.

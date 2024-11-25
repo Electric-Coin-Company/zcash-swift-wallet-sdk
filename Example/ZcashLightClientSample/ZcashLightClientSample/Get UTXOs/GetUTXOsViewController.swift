@@ -15,7 +15,9 @@ class GetUTXOsViewController: UIViewController {
     @IBOutlet weak var totalBalanceLabel: UILabel!
     @IBOutlet weak var messageLabel: UILabel!
     @IBOutlet weak var shieldFundsButton: UIButton!
-    
+
+    let accountIndex = Zip32AccountIndex(0)
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -26,13 +28,12 @@ class GetUTXOsViewController: UIViewController {
         let synchronizer = SDKSynchronizer.shared
         
         Task { @MainActor in
-            let account = Zip32Account(0)
-            let tAddress = (try? await synchronizer.getTransparentAddress(account: account))?.stringEncoded ?? "no t-address found"
+            let tAddress = (try? await synchronizer.getTransparentAddress(accountIndex: accountIndex))?.stringEncoded ?? "no t-address found"
             
             self.transparentAddressLabel.text = tAddress
             
             // swiftlint:disable:next force_try
-            let balance = try! await AppDelegate.shared.sharedSynchronizer.getAccountBalance(account: account)?.unshielded ?? .zero
+            let balance = try! await AppDelegate.shared.sharedSynchronizer.getAccountBalance(accountIndex: accountIndex)?.unshielded ?? .zero
             
             self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.amount))
             self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.amount))
@@ -43,7 +44,7 @@ class GetUTXOsViewController: UIViewController {
         do {
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
             
-            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
+            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: accountIndex)
             
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
             

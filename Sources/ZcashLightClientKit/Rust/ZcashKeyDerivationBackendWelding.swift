@@ -40,12 +40,12 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Returns: true when the encoded string is a valid UFVK. false in any other case
     func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool
 
-    /// Derives and returns a unified spending key from the given seed for the given account ID.
+    /// Derives and returns a unified spending key from the given seed and ZIP 32 account index.
     /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
     /// - Parameter seed: a Byte Array with the seed
-    /// - Parameter accountIndex:account that the key can spend from
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which the key can spend
     /// - Throws: `rustDeriveUnifiedSpendingKey` if rust layer returns error.
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) throws -> UnifiedSpendingKey
+    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Zip32AccountIndex) throws -> UnifiedSpendingKey
 
     /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
     /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from
@@ -81,7 +81,6 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
     /// - Parameter seed: `[Uint8]` seed bytes
     /// - Throws:
-    ///     - `derivationToolInvalidAccount` if the `account.index` is invalid.
     ///     - some `ZcashError.rust*` error if the derivation fails.
     /// - Returns a `[Uint8]`
     static func deriveArbitraryWalletKey(
@@ -93,14 +92,13 @@ protocol ZcashKeyDerivationBackendWelding {
     ///
     /// - Parameter contextString: a globally-unique non-empty sequence of at most 252 bytes that identifies the desired context.
     /// - Parameter seed: `[Uint8]` seed bytes
-    /// - Parameter accountIndex: `Int32` with the account number
+    /// - Parameter accountIndex: the ZIP 32 index of the account
     /// - Throws:
-    ///     - `derivationToolInvalidAccount` if the `account.index` is invalid.
     ///     - some `ZcashError.rust*` error if the derivation fails.
     /// - Returns a `[Uint8]`
     func deriveArbitraryAccountKey(
         contextString: [UInt8],
         from seed: [UInt8],
-        accountIndex: Int32
+        accountIndex: Zip32AccountIndex
     ) throws -> [UInt8]
 }

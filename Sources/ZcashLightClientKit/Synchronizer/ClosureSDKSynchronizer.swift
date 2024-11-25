@@ -52,38 +52,38 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(account: Zip32Account, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
+    public func getSaplingAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getSaplingAddress(account: account)
+            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getUnifiedAddress(account: Zip32Account, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+    public func getUnifiedAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getUnifiedAddress(account: account)
+            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getTransparentAddress(account: Zip32Account, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
+    public func getTransparentAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getTransparentAddress(account: account)
+            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
 
     public func proposeTransfer(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
         completion: @escaping (Result<Proposal, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.proposeTransfer(account: account, recipient: recipient, amount: amount, memo: memo)
+            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
         }
     }
 
     public func proposeShielding(
-        account: Zip32Account,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil,
@@ -91,7 +91,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.proposeShielding(
-                account: account,
+                accountIndex: accountIndex,
                 shieldingThreshold: shieldingThreshold,
                 memo: memo,
                 transparentReceiver: transparentReceiver
@@ -188,9 +188,9 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountBalance(account: Zip32Account, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
+    public func getAccountBalance(accountIndex: Zip32AccountIndex, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getAccountBalance(account: account)
+            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
         }
     }
 
