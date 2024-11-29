@@ -39,8 +39,8 @@ extension UTXOFetcherImpl: UTXOFetcher {
         let accounts = try await rustBackend.listAccounts()
 
         var tAddresses: [TransparentAddress] = []
-        for account in accounts {
-            tAddresses += try await rustBackend.listTransparentReceivers(account: Int32(account))
+        for accountIndex in accounts {
+            tAddresses += try await rustBackend.listTransparentReceivers(accountIndex: accountIndex)
         }
 
         var utxos: [UnspentTransactionOutputEntity] = []

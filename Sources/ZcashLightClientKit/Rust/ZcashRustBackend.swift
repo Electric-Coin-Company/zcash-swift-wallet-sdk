@@ -72,7 +72,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listAccounts() async throws -> [Int32] {
+    func listAccounts() async throws -> [Zip32AccountIndex] {
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
@@ -85,11 +85,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_accounts(accountsPtr) }
 
-        var accounts: [Int32] = []
+        var accounts: [Zip32AccountIndex] = []
 
         for i in (0 ..< Int(accountsPtr.pointee.len)) {
             let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
-            accounts.append(Int32(account.account_index))
+            accounts.append(Zip32AccountIndex(account.account_index))
         }
 
         return accounts
@@ -148,7 +148,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeTransfer(
-        account: Int32,
+        accountIndex: Zip32AccountIndex,
         to address: String,
         value: Int64,
         memo: MemoBytes?
@@ -156,7 +156,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             [CChar](address.utf8CString),
             value,
             memo?.bytes,
@@ -179,12 +179,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func proposeTransferFromURI(
         _ uri: String,
-        account: Int32
+        accountIndex: Zip32AccountIndex
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             [CChar](uri.utf8CString),
             networkType.networkId,
             minimumConfirmations
@@ -219,11 +219,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
+    func getCurrentAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             networkType.networkId
         )
 
@@ -241,11 +241,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             networkType.networkId
         )
 
@@ -281,22 +281,18 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getTransparentBalance(account: Int32) async throws -> Int64 {
-        guard account >= 0 else {
-            throw ZcashError.rustGetTransparentBalanceNegativeAccount(Int(account))
-        }
-
+    func getTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
         let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            account
+            LCZip32Index(accountIndex.index)
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetTransparentBalance(
-                Int(account),
-                lastErrorMessage(fallback: "Error getting Total Transparent balance from account \(account)")
+                Int(accountIndex.index),
+                lastErrorMessage(fallback: "Error getting Total Transparent balance from accountIndex \(accountIndex.index)")
             )
         }
 
@@ -304,23 +300,19 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
-        guard account >= 0 else {
-            throw ZcashError.rustGetVerifiedTransparentBalanceNegativeAccount(Int(account))
-        }
-
+    func getVerifiedTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            account,
+            LCZip32Index(accountIndex.index),
             minimumShieldingConfirmations
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalance(
-                Int(account),
-                lastErrorMessage(fallback: "Error getting verified transparent balance from account \(account)")
+                Int(accountIndex.index),
+                lastErrorMessage(fallback: "Error getting verified transparent balance from accountIndex \(accountIndex.index)")
             )
         }
 
@@ -424,11 +416,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
+    func listTransparentReceivers(accountIndex: Zip32AccountIndex) async throws -> [TransparentAddress] {
         let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             networkType.networkId
         )
 
@@ -667,11 +659,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
 
-        var accountBalances: [UInt32: AccountBalance] = [:]
+        var accountBalances: [Zip32AccountIndex: AccountBalance] = [:]
 
         for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
             let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
-            accountBalances[accountBalance.account_id] = accountBalance.toAccountBalance()
+            accountBalances[Zip32AccountIndex(accountBalance.account_id)] = accountBalance.toAccountBalance()
         }
 
         return WalletSummary(
@@ -747,7 +739,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeShielding(
-        account: Int32,
+        accountIndex: Zip32AccountIndex,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
@@ -755,7 +747,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_shielding(
             dbData.0,
             dbData.1,
-            account,
+            LCZip32Index(accountIndex.index),
             memo?.bytes,
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
@@ -963,7 +955,7 @@ extension FFIBinaryKey {
             bytes: self.encoding.toByteArray(
                 length: Int(self.encoding_len)
             ),
-            account: self.account_id
+            accountIndex: Zip32AccountIndex(self.account_id)
         )
     }
 }

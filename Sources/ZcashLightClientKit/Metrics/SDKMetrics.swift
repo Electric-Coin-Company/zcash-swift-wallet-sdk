@@ -105,7 +105,9 @@ final class SDKMetricsImpl: SDKMetrics {
     func logCBPOverviewReport(_ logger: Logger, walletSummary: WalletSummary?) async {
         actionStop()
 
-        let accountBalance = walletSummary?.accountBalances[0]
+        // TODO: [#1512] This is hardcoded Zip32AccountIndex for index 0, must be updated
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1512
+        let accountBalance = walletSummary?.accountBalances[Zip32AccountIndex(0)]
         logger.sync(
             """
             SYNC (\(syncs)) REPORT

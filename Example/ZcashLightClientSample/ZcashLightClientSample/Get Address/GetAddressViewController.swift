@@ -19,7 +19,7 @@ class GetAddressViewController: UIViewController {
         let synchronizer = SDKSynchronizer.shared
 
         Task { @MainActor in
-            guard let uAddress = try? await synchronizer.getUnifiedAddress(accountIndex: 0) else {
+            guard let uAddress = try? await synchronizer.getUnifiedAddress(accountIndex: Zip32AccountIndex(0)) else {
                 unifiedAddressLabel.text = "could not derive UA"
                 tAddressLabel.text = "could not derive tAddress"
                 saplingAddress.text = "could not derive zAddress"

@@ -113,7 +113,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         do {
             let proposal = try await coordinator.synchronizer.proposefulfillingPaymentURI(
                 paymentURI,
-                accountIndex: 0
+                accountIndex: Zip32AccountIndex(0)
             )
 
             let transactions = try await coordinator.synchronizer.createProposedTransactions(
@@ -320,7 +320,7 @@ class PaymentURIFulfillmentTests: ZcashTestCase {
         do {
             _ = try await coordinator.synchronizer.proposefulfillingPaymentURI(
                 paymentURI,
-                accountIndex: 0
+                accountIndex: Zip32AccountIndex(0)
             )
 
             XCTFail("`fulfillPaymentURI` should have failed")

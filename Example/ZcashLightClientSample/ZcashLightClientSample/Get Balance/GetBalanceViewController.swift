@@ -19,13 +19,15 @@ class GetBalanceViewController: UIViewController {
     var accountBalance: AccountBalance?
     var rate: FiatCurrencyResult?
 
+    let accountIndex = Zip32AccountIndex(0)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let synchronizer = AppDelegate.shared.sharedSynchronizer
         self.title = "Account 0 Balance"
 
         Task { @MainActor [weak self] in
-            self?.accountBalance = try? await synchronizer.getAccountBalance()
+            self?.accountBalance = try? await synchronizer.getAccountBalance(accountIndex: accountIndex)
             self?.updateLabels()
         }
         

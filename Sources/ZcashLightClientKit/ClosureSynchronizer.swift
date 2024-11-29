@@ -32,13 +32,13 @@ public protocol ClosureSynchronizer {
     func start(retry: Bool, completion: @escaping (Error?) -> Void)
     func stop()
 
-    func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
-    func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
-    func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
+    func getSaplingAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
+    func getUnifiedAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
+    func getTransparentAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -46,7 +46,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
@@ -55,7 +55,7 @@ public protocol ClosureSynchronizer {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter accountIndex: the ZIP 32 index of the account from which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -69,7 +69,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?,
@@ -127,7 +127,7 @@ public protocol ClosureSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
-    func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
+    func getAccountBalance(accountIndex: Zip32AccountIndex, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
 
     func refreshExchangeRateUSD()
 

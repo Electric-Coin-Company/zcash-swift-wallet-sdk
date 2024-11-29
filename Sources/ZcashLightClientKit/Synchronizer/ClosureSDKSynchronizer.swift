@@ -52,26 +52,26 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
+    public func getSaplingAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+    public func getUnifiedAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
+    public func getTransparentAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
 
     public func proposeTransfer(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
@@ -83,7 +83,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     }
 
     public func proposeShielding(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil,
@@ -188,7 +188,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountBalance(accountIndex: Int, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
+    public func getAccountBalance(accountIndex: Zip32AccountIndex, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
         }

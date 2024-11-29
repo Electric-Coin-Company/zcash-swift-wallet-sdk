@@ -837,15 +837,15 @@ extension CompactBlockProcessor {
 }
 
 extension CompactBlockProcessor {
-    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
-        try await rustBackend.getCurrentAddress(account: Int32(accountIndex))
+    func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+        try await rustBackend.getCurrentAddress(accountIndex: accountIndex)
     }
     
-    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+    func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress {
         try await getUnifiedAddress(accountIndex: accountIndex).saplingReceiver()
     }
     
-    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+    func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress {
         try await getUnifiedAddress(accountIndex: accountIndex).transparentReceiver()
     }
 }

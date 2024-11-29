@@ -56,13 +56,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeTransfer(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransfer(
-            account: Int32(accountIndex),
+            accountIndex: accountIndex,
             to: recipient,
             value: amount.amount,
             memo: memoBytes
@@ -72,13 +72,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeShielding(
-        accountIndex: Int,
+        accountIndex: Zip32AccountIndex,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String? = nil
     ) async throws -> Proposal? {
         guard let proposal = try await rustBackend.proposeShielding(
-            account: Int32(accountIndex),
+            accountIndex: accountIndex,
             memo: memoBytes,
             shieldingThreshold: shieldingThreshold,
             transparentReceiver: transparentReceiver
@@ -89,11 +89,11 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountIndex: Int
+        accountIndex: Zip32AccountIndex
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransferFromURI(
             uri,
-            account: Int32(accountIndex)
+            accountIndex: accountIndex
         )
         return Proposal(inner: proposal)
     }
