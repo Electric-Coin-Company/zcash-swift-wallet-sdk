@@ -115,7 +115,7 @@ class TestsData {
     }()
 
     var seed: [UInt8] = Environment.seedBytes
-    var spendingKey: UnifiedSpendingKey { try! derivationTools.deriveUnifiedSpendingKey(seed: seed, account: Account(0)) }
+    var spendingKey: UnifiedSpendingKey { try! derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: Zip32AccountIndex(0)) }
     var viewingKey: UnifiedFullViewingKey { try! derivationTools.deriveUnifiedFullViewingKey(from: spendingKey) }
     var birthday: BlockHeight = 123000
 

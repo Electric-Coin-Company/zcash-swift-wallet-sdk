@@ -8,6 +8,8 @@
 
 import Foundation
 
+typealias LCZip32Index = Int32
+
 enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }

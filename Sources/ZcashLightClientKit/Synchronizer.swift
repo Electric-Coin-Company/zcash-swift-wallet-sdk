@@ -308,8 +308,8 @@ public protocol Synchronizer: AnyObject {
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Account balances from the given account index
-    /// - Parameter account: the index of the account
-    /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `account.index`
+    /// - Parameter accountIndex: the ZIP 32 index of the account
+    /// - Returns: `AccountBalance`, struct that holds Sapling and unshielded balances, or `nil` when no account is associated with the given ZIP 32 index
     func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance?
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.

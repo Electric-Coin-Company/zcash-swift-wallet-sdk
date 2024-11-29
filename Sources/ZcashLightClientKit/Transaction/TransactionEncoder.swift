@@ -78,7 +78,7 @@ protocol TransactionEncoder {
     ///
     /// - Parameters:
     /// - Parameter uri: a valid ZIP-321 payment URI.
-    /// - Parameter account: the index of the account the proposal should be made from.
+    /// - Parameter accountIndex: the ZIP 32 index of the account the proposal should be made from.
     /// - Throws:
     ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
     ///     - Some `ZcashError.rust*` if the creation of transaction fails.

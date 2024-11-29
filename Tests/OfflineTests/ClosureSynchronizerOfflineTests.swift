@@ -191,7 +191,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getSaplingAddress(accountIndex: Zip32AccountIndex(3)) { accountIndex in
+        synchronizer.getSaplingAddress(accountIndex: Zip32AccountIndex(3)) { result in
             switch result {
             case let .success(address):
                 XCTAssertEqual(address, self.data.saplingAddress)

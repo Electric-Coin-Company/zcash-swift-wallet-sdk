@@ -28,7 +28,7 @@ public class SDKSynchronizer: Synchronizer {
     let metrics: SDKMetrics
     public let logger: Logger
     var tor: TorClient?
-    // TODO: [#1512] Only one instance of hardcoded account index has been removed in deeper levels and moved here, needs to be resolved i 1512
+    // TODO: [#1512] Only one instance of hardcoded account index has been removed in deeper levels and moved here, needs to be resolved in #1512
     // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1512
     private var accountIndex = Zip32AccountIndex(0)
 

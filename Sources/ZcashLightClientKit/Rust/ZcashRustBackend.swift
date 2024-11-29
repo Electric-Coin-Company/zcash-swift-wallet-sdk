@@ -9,8 +9,6 @@
 import Foundation
 import libzcashlc
 
-typealias LCZip32Index = Int32
-
 enum RustLogging: String {
     /// The logs are completely disabled.
     case off

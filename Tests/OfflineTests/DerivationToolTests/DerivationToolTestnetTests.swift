@@ -61,7 +61,7 @@ class DerivationToolTestnetTests: XCTestCase {
     func testDeriveViewingKeysFromSeed() throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, account: Account(0))
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: Zip32AccountIndex(0))
         let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         XCTAssertEqual(expectedViewingKey, viewingKey)
@@ -77,16 +77,16 @@ class DerivationToolTestnetTests: XCTestCase {
     func testDeriveSpendingKeysFromSeed() throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, account: Account(0))
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: Zip32AccountIndex(0))
 
         XCTAssertEqual(expectedSpendingKey, spendingKey)
     }
 
     func testDeriveUnifiedSpendingKeyFromSeed() throws {
-        let account = Account(0)
+        let accountIndex = Zip32AccountIndex(0)
         let seedBytes = [UInt8](seedData)
 
-        _ = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, account: account)
+        _ = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: accountIndex)
     }
 
     func testGetTransparentAddressFromUA() throws {

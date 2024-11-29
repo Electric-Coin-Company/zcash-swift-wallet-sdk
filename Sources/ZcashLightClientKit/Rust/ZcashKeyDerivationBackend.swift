@@ -101,7 +101,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
                 UInt(seed.count),
-                Int32(accountIndex.index),
+                LCZip32Index(accountIndex.index),
                 networkType.networkId
             )
         }
@@ -211,7 +211,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
                     UInt(contextString.count),
                     seedBufferPtr.baseAddress,
                     UInt(seed.count),
-                    Int32(accountIndex.index),
+                    LCZip32Index(accountIndex.index),
                     networkType.networkId
                 )
             }
