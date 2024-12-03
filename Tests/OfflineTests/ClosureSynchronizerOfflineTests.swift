@@ -638,16 +638,18 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceSucceed() {
+        let accountIndex = Zip32AccountIndex(3)
+        
         let expectedBalance = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(200))
 
         synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, Zip32AccountIndex(3))
+            XCTAssertEqual(receivedAccountIndex, accountIndex)
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -661,13 +663,15 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
+        let accountIndex = Zip32AccountIndex(3)
+        
         synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -680,6 +684,8 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceSucceed() {
+        let accountIndex = Zip32AccountIndex(3)
+        
         let expectedBalance = AccountBalance(
             saplingBalance:
                 PoolBalance(
@@ -697,13 +703,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         )
         
         synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, Zip32AccountIndex(3))
+            XCTAssertEqual(receivedAccountIndex, accountIndex)
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -723,7 +729,9 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        let accountIndex = Zip32AccountIndex(3)
+        
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -759,7 +767,8 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        let accountIndex = Zip32AccountIndex(3)
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case let .success(receivedBalance):
                 XCTAssertEqual(receivedBalance, expectedBalance)
@@ -779,7 +788,9 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: Zip32AccountIndex(3)) { result in
+        let accountIndex = Zip32AccountIndex(3)
+        
+        synchronizer.getAccountsBalances()[accountIndex] { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")

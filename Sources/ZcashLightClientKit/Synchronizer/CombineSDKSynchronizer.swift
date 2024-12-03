@@ -190,9 +190,9 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getAccountBalance(accountIndex: Zip32AccountIndex) -> SinglePublisher<AccountBalance?, Error> {
+    public func getAccountsBalances() -> SinglePublisher<[Zip32AccountIndex: AccountBalance], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountsBalances()
         }
     }
 

@@ -14,7 +14,7 @@ struct SaplingParametersHandlerConfig {
 }
 
 protocol SaplingParametersHandler {
-    func handleIfNeeded(accountIndex: Zip32AccountIndex) async throws
+    func handleIfNeeded() async throws
 }
 
 struct SaplingParametersHandlerImpl {
@@ -24,17 +24,37 @@ struct SaplingParametersHandlerImpl {
 }
 
 extension SaplingParametersHandlerImpl: SaplingParametersHandler {
-    func handleIfNeeded(accountIndex: Zip32AccountIndex) async throws {
+    func handleIfNeeded() async throws {
         try Task.checkCancellation()
 
         do {
-            let totalSaplingBalance =
-                try await rustBackend.getWalletSummary()?.accountBalances[accountIndex]?.saplingBalance.total().amount
-                ?? 0
-            let totalTransparentBalance = try await rustBackend.getTransparentBalance(accountIndex: accountIndex)
+            let accounts = try await rustBackend.listAccounts()
 
+            var totalSaplingBalanceTrigger = false
+            var totalTransparentBalanceTrigger = false
+
+            for account in accounts {
+                let zip32AccountIndex = Zip32AccountIndex(account.index)
+                
+                let totalSaplingBalance =
+                try await rustBackend.getWalletSummary()?.accountBalances[zip32AccountIndex]?.saplingBalance.total().amount
+                    ?? 0
+
+                if totalSaplingBalance > 0 {
+                    totalSaplingBalanceTrigger = true
+                    break
+                }
+
+                let totalTransparentBalance = try await rustBackend.getTransparentBalance(accountIndex: zip32AccountIndex)
+
+                if totalTransparentBalance > 0 {
+                    totalTransparentBalanceTrigger = true
+                    break
+                }
+            }
+            
             // Download Sapling parameters only if sapling funds are detected.
-            guard totalSaplingBalance > 0 || totalTransparentBalance > 0 else { return }
+            guard totalSaplingBalanceTrigger || totalTransparentBalanceTrigger else { return }
         } catch {
             // if sapling balance can't be detected of we fail to obtain the balance
             // for some reason we shall not proceed to download the parameters and

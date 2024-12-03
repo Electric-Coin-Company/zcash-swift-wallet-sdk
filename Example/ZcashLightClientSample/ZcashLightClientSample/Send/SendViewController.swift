@@ -105,10 +105,10 @@ class SendViewController: UIViewController {
     
     func updateBalance() async {
         balanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: accountIndex))?.saplingBalance.total() ?? .zero
+            balance: (try? await synchronizer.getAccountsBalances()[accountIndex])?.saplingBalance.total() ?? .zero
         )
         verifiedBalanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: accountIndex))?.saplingBalance.spendableValue ?? .zero
+            balance: (try? await synchronizer.getAccountsBalances()[accountIndex])?.saplingBalance.spendableValue ?? .zero
         )
     }
     
@@ -123,7 +123,7 @@ class SendViewController: UIViewController {
     func maxFundsOn() {
         Task { @MainActor in
             let fee = Zatoshi(10000)
-            let max: Zatoshi = ((try? await synchronizer.getAccountBalance(accountIndex: accountIndex))?.saplingBalance.spendableValue ?? .zero) - fee
+            let max: Zatoshi = ((try? await synchronizer.getAccountsBalances()[accountIndex])?.saplingBalance.spendableValue ?? .zero) - fee
             amountTextField.text = format(balance: max)
             amountTextField.isEnabled = false
         }
@@ -145,12 +145,12 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: accountIndex))?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountsBalances()[accountIndex])?.saplingBalance.spendableValue ?? .zero
         return balance > .zero
     }
     
     func isAmountValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: accountIndex))?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountsBalances()[accountIndex])?.saplingBalance.spendableValue ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),
