@@ -127,7 +127,7 @@ public protocol ClosureSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
-    func getAccountBalance(accountIndex: Zip32AccountIndex, completion: @escaping (Result<AccountBalance?, Error>) -> Void)
+    func getAccountsBalances(completion: @escaping (Result<[Zip32AccountIndex: AccountBalance], Error>) -> Void)
 
     func refreshExchangeRateUSD()
 

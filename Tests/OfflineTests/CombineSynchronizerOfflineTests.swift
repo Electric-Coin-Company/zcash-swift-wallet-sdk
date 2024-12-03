@@ -754,18 +754,18 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceSucceed() {
-        let testAccount = Account(3)
+        let accountIndex = Zip32AccountIndex(3)
         
         let expectedBalance = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(100))
 
-        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
-            XCTAssertEqual(receivedAccount, testAccount)
+        synchronizerMock.getAccountsBalancesClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, accountIndex)
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: testAccount)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -785,15 +785,15 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        let testAccount = Account(3)
+        let accountIndex = Zip32AccountIndex(3)
 
-        synchronizerMock.getAccountBalanceAccountClosure = { _ in
+        synchronizerMock.getAccountsBalancesClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: testAccount)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -813,7 +813,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceSucceed() {
-        let testAccount = Account(3)
+        let accountIndex = Zip32AccountIndex(3)
 
         let expectedBalance = AccountBalance(
             saplingBalance:
@@ -831,14 +831,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
             unshielded: .zero
         )
         
-        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
-            XCTAssertEqual(receivedAccount, testAccount)
+        synchronizerMock.getAccountsBalancesClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, accountIndex)
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: testAccount)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -858,13 +858,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountClosure = { _ in
+        synchronizerMock.getAccountsBalancesClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: Account(3))
+        let accountIndex = Zip32AccountIndex(3)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -884,7 +885,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {
-        let testAcount = Account(3)
+        let accountIndex = Zip32AccountIndex(3)
         
         let expectedBalance = AccountBalance(
             saplingBalance:
@@ -902,14 +903,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
             unshielded: .zero
         )
         
-        synchronizerMock.getAccountBalanceAccountClosure = { receivedAccount in
-            XCTAssertEqual(receivedAccount, testAcount)
+        synchronizerMock.getAccountsBalancesClosure = { receivedAccount in
+            XCTAssertEqual(receivedAccount, accountIndex)
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: testAcount)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -929,13 +930,14 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountClosure = { _ in
+        synchronizerMock.getAccountsBalancesClosure = { _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(account: Account(3))
+        let accountIndex = Zip32AccountIndex(3)
+        synchronizer.getAccountsBalances()[accountIndex]
             .sink(
                 receiveCompletion: { result in
                     switch result {

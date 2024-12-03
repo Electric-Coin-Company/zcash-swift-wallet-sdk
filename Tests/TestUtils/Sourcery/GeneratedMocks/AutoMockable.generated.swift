@@ -1289,21 +1289,19 @@ class SaplingParametersHandlerMock: SaplingParametersHandler {
 
     // MARK: - handleIfNeeded
 
-    var handleIfNeededAccountIndexThrowableError: Error?
-    var handleIfNeededAccountIndexCallsCount = 0
-    var handleIfNeededAccountIndexCalled: Bool {
-        return handleIfNeededAccountIndexCallsCount > 0
+    var handleIfNeededThrowableError: Error?
+    var handleIfNeededCallsCount = 0
+    var handleIfNeededCalled: Bool {
+        return handleIfNeededCallsCount > 0
     }
-    var handleIfNeededAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var handleIfNeededAccountIndexClosure: ((Zip32AccountIndex) async throws -> Void)?
+    var handleIfNeededClosure: (() async throws -> Void)?
 
-    func handleIfNeeded(accountIndex: Zip32AccountIndex) async throws {
-        if let error = handleIfNeededAccountIndexThrowableError {
+    func handleIfNeeded() async throws {
+        if let error = handleIfNeededThrowableError {
             throw error
         }
-        handleIfNeededAccountIndexCallsCount += 1
-        handleIfNeededAccountIndexReceivedAccountIndex = accountIndex
-        try await handleIfNeededAccountIndexClosure!(accountIndex)
+        handleIfNeededCallsCount += 1
+        try await handleIfNeededClosure!()
     }
 
 }
@@ -1800,27 +1798,25 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - getAccountBalance
+    // MARK: - getAccountsBalances
 
-    var getAccountBalanceAccountIndexThrowableError: Error?
-    var getAccountBalanceAccountIndexCallsCount = 0
-    var getAccountBalanceAccountIndexCalled: Bool {
-        return getAccountBalanceAccountIndexCallsCount > 0
+    var getAccountsBalancesThrowableError: Error?
+    var getAccountsBalancesCallsCount = 0
+    var getAccountsBalancesCalled: Bool {
+        return getAccountsBalancesCallsCount > 0
     }
-    var getAccountBalanceAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getAccountBalanceAccountIndexReturnValue: AccountBalance?
-    var getAccountBalanceAccountIndexClosure: ((Zip32AccountIndex) async throws -> AccountBalance?)?
+    var getAccountsBalancesReturnValue: [Zip32AccountIndex: AccountBalance]!
+    var getAccountsBalancesClosure: (() async throws -> [Zip32AccountIndex: AccountBalance])?
 
-    func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance? {
-        if let error = getAccountBalanceAccountIndexThrowableError {
+    func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance] {
+        if let error = getAccountsBalancesThrowableError {
             throw error
         }
-        getAccountBalanceAccountIndexCallsCount += 1
-        getAccountBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getAccountBalanceAccountIndexClosure {
-            return try await closure(accountIndex)
+        getAccountsBalancesCallsCount += 1
+        if let closure = getAccountsBalancesClosure {
+            return try await closure()
         } else {
-            return getAccountBalanceAccountIndexReturnValue
+            return getAccountsBalancesReturnValue
         }
     }
 

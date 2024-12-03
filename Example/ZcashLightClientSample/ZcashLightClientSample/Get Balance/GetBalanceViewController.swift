@@ -27,7 +27,9 @@ class GetBalanceViewController: UIViewController {
         self.title = "Account 0 Balance"
 
         Task { @MainActor [weak self] in
-            self?.accountBalance = try? await synchronizer.getAccountBalance(accountIndex: accountIndex)
+            guard let accountIndex = self?.accountIndex else { return }
+            
+            self?.accountBalance = try? await synchronizer.getAccountsBalances()[accountIndex]
             self?.updateLabels()
         }
         

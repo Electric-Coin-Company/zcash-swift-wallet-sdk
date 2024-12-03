@@ -188,9 +188,9 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountBalance(accountIndex: Zip32AccountIndex, completion: @escaping (Result<AccountBalance?, Error>) -> Void) {
+    public func getAccountsBalances(completion: @escaping (Result<[Zip32AccountIndex: AccountBalance], Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getAccountBalance(accountIndex: accountIndex)
+            try await self.synchronizer.getAccountsBalances()
         }
     }
 

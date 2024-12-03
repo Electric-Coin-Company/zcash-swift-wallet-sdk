@@ -86,6 +86,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         var initialTotalBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
         self.expectedReorgHeight = receivedTxHeight + 1
+        let accountIndex = Zip32AccountIndex(0)
         
         /*
         precondition:know balances before tx at received_Tx_height arrives
@@ -100,8 +101,8 @@ class AdvancedReOrgTests: ZcashTestCase {
             try await coordinator.sync(
                 completion: { synchro in
                     synchronizer = synchro
-                    initialVerifiedBalance = try await synchro.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
-                    initialTotalBalance = try await synchro.getAccountBalance()?.saplingBalance.total() ?? .zero
+                    initialVerifiedBalance = try await synchro.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
+                    initialTotalBalance = try await synchro.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
                     preTxExpectation.fulfill()
                     shouldContinue = true
                 },
@@ -135,8 +136,8 @@ class AdvancedReOrgTests: ZcashTestCase {
             try await coordinator.sync(
                 completion: { synchro in
                     synchronizer = synchro
-                    receivedTxVerifiedBalance = try await synchro.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
-                    receivedTxTotalBalance = try await synchro.getAccountBalance()?.saplingBalance.total() ?? .zero
+                    receivedTxVerifiedBalance = try await synchro.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
+                    receivedTxTotalBalance = try await synchro.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
                     receivedTxExpectation.fulfill()
                 }, error: self.handleError
             )
@@ -202,8 +203,8 @@ class AdvancedReOrgTests: ZcashTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    afterReorgTxTotalBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                    afterReorgTxVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                    afterReorgTxTotalBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                    afterReorgTxVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                     reorgSyncexpectation.fulfill()
                 },
                 error: self.handleError
@@ -238,8 +239,8 @@ class AdvancedReOrgTests: ZcashTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    finalReorgTxTotalBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                    finalReorgTxVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                    finalReorgTxTotalBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                    finalReorgTxVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                     finalsyncExpectation.fulfill()
                 },
                 error: self.handleError
@@ -289,6 +290,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance = Zatoshi(-1)
+        let accountIndex = Zip32AccountIndex(0)
         
         /*
         2. applyStaged(received_Tx_height)
@@ -304,7 +306,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    initialTotalBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
+                    initialTotalBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
                     preTxExpectation.fulfill()
                 },
                 error: self.handleError
@@ -450,17 +452,18 @@ class AdvancedReOrgTests: ZcashTestCase {
         await fulfillment(of: [lastSyncExpectation], timeout: 5)
 
         let expectedVerifiedBalance = initialTotalBalance + pendingTx.value
-        let currentVerifiedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+        let currentVerifiedBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
         // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
 //        let expectedPendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
 //        XCTAssertEqual(expectedPendingTransactionsCount, 0)
         XCTAssertEqual(expectedVerifiedBalance, currentVerifiedBalance)
 
-        let resultingBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
+        let resultingBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
         XCTAssertEqual(resultingBalance, currentVerifiedBalance)
     }
     
     func testIncomingTransactionIndexChange() async throws {
+        let accountIndex = Zip32AccountIndex(0)
         await hookToReOrgNotification()
         self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
@@ -480,8 +483,8 @@ class AdvancedReOrgTests: ZcashTestCase {
         var preReorgVerifiedBalance = Zatoshi.zero
         try await coordinator.sync(
             completion: { synchronizer in
-                preReorgTotalBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                preReorgVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                preReorgTotalBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                preReorgVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 firstSyncExpectation.fulfill()
             },
             error: self.handleError
@@ -503,8 +506,8 @@ class AdvancedReOrgTests: ZcashTestCase {
         var postReorgVerifiedBalance = Zatoshi.zero
         try await coordinator.sync(
             completion: { synchronizer in
-                postReorgTotalBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                postReorgVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                postReorgTotalBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                postReorgVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 afterReorgSync.fulfill()
             },
             error: self.handleError
@@ -517,6 +520,7 @@ class AdvancedReOrgTests: ZcashTestCase {
     }
     
     func testReOrgExpiresInboundTransaction() async throws {
+        let accountIndex = Zip32AccountIndex(0)
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight = BlockHeight(663188)
         try coordinator.applyStaged(blockheight: receivedTxHeight - 1)
@@ -527,8 +531,8 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         try await coordinator.sync(
             completion: { synchronizer in
-                initialBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                initialVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                initialBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                initialVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 expectation.fulfill()
             },
             error: self.handleError
@@ -546,8 +550,8 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         try await coordinator.sync(
             completion: { synchronizer in
-                afterTxBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                afterTxVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                afterTxBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                afterTxVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 let receivedTransactions = await synchronizer.receivedTransactions
                 XCTAssertNotNil(
                     receivedTransactions.first { $0.minedHeight == receivedTxHeight },
@@ -576,8 +580,8 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         try await coordinator.sync(
             completion: { synchronizer in
-                afterReOrgBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                afterReOrgVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                afterReOrgBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                afterReOrgVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 let receivedTransactions = await synchronizer.receivedTransactions
                 XCTAssertNil(
                     receivedTransactions.first { $0.minedHeight == receivedTxHeight },
@@ -628,6 +632,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         let incomingTxHeight = BlockHeight(663188)
+        let accountIndex = Zip32AccountIndex(0)
         
         try coordinator.applyStaged(blockheight: incomingTxHeight + 1)
 
@@ -653,7 +658,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         /*
         1a. save balances
         */
-        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         initialBalance = accountBalance?.saplingBalance.total() ?? .zero
         initialVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
         incomingTx = await coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
@@ -702,7 +707,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         /*
         7. check that balances still match
         */
-        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
         let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedVerifiedBalance, initialVerifiedBalance)
@@ -712,6 +717,7 @@ class AdvancedReOrgTests: ZcashTestCase {
     func testTxIndexReorg() async throws {
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeBefore))
         
+        let accountIndex = Zip32AccountIndex(0)
         let txReorgHeight = BlockHeight(663195)
         let finalHeight = BlockHeight(663200)
         try coordinator.applyStaged(blockheight: txReorgHeight)
@@ -723,8 +729,8 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         try await coordinator.sync(
             completion: { synchronizer in
-                initialBalance = try await synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
-                initialVerifiedBalance = try await synchronizer.getAccountBalance()?.saplingBalance.spendableValue ?? .zero
+                initialBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
+                initialVerifiedBalance = try await synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.spendableValue ?? .zero
                 firstSyncExpectation.fulfill()
             },
             error: self.handleError
@@ -748,7 +754,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         
         await fulfillment(of: [lastSyncExpectation], timeout: 5)
 
-        let accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        let accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
         let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, initialBalance)
@@ -1062,6 +1068,7 @@ class AdvancedReOrgTests: ZcashTestCase {
             branchID: branchID,
             chainName: chainName
         )
+        let accountIndex = Zip32AccountIndex(0)
         
         sleep(2)
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txHeightReOrgBefore))
@@ -1081,7 +1088,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         
         await fulfillment(of: [firstSyncExpectation], timeout: 5)
         
-        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let initialBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         let initialVerifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
         guard let initialTxHeight = try await coordinator.synchronizer.allReceivedTransactions().first?.minedHeight else {
@@ -1112,7 +1119,7 @@ class AdvancedReOrgTests: ZcashTestCase {
             return
         }
 
-        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
         let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
@@ -1142,6 +1149,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxBefore))
         
+        let accountIndex = Zip32AccountIndex(0)
         let reorgHeight: BlockHeight = 663195
         self.expectedReorgHeight = reorgHeight
         self.expectedRewindHeight = reorgHeight - 10
@@ -1163,7 +1171,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         
         await fulfillment(of: [firstSyncExpectation], timeout: 5)
         
-        var accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        var accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let initialTotalBalance: Zatoshi = accountBalance?.saplingBalance.total() ?? .zero
         let initialVerifiedBalance: Zatoshi = accountBalance?.saplingBalance.spendableValue ?? .zero
         
@@ -1202,7 +1210,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         
         await fulfillment(of: [afterReorgSyncExpectation], timeout: 5)
 
-        accountBalance = try await coordinator.synchronizer.getAccountBalance()
+        accountBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]
         let expectedVerifiedBalance = accountBalance?.saplingBalance.spendableValue ?? .zero
         let expectedBalance = accountBalance?.saplingBalance.total() ?? .zero
         XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
@@ -1231,6 +1239,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         let sentTxHeight: BlockHeight = 663195
         try coordinator.applyStaged(blockheight: sentTxHeight - 1)
+        let accountIndex = Zip32AccountIndex(0)
         
         sleep(2)
         
@@ -1253,7 +1262,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         await fulfillment(of: [firstSyncExpectation], timeout: 10)
         
         sleep(1)
-        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
+        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: ZcashTransaction.Overview?
@@ -1373,7 +1382,7 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         await fulfillment(of: [lastSyncExpectation], timeout: 5)
 
-        let expectedBalance = try await coordinator.synchronizer.getAccountBalance()?.saplingBalance.total() ?? .zero
+        let expectedBalance = try await coordinator.synchronizer.getAccountsBalances()[accountIndex]?.saplingBalance.total() ?? .zero
         XCTAssertEqual(expectedBalance, initialTotalBalance)
     }
     

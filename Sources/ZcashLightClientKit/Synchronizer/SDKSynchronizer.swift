@@ -28,9 +28,6 @@ public class SDKSynchronizer: Synchronizer {
     let metrics: SDKMetrics
     public let logger: Logger
     var tor: TorClient?
-    // TODO: [#1512] Only one instance of hardcoded account index has been removed in deeper levels and moved here, needs to be resolved in #1512
-    // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1512
-    private var accountIndex = Zip32AccountIndex(0)
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -397,7 +394,7 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
 
         // let's see if there are funds to shield
-        guard let tBalance = try await self.getAccountBalance(accountIndex: spendingKey.accountIndex)?.unshielded else {
+        guard let tBalance = try await self.getAccountsBalances()[spendingKey.accountIndex]?.unshielded else {
             throw ZcashError.synchronizerSpendingKeyDoesNotBelongToTheWallet
         }
 
@@ -511,8 +508,8 @@ public class SDKSynchronizer: Synchronizer {
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
 
-    public func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance? {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances[accountIndex]
+    public func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance] {
+        try await initializer.rustBackend.getWalletSummary()?.accountBalances ?? [:]
     }
 
     /// Fetches the latest ZEC-USD exchange rate.
@@ -923,10 +920,10 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: notify state
 
-    private func snapshotState(status: InternalSyncStatus, accountIndex: Zip32AccountIndex) async -> SynchronizerState {
+    private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
         await SynchronizerState(
             syncSessionID: syncSession.value,
-            accountBalance: try? await getAccountBalance(accountIndex: accountIndex),
+            accountsBalances: (try? await getAccountsBalances()) ?? [:],
             internalSyncStatus: status,
             latestBlockHeight: latestBlocksDataProvider.latestBlockHeight
         )
@@ -951,7 +948,7 @@ public class SDKSynchronizer: Synchronizer {
             if SessionTicker.live.isNewSyncSession(oldStatus, newStatus) {
                 await self.syncSession.newSession(with: self.syncSessionIDGenerator)
             }
-            newState = await snapshotState(status: newStatus, accountIndex: accountIndex)
+            newState = await snapshotState(status: newStatus)
         }
 
         latestState = newState

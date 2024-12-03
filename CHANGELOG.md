@@ -12,6 +12,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 - `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accpt a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.
+- The SDK no longer assumes a default account. All business logic with instances of Zip32AccountIndex(<index>) has been refactored.
 
 ## Checkpoints
 

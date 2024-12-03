@@ -105,17 +105,24 @@ final class SDKMetricsImpl: SDKMetrics {
     func logCBPOverviewReport(_ logger: Logger, walletSummary: WalletSummary?) async {
         actionStop()
 
-        // TODO: [#1512] This is hardcoded Zip32AccountIndex for index 0, must be updated
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1512
-        let accountBalance = walletSummary?.accountBalances[Zip32AccountIndex(0)]
         logger.sync(
             """
             SYNC (\(syncs)) REPORT
             finished in: \(Date().timeIntervalSince1970 - cbpStartTime)
-            verified balance: \(accountBalance?.saplingBalance.spendableValue.amount ?? 0)
-            total balance: \(accountBalance?.saplingBalance.total().amount ?? 0)
             """
         )
+
+        if let accountBalances = walletSummary?.accountBalances {
+            for accountBalance in accountBalances {
+                logger.sync(
+                """
+                account index: \(accountBalance.key)
+                    verified balance: \(accountBalance.value.saplingBalance.spendableValue.amount)
+                    total balance: \(accountBalance.value.saplingBalance.total().amount)
+                """
+                )
+            }
+        }
 
         try? await Task.sleep(nanoseconds: 100_000)
 

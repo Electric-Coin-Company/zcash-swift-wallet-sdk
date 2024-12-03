@@ -36,7 +36,7 @@ public struct SynchronizerState: Equatable {
     /// SyncSessionIDs are provided to users
     public var syncSessionID: UUID
     /// account balance known to this synchronizer given the data that has processed locally
-    public var accountBalance: AccountBalance?
+    public var accountsBalances: [Zip32AccountIndex: AccountBalance]
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
@@ -47,7 +47,7 @@ public struct SynchronizerState: Equatable {
     public static var zero: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalance: .zero,
+            accountsBalances: [:],
             internalSyncStatus: .unprepared,
             latestBlockHeight: .zero
         )
@@ -55,12 +55,12 @@ public struct SynchronizerState: Equatable {
     
     init(
         syncSessionID: UUID,
-        accountBalance: AccountBalance?,
+        accountsBalances: [Zip32AccountIndex: AccountBalance],
         internalSyncStatus: InternalSyncStatus,
         latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
-        self.accountBalance = accountBalance
+        self.accountsBalances = accountsBalances
         self.internalSyncStatus = internalSyncStatus
         self.latestBlockHeight = latestBlockHeight
         self.syncStatus = internalSyncStatus.mapToSyncStatus()
@@ -307,10 +307,9 @@ public protocol Synchronizer: AnyObject {
     /// `SynchronizerErrors.notPrepared`.
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
-    /// Account balances from the given account index
-    /// - Parameter accountIndex: the ZIP 32 index of the account
-    /// - Returns: `AccountBalance`, struct that holds Sapling and unshielded balances, or `nil` when no account is associated with the given ZIP 32 index
-    func getAccountBalance(accountIndex: Zip32AccountIndex) async throws -> AccountBalance?
+    /// Accounts balances
+    /// - Returns: `[Zip32AccountIndex: AccountBalance]`, struct that holds Sapling and unshielded balances per account
+    func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance]
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()
