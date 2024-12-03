@@ -32,13 +32,12 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
 
             var totalSaplingBalanceTrigger = false
             var totalTransparentBalanceTrigger = false
-
+            let accountBalances = try await rustBackend.getWalletSummary()?.accountBalances
+            
             for account in accounts {
                 let zip32AccountIndex = Zip32AccountIndex(account.index)
                 
-                let totalSaplingBalance =
-                try await rustBackend.getWalletSummary()?.accountBalances[zip32AccountIndex]?.saplingBalance.total().amount
-                    ?? 0
+                let totalSaplingBalance = accountBalances?[zip32AccountIndex]?.saplingBalance.total().amount ?? 0
 
                 if totalSaplingBalance > 0 {
                     totalSaplingBalanceTrigger = true
