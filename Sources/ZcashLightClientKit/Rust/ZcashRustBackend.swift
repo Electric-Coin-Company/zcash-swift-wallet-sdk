@@ -96,6 +96,35 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
+    func importAccount(
+        ufvk: String,
+        treeState: TreeState,
+        recoverUntil: UInt32?,
+        purpose: AccountPurpose
+    ) async throws -> Int32 {
+        var rUntil: Int64 = -1
+        
+        if let recoverUntil {
+            rUntil = Int64(recoverUntil)
+        }
+        
+        let treeStateBytes = try treeState.serializedData(partial: false).bytes
+
+        let index = zcashlc_import_account_ufvk(
+            dbData.0,
+            dbData.1,
+            [CChar](ufvk.utf8CString),
+            treeStateBytes,
+            UInt(treeStateBytes.count),
+            rUntil,
+            networkType.networkId,
+            purpose.rawValue
+        )
+        
+        return index
+    }
+    
+    @DBActor
     func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
