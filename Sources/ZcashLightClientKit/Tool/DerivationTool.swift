@@ -233,9 +233,8 @@ extension UnifiedFullViewingKey {
     /// already validated by another function. only for internal use. Unless you are
     /// constructing an address from a primitive function of the FFI, you probably
     /// shouldn't be using this.
-    init(validatedEncoding: String, accountIndex: Zip32AccountIndex) {
+    init(validatedEncoding: String) {
         self.encoding = validatedEncoding
-        self.accountIndex = accountIndex
     }
 }
 

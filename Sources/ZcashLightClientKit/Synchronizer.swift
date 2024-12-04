@@ -36,7 +36,7 @@ public struct SynchronizerState: Equatable {
     /// SyncSessionIDs are provided to users
     public var syncSessionID: UUID
     /// account balance known to this synchronizer given the data that has processed locally
-    public var accountsBalances: [Zip32AccountIndex: AccountBalance]
+    public var accountsBalances: [AccountUUID: AccountBalance]
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
@@ -55,7 +55,7 @@ public struct SynchronizerState: Equatable {
     
     init(
         syncSessionID: UUID,
-        accountsBalances: [Zip32AccountIndex: AccountBalance],
+        accountsBalances: [AccountUUID: AccountBalance],
         internalSyncStatus: InternalSyncStatus,
         latestBlockHeight: BlockHeight
     ) {
@@ -146,17 +146,17 @@ public protocol Synchronizer: AnyObject {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress
+    func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress
+    func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
     /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress
+    func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -168,7 +168,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -190,7 +190,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -212,22 +212,6 @@ public protocol Synchronizer: AnyObject {
         spendingKey: UnifiedSpendingKey
     ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
 
-    /// Sends zatoshi.
-    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
-    /// - Parameter zatoshi: the amount to send in Zatoshi.
-    /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
-    ///
-    /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
-    /// `SynchronizerErrors.notPrepared`.
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview
-
     /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI by spending from the ZIP 32 account with the given index.
     ///  - Parameter uri: a valid ZIP-321 payment URI
     ///  - Parameter accountIndex: the ZIP 32 index of the account providing spend authority.
@@ -236,22 +220,8 @@ public protocol Synchronizer: AnyObject {
     /// `SynchronizerErrors.notPrepared`.
     func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> Proposal
-
-    /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
-    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
-    /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter shieldingThreshold: the minimum transparent balance required before a transaction will be created.
-    ///
-    /// - Note: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
-    /// `SynchronizerErrors.notPrepared`.
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) async throws -> ZcashTransaction.Overview
 
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }
@@ -308,12 +278,15 @@ public protocol Synchronizer: AnyObject {
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Accounts balances
-    /// - Returns: `[Zip32AccountIndex: AccountBalance]`, struct that holds Sapling and unshielded balances per account
-    func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance]
+    /// - Returns: `[AccountUUID: AccountBalance]`, struct that holds Sapling and unshielded balances per account
+    func getAccountsBalances() async throws -> [AccountUUID: AccountBalance]
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()
 
+    /// 
+    func listAccounts() async throws -> [AccountUUID]
+    
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant

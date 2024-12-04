@@ -72,7 +72,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listAccounts() async throws -> [Zip32AccountIndex] {
+    func listAccounts() async throws -> [AccountUUID] {
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
@@ -85,11 +85,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_accounts(accountsPtr) }
 
-        var accounts: [Zip32AccountIndex] = []
+        var accounts: [AccountUUID] = []
 
         for i in (0 ..< Int(accountsPtr.pointee.len)) {
             let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
-            accounts.append(Zip32AccountIndex(account.account_index))
+            accounts.append(AccountUUID(id: account.uuidArray))
         }
 
         return accounts
@@ -126,7 +126,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
         
         guard let uuidPtr else {
-            // TODO: throw an error
+            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`importAccount` failed with unknown error"))
         }
         
         defer { zcashlc_free_ffi_uuid(uuidPtr) }
@@ -996,11 +996,10 @@ extension String {
 extension FfiBoxedSlice {
     /// converts an [`FfiBoxedSlice`] into a [`UnifiedSpendingKey`]
     /// - Note: This does not check that the converted value actually holds a valid USK
-    func unsafeToUnifiedSpendingKey(network: NetworkType, accountUUID: AccountUUID) -> UnifiedSpendingKey {
+    func unsafeToUnifiedSpendingKey(network: NetworkType) -> UnifiedSpendingKey {
         .init(
             network: network,
-            bytes: self.ptr.toByteArray(length: Int(self.len)),
-            accountUUID: accountUUID
+            bytes: self.ptr.toByteArray(length: Int(self.len))
         )
     }
 }
@@ -1034,8 +1033,7 @@ extension FFIBinaryKey {
             network: network,
             bytes: self.encoding.toByteArray(
                 length: Int(self.encoding_len)
-            ),
-            accountUUID: AccountUUID(id: uuidArray)
+            )
         )
     }
 }

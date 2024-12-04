@@ -51,56 +51,56 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<SaplingAddress, Error> {
+    public func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getSaplingAddress(accountUUID: accountUUID)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<UnifiedAddress, Error> {
+    public func getUnifiedAddress(accountUUID: AccountUUID) -> SinglePublisher<UnifiedAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getUnifiedAddress(accountUUID: accountUUID)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<TransparentAddress, Error> {
+    public func getTransparentAddress(accountUUID: AccountUUID) -> SinglePublisher<TransparentAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getTransparentAddress(accountUUID: accountUUID)
         }
     }
 
     public func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
     ) -> SinglePublisher<Proposal, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+            try await self.synchronizer.proposeTransfer(accountUUID: accountUUID, recipient: recipient, amount: amount, memo: memo)
         }
     }
 
     public func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) -> SinglePublisher<Proposal, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.proposefulfillingPaymentURI(
                 uri,
-                accountIndex: accountIndex
+                accountUUID: accountUUID
             )
         }
     }
 
     public func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil
     ) -> SinglePublisher<Proposal?, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.proposeShielding(
-                accountIndex: accountIndex,
+                accountUUID: accountUUID,
                 shieldingThreshold: shieldingThreshold,
                 memo: memo,
                 transparentReceiver: transparentReceiver
@@ -117,29 +117,12 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    public func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error> {
+    public func listAccounts() -> SinglePublisher<[AccountUUID], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
+            try await self.synchronizer.listAccounts()
         }
     }
-
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    public func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
-        }
-    }
-
+    
     public var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.transactions
@@ -190,7 +173,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getAccountsBalances() -> SinglePublisher<[Zip32AccountIndex: AccountBalance], Error> {
+    public func getAccountsBalances() -> SinglePublisher<[AccountUUID: AccountBalance], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getAccountsBalances()
         }

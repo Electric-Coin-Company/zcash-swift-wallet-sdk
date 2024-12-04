@@ -32,9 +32,9 @@ public protocol ClosureSynchronizer {
     func start(retry: Bool, completion: @escaping (Error?) -> Void)
     func stop()
 
-    func getSaplingAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
-    func getUnifiedAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
-    func getTransparentAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
+    func getSaplingAddress(accountUUID: AccountUUID, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
+    func getUnifiedAddress(accountUUID: AccountUUID, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
+    func getTransparentAddress(accountUUID: AccountUUID, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -46,7 +46,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
@@ -69,7 +69,7 @@ public protocol ClosureSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?,
@@ -93,23 +93,8 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
     )
 
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?,
-        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
-    )
-
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi,
-        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
-    )
-
+    func listAccounts(completion: @escaping (Result<[AccountUUID], Error>) -> Void)
+        
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
@@ -127,7 +112,7 @@ public protocol ClosureSynchronizer {
 
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
-    func getAccountsBalances(completion: @escaping (Result<[Zip32AccountIndex: AccountBalance], Error>) -> Void)
+    func getAccountsBalances(completion: @escaping (Result<[AccountUUID: AccountBalance], Error>) -> Void)
 
     func refreshExchangeRateUSD()
 

@@ -13,7 +13,7 @@ public protocol StringEncoded {
 public struct UnifiedSpendingKey: Equatable, Undescribable {
     let network: NetworkType
     let bytes: [UInt8]
-    public let accountUUID: AccountUUID
+    //public let accountUUID: AccountUUID
 }
 
 /// Sapling Extended Spending Key
@@ -45,7 +45,7 @@ public struct TransparentAccountPrivKey: Equatable, Undescribable {
 /// A ZIP 316 Unified Full Viewing Key.
 public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     let encoding: String
-    public let accountUUID: AccountUUID
+    //public let accountUUID: AccountUUID
 
     public var stringEncoded: String { encoding }
 
@@ -55,13 +55,13 @@ public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     ///  - parameter accountIndex: the ZIP32 account Index of the given UFVK
     ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
     /// - Throws: `unifiedFullViewingKeyInvalidInput`when the provided encoding is found to be invalid
-    public init(encoding: String, accountUUID: AccountUUID, network: NetworkType) throws {
+    public init(encoding: String, network: NetworkType) throws {
+//    public init(encoding: String, accountUUID: AccountUUID, network: NetworkType) throws {
         guard DerivationTool(networkType: network).isValidUnifiedFullViewingKey(encoding) else {
             throw ZcashError.unifiedFullViewingKeyInvalidInput
         }
 
         self.encoding = encoding
-        self.accountUUID = accountUUID
     }
 }
 

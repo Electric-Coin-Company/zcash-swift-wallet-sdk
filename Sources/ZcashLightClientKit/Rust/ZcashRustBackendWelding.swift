@@ -36,7 +36,7 @@ public enum RewindResult {
 
 protocol ZcashRustBackendWelding {
     /// Returns a list of the ZIP 32 indices of accounts in the wallet.
-    func listAccounts() async throws -> [Zip32AccountIndex]
+    func listAccounts() async throws -> [AccountUUID]
 
     func importAccount(
         ufvk: String,

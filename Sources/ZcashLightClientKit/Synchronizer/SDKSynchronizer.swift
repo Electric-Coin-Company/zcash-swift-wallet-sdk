@@ -265,6 +265,10 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Synchronizer methods
 
+    public func listAccounts() async throws -> [AccountUUID] {
+        try await initializer.rustBackend.listAccounts()
+    }
+    
     public func proposeTransfer(accountUUID: AccountUUID, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
         try throwIfUnprepared()
 
@@ -355,111 +359,6 @@ public class SDKSynchronizer: Synchronizer {
                     return TransactionSubmitResult.submitFailure(txId: transaction.rawID, code: code, description: message)
                 }
             }
-        }
-    }
-
-    public func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview {
-        try throwIfUnprepared()
-
-        if case Recipient.transparent = toAddress, memo != nil {
-            throw ZcashError.synchronizerSendMemoToTransparentAddress
-        }
-
-        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
-            spendURL: initializer.spendParamsURL,
-            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
-            outputURL: initializer.outputParamsURL,
-            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
-            logger: logger
-        )
-
-        return try await createToAddress(
-            spendingKey: spendingKey,
-            zatoshi: zatoshi,
-            recipient: toAddress,
-            memo: memo
-        )
-    }
-
-    public func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) async throws -> ZcashTransaction.Overview {
-        try throwIfUnprepared()
-
-        // let's see if there are funds to shield
-        guard let tBalance = try await self.getAccountsBalances()[spendingKey.accountUUID]?.unshielded else {
-            throw ZcashError.synchronizerSpendingKeyDoesNotBelongToTheWallet
-        }
-
-        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
-        guard tBalance >= self.network.constants.defaultFee() else {
-            throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
-        }
-
-        guard let proposal = try await transactionEncoder.proposeShielding(
-            accountUUID: spendingKey.accountUUID,
-            shieldingThreshold: shieldingThreshold,
-            memoBytes: memo.asMemoBytes(),
-            transparentReceiver: nil
-        ) else { throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds }
-
-        let transactions = try await transactionEncoder.createProposedTransactions(
-            proposal: proposal,
-            spendingKey: spendingKey
-        )
-
-        assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
-        let transaction = transactions[0]
-
-        let encodedTx = try transaction.encodedTransaction()
-
-        try await transactionEncoder.submit(transaction: encodedTx)
-
-        return transaction
-    }
-
-    func createToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        recipient: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview {
-        do {
-            if
-                case .transparent = recipient,
-                memo != nil {
-                throw ZcashError.synchronizerSendMemoToTransparentAddress
-            }
-
-            let proposal = try await transactionEncoder.proposeTransfer(
-                accountIndex: spendingKey.accountIndex,
-                recipient: recipient.stringEncoded,
-                amount: zatoshi,
-                memoBytes: memo?.asMemoBytes()
-            )
-
-            let transactions = try await transactionEncoder.createProposedTransactions(
-                proposal: proposal,
-                spendingKey: spendingKey
-            )
-
-            assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
-            let transaction = transactions[0]
-
-            let encodedTransaction = try transaction.encodedTransaction()
-
-            try await transactionEncoder.submit(transaction: encodedTransaction)
-            
-            return transaction
-        } catch {
-            throw error
         }
     }
 

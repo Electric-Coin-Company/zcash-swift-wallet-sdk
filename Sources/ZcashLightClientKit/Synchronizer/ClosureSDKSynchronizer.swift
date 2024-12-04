@@ -52,38 +52,44 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         synchronizer.stop()
     }
 
-    public func getSaplingAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
+    public func getSaplingAddress(accountUUID: AccountUUID, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getSaplingAddress(accountUUID: accountUUID)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+    public func getUnifiedAddress(accountUUID: AccountUUID, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getUnifiedAddress(accountUUID: accountUUID)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Zip32AccountIndex, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
+    public func getTransparentAddress(accountUUID: AccountUUID, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+            try await self.synchronizer.getTransparentAddress(accountUUID: accountUUID)
+        }
+    }
+    
+    public func listAccounts(completion: @escaping (Result<[AccountUUID], Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.listAccounts()
         }
     }
 
     public func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?,
         completion: @escaping (Result<Proposal, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.proposeTransfer(accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
+            try await self.synchronizer.proposeTransfer(accountUUID: accountUUID, recipient: recipient, amount: amount, memo: memo)
         }
     }
 
     public func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil,
@@ -91,7 +97,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.proposeShielding(
-                accountIndex: accountIndex,
+                accountUUID: accountUUID,
                 shieldingThreshold: shieldingThreshold,
                 memo: memo,
                 transparentReceiver: transparentReceiver
@@ -106,31 +112,6 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.createProposedTransactions(proposal: proposal, spendingKey: spendingKey)
-        }
-    }
-
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    public func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?,
-        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
-    ) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
-        }
-    }
-
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    public func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi,
-        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
-    ) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
         }
     }
 
@@ -188,7 +169,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountsBalances(completion: @escaping (Result<[Zip32AccountIndex: AccountBalance], Error>) -> Void) {
+    public func getAccountsBalances(completion: @escaping (Result<[AccountUUID: AccountBalance], Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getAccountsBalances()
         }

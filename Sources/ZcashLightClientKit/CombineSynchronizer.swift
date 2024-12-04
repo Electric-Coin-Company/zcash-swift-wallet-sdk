@@ -31,9 +31,9 @@ public protocol CombineSynchronizer {
     func start(retry: Bool) -> CompletablePublisher<Error>
     func stop()
 
-    func getSaplingAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<SaplingAddress, Error>
-    func getUnifiedAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<UnifiedAddress, Error>
-    func getTransparentAddress(accountIndex: Zip32AccountIndex) -> SinglePublisher<TransparentAddress, Error>
+    func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error>
+    func getUnifiedAddress(accountUUID: AccountUUID) -> SinglePublisher<UnifiedAddress, Error>
+    func getTransparentAddress(accountUUID: AccountUUID) -> SinglePublisher<TransparentAddress, Error>
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
@@ -45,7 +45,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -67,7 +67,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -89,30 +89,13 @@ public protocol CombineSynchronizer {
         spendingKey: UnifiedSpendingKey
     ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
 
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
-    
-    @available(
-        *,
-        deprecated,
-        message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead"
-    )
-    func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
-
     func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) -> SinglePublisher<Proposal, Error>
 
+    func listAccounts() -> SinglePublisher<[AccountUUID], Error>
+    
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var receivedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
