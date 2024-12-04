@@ -29,7 +29,7 @@ protocol TransactionEncoder {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?
@@ -51,7 +51,7 @@ protocol TransactionEncoder {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String?
@@ -84,7 +84,7 @@ protocol TransactionEncoder {
     ///     - Some `ZcashError.rust*` if the creation of transaction fails.
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> Proposal
 
     /// submits a transaction to the Zcash peer-to-peer network.

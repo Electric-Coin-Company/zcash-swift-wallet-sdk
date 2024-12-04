@@ -430,7 +430,9 @@ public class Initializer {
             _ = try await rustBackend.createAccount(
                 seed: seed,
                 treeState: checkpoint.treeState(),
-                recoverUntil: chainTip
+                recoverUntil: chainTip,
+                name: "",
+                keySource: ""
             )
         }
 

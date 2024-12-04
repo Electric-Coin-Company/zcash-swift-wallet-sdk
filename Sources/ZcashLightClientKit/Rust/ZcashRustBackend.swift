@@ -100,8 +100,10 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         ufvk: String,
         treeState: TreeState,
         recoverUntil: UInt32?,
-        purpose: AccountPurpose
-    ) async throws -> Int32 {
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String
+    ) async throws -> AccountUUID {
         var rUntil: Int64 = -1
         
         if let recoverUntil {
@@ -110,7 +112,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
 
-        let index = zcashlc_import_account_ufvk(
+        let uuidPtr = zcashlc_import_account_ufvk(
             dbData.0,
             dbData.1,
             [CChar](ufvk.utf8CString),
@@ -118,14 +120,28 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             UInt(treeStateBytes.count),
             rUntil,
             networkType.networkId,
-            purpose.rawValue
+            purpose.rawValue,
+            [CChar](name.utf8CString),
+            [CChar](keySource.utf8CString)
         )
         
-        return index
+        guard let uuidPtr else {
+            // TODO: throw an error
+        }
+        
+        defer { zcashlc_free_ffi_uuid(uuidPtr) }
+
+        return uuidPtr.pointee.unsafeToAccountUUID()
     }
     
     @DBActor
-    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
+    func createAccount(
+        seed: [UInt8],
+        treeState: TreeState,
+        recoverUntil: UInt32?,
+        name: String,
+        keySource: String
+    ) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
         if let recoverUntil {
@@ -142,7 +158,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             treeStateBytes,
             UInt(treeStateBytes.count),
             rUntil,
-            networkType.networkId
+            networkType.networkId,
+            [CChar](name.utf8CString),
+            [CChar](keySource.utf8CString)
         )
 
         guard let ffiBinaryKeyPtr else {
@@ -177,7 +195,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         to address: String,
         value: Int64,
         memo: MemoBytes?
@@ -185,7 +203,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             [CChar](address.utf8CString),
             value,
             memo?.bytes,
@@ -199,7 +217,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(proposal) }
 
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
@@ -208,12 +226,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func proposeTransferFromURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             [CChar](uri.utf8CString),
             networkType.networkId,
             minimumConfirmations
@@ -225,7 +243,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(proposal) }
 
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
@@ -248,11 +266,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getCurrentAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+    func getCurrentAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -270,11 +288,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getNextAvailableAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -310,18 +328,18 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
+    func getTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
         let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            LCZip32Index(accountIndex.index)
+            accountUUID.id
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetTransparentBalance(
-                Int(accountIndex.index),
-                lastErrorMessage(fallback: "Error getting Total Transparent balance from accountIndex \(accountIndex.index)")
+                accountUUID,
+                lastErrorMessage(fallback: "Error getting Total Transparent balance from accountUUID \(accountUUID.id)")
             )
         }
 
@@ -329,19 +347,19 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getVerifiedTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
+    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             minimumShieldingConfirmations
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalance(
-                Int(accountIndex.index),
-                lastErrorMessage(fallback: "Error getting verified transparent balance from accountIndex \(accountIndex.index)")
+                accountUUID,
+                lastErrorMessage(fallback: "Error getting verified transparent balance from accountUUID \(accountUUID.id)")
             )
         }
 
@@ -445,11 +463,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listTransparentReceivers(accountIndex: Zip32AccountIndex) async throws -> [TransparentAddress] {
+    func listTransparentReceivers(accountUUID: AccountUUID) async throws -> [TransparentAddress] {
         let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -688,11 +706,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
 
-        var accountBalances: [Zip32AccountIndex: AccountBalance] = [:]
+        var accountBalances: [AccountUUID: AccountBalance] = [:]
 
         for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
             let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
-            accountBalances[Zip32AccountIndex(accountBalance.account_id)] = accountBalance.toAccountBalance()
+            accountBalances[AccountUUID(id: accountBalance.uuidArray)] = accountBalance.toAccountBalance()
         }
 
         return WalletSummary(
@@ -768,7 +786,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
@@ -776,7 +794,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_shielding(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             memo?.bytes,
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
@@ -794,7 +812,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "Failed with nil pointer."))
         }
         
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
@@ -975,7 +993,40 @@ extension String {
     }
 }
 
+extension FfiBoxedSlice {
+    /// converts an [`FfiBoxedSlice`] into a [`UnifiedSpendingKey`]
+    /// - Note: This does not check that the converted value actually holds a valid USK
+    func unsafeToUnifiedSpendingKey(network: NetworkType, accountUUID: AccountUUID) -> UnifiedSpendingKey {
+        .init(
+            network: network,
+            bytes: self.ptr.toByteArray(length: Int(self.len)),
+            accountUUID: accountUUID
+        )
+    }
+}
+
+extension FfiUuid {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.uuid_bytes) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    /// converts an [`FfiUuid`] into a [`AccountUUID`]
+    func unsafeToAccountUUID() -> AccountUUID {
+        .init(
+            id: self.uuidArray
+        )
+    }
+}
+
 extension FFIBinaryKey {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.account_uuid) { buf in
+            [UInt8](buf)
+        }
+    }
+
     /// converts an [`FFIBinaryKey`] into a [`UnifiedSpendingKey`]
     /// - Note: This does not check that the converted value actually holds a valid USK
     func unsafeToUnifiedSpendingKey(network: NetworkType) -> UnifiedSpendingKey {
@@ -984,7 +1035,7 @@ extension FFIBinaryKey {
             bytes: self.encoding.toByteArray(
                 length: Int(self.encoding_len)
             ),
-            accountIndex: Zip32AccountIndex(self.account_id)
+            accountUUID: AccountUUID(id: uuidArray)
         )
     }
 }
@@ -1030,6 +1081,12 @@ extension FfiBalance {
 }
 
 extension FfiAccountBalance {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.account_uuid) { buf in
+            [UInt8](buf)
+        }
+    }
+
     /// Converts an [`FfiAccountBalance`] into a [`AccountBalance`].
     func toAccountBalance() -> AccountBalance {
         .init(
