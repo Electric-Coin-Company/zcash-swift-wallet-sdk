@@ -191,61 +191,6 @@ class SynchronizerOfflineTests: ZcashTestCase {
         }
     }
 
-    func testSendToAddressCalledWithoutPrepareThrowsError() async throws {
-        // Pick a testnet height for which both Sapling and Orchard are active.
-        let walletBirthday = 1900000
-
-        let testCoordinator = try await TestCoordinator(
-            alias: .default,
-            container: mockContainer,
-            walletBirthday: walletBirthday,
-            network: network,
-            callPrepareInConstructor: false
-        )
-
-        do {
-            _ = try await testCoordinator.synchronizer.sendToAddress(
-                spendingKey: testCoordinator.spendingKey,
-                zatoshi: Zatoshi(1),
-                toAddress: .transparent(data.transparentAddress),
-                memo: nil
-            )
-            XCTFail("Send to address should fail.")
-        } catch {
-            if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
-            } else {
-                XCTFail("Send to address failed with unexpected error: \(error)")
-            }
-        }
-    }
-
-    func testShieldFundsCalledWithoutPrepareThrowsError() async throws {
-        // Pick a testnet height for which both Sapling and Orchard are active.
-        let walletBirthday = 1900000
-
-        let testCoordinator = try await TestCoordinator(
-            alias: .default,
-            container: mockContainer,
-            walletBirthday: walletBirthday,
-            network: network,
-            callPrepareInConstructor: false
-        )
-
-        do {
-            _ = try await testCoordinator.synchronizer.shieldFunds(
-                spendingKey: testCoordinator.spendingKey,
-                memo: Memo(string: "memo"),
-                shieldingThreshold: Zatoshi(1)
-            )
-            XCTFail("Shield funds should fail.")
-        } catch {
-            if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
-            } else {
-                XCTFail("Shield funds failed with unexpected error: \(error)")
-            }
-        }
-    }
-
     func testRefreshUTXOCalledWithoutPrepareThrowsError() async throws {
         // Pick a testnet height for which both Sapling and Orchard are active.
         let walletBirthday = 1900000
@@ -498,7 +443,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
     func synchronizerState(for internalSyncStatus: InternalSyncStatus) -> SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalance: .zero,
+            accountsBalances: [:],
             internalSyncStatus: internalSyncStatus,
             latestBlockHeight: .zero
         )

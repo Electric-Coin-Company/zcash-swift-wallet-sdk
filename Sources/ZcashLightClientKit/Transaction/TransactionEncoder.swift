@@ -21,7 +21,7 @@ public enum TransactionEncoderError: Error {
 protocol TransactionEncoder {
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
+    /// - Parameter accountUUID: the account from which to transfer funds.
     /// - Parameter recipient: string containing the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -37,7 +37,7 @@ protocol TransactionEncoder {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account from which to shield funds.
+    /// - Parameter accountUUID:the account from which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -78,7 +78,7 @@ protocol TransactionEncoder {
     ///
     /// - Parameters:
     /// - Parameter uri: a valid ZIP-321 payment URI.
-    /// - Parameter accountIndex: the ZIP 32 index of the account the proposal should be made from.
+    /// - Parameter accountUUID: the account the proposal should be made from.
     /// - Throws:
     ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
     ///     - Some `ZcashError.rust*` if the creation of transaction fails.

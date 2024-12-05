@@ -130,7 +130,9 @@ public class SDKSynchronizer: Synchronizer {
     public func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
 
@@ -138,7 +140,13 @@ public class SDKSynchronizer: Synchronizer {
             throw error
         }
 
-        if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday, for: walletMode) {
+        if case .seedRequired = try await self.initializer.initialize(
+            with: seed,
+            walletBirthday: walletBirthday,
+            for: walletMode,
+            name: name,
+            keySource: keySource
+        ) {
             return .seedRequired
         }
         

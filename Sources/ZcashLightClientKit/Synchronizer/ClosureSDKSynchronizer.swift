@@ -35,10 +35,18 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
         for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday, for: walletMode)
+            return try await self.synchronizer.prepare(
+                with: seed,
+                walletBirthday: walletBirthday,
+                for: walletMode,
+                name: name,
+                keySource: keySource
+            )
         }
     }
 
@@ -169,7 +177,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getAccountsBalances(completion: @escaping (Result<[AccountUUID: AccountBalance], Error>) -> Void) {
+    public func getAccountsBalances(_ completion: @escaping (Result<[AccountUUID: AccountBalance], Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getAccountsBalances()
         }

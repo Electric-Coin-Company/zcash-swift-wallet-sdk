@@ -102,16 +102,22 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         recoverUntil: UInt32?,
         purpose: AccountPurpose,
         name: String,
-        keySource: String
+        keySource: String?
     ) async throws -> AccountUUID {
         var rUntil: Int64 = -1
         
         if let recoverUntil {
             rUntil = Int64(recoverUntil)
         }
-        
-        let treeStateBytes = try treeState.serializedData(partial: false).bytes
 
+        let treeStateBytes = try treeState.serializedData(partial: false).bytes
+        
+        var kSource: [CChar]? = nil
+
+        if let keySource {
+            kSource = [CChar](keySource.utf8CString)
+        }
+        
         let uuidPtr = zcashlc_import_account_ufvk(
             dbData.0,
             dbData.1,
@@ -122,7 +128,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             networkType.networkId,
             purpose.rawValue,
             [CChar](name.utf8CString),
-            [CChar](keySource.utf8CString)
+            kSource
         )
         
         guard let uuidPtr else {
@@ -140,7 +146,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         treeState: TreeState,
         recoverUntil: UInt32?,
         name: String,
-        keySource: String
+        keySource: String?
     ) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
@@ -150,6 +156,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
         
+        var kSource: [CChar]? = nil
+
+        if let keySource {
+            kSource = [CChar](keySource.utf8CString)
+        }
+
         let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
@@ -160,7 +172,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             rUntil,
             networkType.networkId,
             [CChar](name.utf8CString),
-            [CChar](keySource.utf8CString)
+            kSource
         )
 
         guard let ffiBinaryKeyPtr else {

@@ -35,7 +35,7 @@ public enum RewindResult {
 }
 
 protocol ZcashRustBackendWelding {
-    /// Returns a list of the ZIP 32 indices of accounts in the wallet.
+    /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [AccountUUID]
 
     func importAccount(
@@ -44,7 +44,7 @@ protocol ZcashRustBackendWelding {
         recoverUntil: UInt32?,
         purpose: AccountPurpose,
         name: String,
-        keySource: String
+        keySource: String?
     ) async throws -> AccountUUID
         
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
@@ -71,7 +71,7 @@ protocol ZcashRustBackendWelding {
         treeState: TreeState,
         recoverUntil: UInt32?,
         name: String,
-        keySource: String
+        keySource: String?
     ) async throws -> UnifiedSpendingKey
 
     /// Checks whether the given seed is relevant to any of the derived accounts in the wallet.

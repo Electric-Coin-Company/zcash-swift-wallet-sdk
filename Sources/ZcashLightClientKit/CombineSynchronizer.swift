@@ -25,7 +25,9 @@ public protocol CombineSynchronizer {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) -> SinglePublisher<Initializer.InitializationResult, Error>
 
     func start(retry: Bool) -> CompletablePublisher<Error>
@@ -37,7 +39,7 @@ public protocol CombineSynchronizer {
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
+    /// - Parameter accountUUID: the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -53,7 +55,7 @@ public protocol CombineSynchronizer {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account from which to shield funds.
+    /// - Parameter accountUUID: the account from which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account

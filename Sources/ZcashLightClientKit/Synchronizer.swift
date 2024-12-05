@@ -129,7 +129,9 @@ public protocol Synchronizer: AnyObject {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
@@ -144,23 +146,23 @@ public protocol Synchronizer: AnyObject {
     func stop()
 
     /// Gets the sapling shielded address for the given account.
-    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
+    /// - Parameter accountUUID: the  account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
     func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
-    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest.
+    /// - Parameter accountUUID: the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
     func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
-    /// - Parameter accountIndex: the ZIP 32 index of the account whose address is of interest. By default, the first account is used.
+    /// - Parameter accountUUID: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account from which to transfer funds.
+    /// - Parameter accountUUID: the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -176,7 +178,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the ZIP 32 index of the account for which to shield funds.
+    /// - Parameter accountUUID: the account for which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -214,7 +216,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI by spending from the ZIP 32 account with the given index.
     ///  - Parameter uri: a valid ZIP-321 payment URI
-    ///  - Parameter accountIndex: the ZIP 32 index of the account providing spend authority.
+    ///  - Parameter accountUUID: the account providing spend authority.
     ///
     /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
@@ -284,7 +286,7 @@ public protocol Synchronizer: AnyObject {
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()
 
-    /// 
+    /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [AccountUUID]
     
     /// Rescans the known blocks with the current keys.
