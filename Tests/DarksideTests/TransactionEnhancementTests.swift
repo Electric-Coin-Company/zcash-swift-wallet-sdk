@@ -83,7 +83,9 @@ class TransactionEnhancementTests: ZcashTestCase {
             _ = try await rustBackend.createAccount(
                 seed: Environment.seedBytes,
                 treeState: birthday.treeState(),
-                recoverUntil: nil
+                recoverUntil: nil,
+                name: "",
+                keySource: ""
             )
         } catch {
             XCTFail("Failed to create account. Error: \(error)")
