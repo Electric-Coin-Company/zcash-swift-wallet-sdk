@@ -72,7 +72,7 @@ class SyncBlocksListViewController: UIViewController {
                             walletBirthday: synchronizerData.birthday,
                             for: .existingWallet,
                             name: "",
-                            keySource: nil
+                            keySource: ""
                         )
                     }
 

@@ -104,7 +104,7 @@ class SyncBlocksViewController: UIViewController {
                             walletBirthday: DemoAppConfig.defaultBirthdayHeight,
                             for: .existingWallet,
                             name: "",
-                            keySource: nil
+                            keySource: ""
                         )
                     } catch {
                         loggerProxy.error(error.toZcashError().message)

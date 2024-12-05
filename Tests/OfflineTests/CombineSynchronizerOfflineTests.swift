@@ -101,7 +101,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareSucceed() throws {
-        synchronizerMock.prepareWithWalletBirthdayForClosure = { receivedSeed, receivedWalletBirthday, _ in
+        synchronizerMock.prepareWithWalletBirthdayForNameKeySourceClosure = { receivedSeed, receivedWalletBirthday, _, _, _ in
             XCTAssertEqual(receivedSeed, self.data.seed)
             XCTAssertEqual(receivedWalletBirthday, self.data.birthday)
             return .success
@@ -109,7 +109,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "")
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -129,13 +129,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareThrowsError() throws {
-        synchronizerMock.prepareWithWalletBirthdayForClosure = { _, _, _ in
+        synchronizerMock.prepareWithWalletBirthdayForNameKeySourceClosure = { _, _, _, _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "")
             .sink(
                 receiveCompletion: { result in
                     switch result {

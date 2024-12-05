@@ -47,7 +47,7 @@ class SendViewController: UIViewController {
             walletBirthday: DemoAppConfig.defaultBirthdayHeight,
             for: .existingWallet,
             name: "",
-            keySource: nil
+            keySource: ""
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }
