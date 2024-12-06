@@ -29,7 +29,7 @@ class GetBalanceViewController: UIViewController {
                 return
             }
 
-            self?.accountBalance = try? await synchronizer.getAccountsBalances()[account.uuid]
+            self?.accountBalance = try? await synchronizer.getAccountsBalances()[account.id]
             self?.updateLabels()
         }
         

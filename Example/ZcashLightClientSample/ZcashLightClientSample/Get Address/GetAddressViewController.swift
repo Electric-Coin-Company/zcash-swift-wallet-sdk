@@ -23,7 +23,7 @@ class GetAddressViewController: UIViewController {
                 return
             }
 
-            guard let uAddress = try? await synchronizer.getUnifiedAddress(accountUUID: account.uuid) else {
+            guard let uAddress = try? await synchronizer.getUnifiedAddress(accountUUID: account.id) else {
                 unifiedAddressLabel.text = "could not derive UA"
                 tAddressLabel.text = "could not derive tAddress"
                 saplingAddress.text = "could not derive zAddress"

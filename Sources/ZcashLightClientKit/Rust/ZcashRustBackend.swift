@@ -1048,7 +1048,7 @@ extension FfiAccount {
     /// - Note: This does not check that the converted value actually holds a valid Account
     func unsafeToAccount() -> Account {
         .init(
-            uuid: AccountUUID(id: uuidArray),
+            id: AccountUUID(id: uuidArray),
             name: account_name != nil ? String(cString: account_name) : "",
             keySource: key_source != nil ? String(cString: key_source) : nil,
             seedFingerprint: seedFingerprintArray,

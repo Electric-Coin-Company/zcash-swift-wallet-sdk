@@ -32,12 +32,12 @@ class GetUTXOsViewController: UIViewController {
                 return
             }
 
-            let tAddress = (try? await synchronizer.getTransparentAddress(accountUUID: account.uuid))?.stringEncoded ?? "no t-address found"
+            let tAddress = (try? await synchronizer.getTransparentAddress(accountUUID: account.id))?.stringEncoded ?? "no t-address found"
             
             self.transparentAddressLabel.text = tAddress
             
             // swiftlint:disable:next force_try
-            let balance = try! await AppDelegate.shared.sharedSynchronizer.getAccountsBalances()[account.uuid]?.unshielded ?? .zero
+            let balance = try! await AppDelegate.shared.sharedSynchronizer.getAccountsBalances()[account.id]?.unshielded ?? .zero
             
             self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.amount))
             self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.amount))

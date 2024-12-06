@@ -10,8 +10,8 @@ public protocol StringEncoded {
     var stringEncoded: String { get }
 }
 
-public struct Account {
-    public let uuid: AccountUUID
+public struct Account: Equatable, Hashable, Codable, Identifiable {
+    public let id: AccountUUID
     public let name: String
     public let keySource: String?
     public let seedFingerprint: [UInt8]?
