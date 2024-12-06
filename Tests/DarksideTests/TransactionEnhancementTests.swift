@@ -85,7 +85,7 @@ class TransactionEnhancementTests: ZcashTestCase {
                 treeState: birthday.treeState(),
                 recoverUntil: nil,
                 name: "",
-                keySource: ""
+                keySource: nil
             )
         } catch {
             XCTFail("Failed to create account. Error: \(error)")

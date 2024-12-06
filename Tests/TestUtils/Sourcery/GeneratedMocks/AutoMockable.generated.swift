@@ -1792,10 +1792,10 @@ class SynchronizerMock: Synchronizer {
     var listAccountsCalled: Bool {
         return listAccountsCallsCount > 0
     }
-    var listAccountsReturnValue: [AccountUUID]!
-    var listAccountsClosure: (() async throws -> [AccountUUID])?
+    var listAccountsReturnValue: [Account]!
+    var listAccountsClosure: (() async throws -> [Account])?
 
-    func listAccounts() async throws -> [AccountUUID] {
+    func listAccounts() async throws -> [Account] {
         if let error = listAccountsThrowableError {
             throw error
         }
@@ -2397,10 +2397,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var listAccountsCalled: Bool {
         return listAccountsCallsCount > 0
     }
-    var listAccountsReturnValue: [AccountUUID]!
-    var listAccountsClosure: (() async throws -> [AccountUUID])?
+    var listAccountsReturnValue: [Account]!
+    var listAccountsClosure: (() async throws -> [Account])?
 
-    func listAccounts() async throws -> [AccountUUID] {
+    func listAccounts() async throws -> [Account] {
         if let error = listAccountsThrowableError {
             throw error
         }

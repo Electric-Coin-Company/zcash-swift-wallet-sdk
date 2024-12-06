@@ -60,7 +60,7 @@ class ZcashRustBackendTests: XCTestCase {
                 treeState: treeState,
                 recoverUntil: nil,
                 name: "",
-                keySource: ""
+                keySource: nil
             )
             XCTFail("createAccount should fail here.")
         } catch { }
@@ -81,7 +81,7 @@ class ZcashRustBackendTests: XCTestCase {
         let checkpointSource = CheckpointSourceFactory.fromBundle(for: .mainnet)
         let treeState = checkpointSource.birthday(for: 1234567).treeState()
 
-        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState, recoverUntil: nil, name: "", keySource: "")
+        let usk = try await rustBackend.createAccount(seed: seed, treeState: treeState, recoverUntil: nil, name: "", keySource: nil)
 
         let expectedReceivers = try testVector.map {
             UnifiedAddress(validatedEncoding: $0.unified_addr!, networkType: .mainnet)

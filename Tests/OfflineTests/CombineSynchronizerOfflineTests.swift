@@ -109,7 +109,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "")
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -135,7 +135,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "")
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil)
             .sink(
                 receiveCompletion: { result in
                     switch result {

@@ -109,7 +109,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "") { result in
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil) { result in
             switch result {
             case let .success(status):
                 XCTAssertEqual(status, .success)
@@ -129,7 +129,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: "") { result in
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")

@@ -95,7 +95,7 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
     )
 
-    func listAccounts(completion: @escaping (Result<[AccountUUID], Error>) -> Void)
+    func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void)
         
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)

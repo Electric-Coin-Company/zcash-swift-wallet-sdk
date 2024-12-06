@@ -35,14 +35,14 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
             let accountBalances = try await rustBackend.getWalletSummary()?.accountBalances
             
             for account in accounts {
-                let totalSaplingBalance = accountBalances?[account]?.saplingBalance.total().amount ?? 0
+                let totalSaplingBalance = accountBalances?[account.uuid]?.saplingBalance.total().amount ?? 0
 
                 if totalSaplingBalance > 0 {
                     totalSaplingBalanceTrigger = true
                     break
                 }
 
-                let totalTransparentBalance = try await rustBackend.getTransparentBalance(accountUUID: account)
+                let totalTransparentBalance = try await rustBackend.getTransparentBalance(accountUUID: account.uuid)
 
                 if totalTransparentBalance > 0 {
                     totalTransparentBalanceTrigger = true

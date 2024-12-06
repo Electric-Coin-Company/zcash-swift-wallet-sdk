@@ -72,7 +72,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listAccounts() async throws -> [AccountUUID] {
+    func listAccounts() async throws -> [Account] {
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
@@ -85,16 +85,40 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_accounts(accountsPtr) }
 
-        var accounts: [AccountUUID] = []
+        var accounts: [Account] = []
 
         for i in (0 ..< Int(accountsPtr.pointee.len)) {
-            let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
-            accounts.append(AccountUUID(id: account.uuidArray))
+            let accountUUIDPtr = accountsPtr.pointee.ptr.advanced(by: i).pointee
+            let accountUUID = AccountUUID(id: accountUUIDPtr.uuidArray)
+
+            let account = try await getAccount(for: accountUUID)
+            
+            accounts.append(account)
         }
 
         return accounts
     }
 
+    @DBActor
+    func getAccount(
+        for accountUUID: AccountUUID
+    ) async throws -> Account {
+        let accountPtr: UnsafeMutablePointer<FfiAccount>? = zcashlc_get_account(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+        
+        guard let accountPtr else {
+            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`importAccount` failed with unknown error"))
+        }
+        
+        defer { zcashlc_free_account(accountPtr) }
+
+        return accountPtr.pointee.unsafeToAccount()
+    }
+    
     @DBActor
     func importAccount(
         ufvk: String,
@@ -117,7 +141,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         if let keySource {
             kSource = [CChar](keySource.utf8CString)
         }
-        
+
         let uuidPtr = zcashlc_import_account_ufvk(
             dbData.0,
             dbData.1,
@@ -128,7 +152,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             networkType.networkId,
             purpose.rawValue,
             [CChar](name.utf8CString),
-            kSource
+            kSource,
+            nil,
+            UINT32_MAX
         )
         
         guard let uuidPtr else {
@@ -1004,6 +1030,33 @@ extension String {
         return contains("is not empty")
     }
 }
+
+extension FfiAccount {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: uuid_bytes) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    var seedFingerprintArray: [UInt8] {
+        withUnsafeBytes(of: seed_fingerprint) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    /// converts an [`FfiAccount`] into a [`Account`]
+    /// - Note: This does not check that the converted value actually holds a valid Account
+    func unsafeToAccount() -> Account {
+        .init(
+            uuid: AccountUUID(id: uuidArray),
+            name: account_name != nil ? String(cString: account_name) : "",
+            keySource: key_source != nil ? String(cString: key_source) : nil,
+            seedFingerprint: seedFingerprintArray,
+            hdAccountIndex: hd_account_index
+        )
+    }
+}
+
 
 extension FfiBoxedSlice {
     /// converts an [`FfiBoxedSlice`] into a [`UnifiedSpendingKey`]

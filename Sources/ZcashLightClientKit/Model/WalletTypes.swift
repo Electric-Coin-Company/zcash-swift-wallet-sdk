@@ -10,6 +10,14 @@ public protocol StringEncoded {
     var stringEncoded: String { get }
 }
 
+public struct Account {
+    public let uuid: AccountUUID
+    public let name: String
+    public let keySource: String?
+    public let seedFingerprint: [UInt8]?
+    public let hdAccountIndex: UInt32?
+}
+
 public struct UnifiedSpendingKey: Equatable, Undescribable {
     let network: NetworkType
     let bytes: [UInt8]

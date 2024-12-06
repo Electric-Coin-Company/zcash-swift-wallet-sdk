@@ -47,7 +47,7 @@ class SendViewController: UIViewController {
             walletBirthday: DemoAppConfig.defaultBirthdayHeight,
             for: .existingWallet,
             name: "",
-            keySource: ""
+            keySource: nil
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }
@@ -109,10 +109,10 @@ class SendViewController: UIViewController {
                 return
             }
             balanceLabel.text = format(
-                balance: (try? await synchronizer.getAccountsBalances()[account])?.saplingBalance.total() ?? .zero
+                balance: (try? await synchronizer.getAccountsBalances()[account.uuid])?.saplingBalance.total() ?? .zero
             )
             verifiedBalanceLabel.text = format(
-                balance: (try? await synchronizer.getAccountsBalances()[account])?.saplingBalance.spendableValue ?? .zero
+                balance: (try? await synchronizer.getAccountsBalances()[account.uuid])?.saplingBalance.spendableValue ?? .zero
             )
         }
     }
@@ -132,7 +132,7 @@ class SendViewController: UIViewController {
             }
 
             let fee = Zatoshi(10000)
-            let max: Zatoshi = ((try? await synchronizer.getAccountsBalances()[account])?.saplingBalance.spendableValue ?? .zero) - fee
+            let max: Zatoshi = ((try? await synchronizer.getAccountsBalances()[account.uuid])?.saplingBalance.spendableValue ?? .zero) - fee
             amountTextField.text = format(balance: max)
             amountTextField.isEnabled = false
         }
@@ -157,7 +157,7 @@ class SendViewController: UIViewController {
         guard let account = try? await synchronizer.listAccounts().first else {
             return false
         }
-        let balance = (try? await synchronizer.getAccountsBalances()[account])?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountsBalances()[account.uuid])?.saplingBalance.spendableValue ?? .zero
         return balance > .zero
     }
     
@@ -165,7 +165,7 @@ class SendViewController: UIViewController {
         guard let account = try? await synchronizer.listAccounts().first else {
             return false
         }
-        let balance = (try? await synchronizer.getAccountsBalances()[account])?.saplingBalance.spendableValue ?? .zero
+        let balance = (try? await synchronizer.getAccountsBalances()[account.uuid])?.saplingBalance.spendableValue ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),

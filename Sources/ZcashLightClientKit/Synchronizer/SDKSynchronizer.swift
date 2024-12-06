@@ -273,7 +273,7 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Synchronizer methods
 
-    public func listAccounts() async throws -> [AccountUUID] {
+    public func listAccounts() async throws -> [Account] {
         try await initializer.rustBackend.listAccounts()
     }
     

@@ -96,7 +96,7 @@ public protocol CombineSynchronizer {
         accountUUID: AccountUUID
     ) -> SinglePublisher<Proposal, Error>
 
-    func listAccounts() -> SinglePublisher<[AccountUUID], Error>
+    func listAccounts() -> SinglePublisher<[Account], Error>
     
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

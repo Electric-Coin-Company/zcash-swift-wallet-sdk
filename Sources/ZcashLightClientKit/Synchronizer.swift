@@ -287,7 +287,7 @@ public protocol Synchronizer: AnyObject {
     func refreshExchangeRateUSD()
 
     /// Returns a list of the accounts in the wallet.
-    func listAccounts() async throws -> [AccountUUID]
+    func listAccounts() async throws -> [Account]
     
     /// Rescans the known blocks with the current keys.
     ///

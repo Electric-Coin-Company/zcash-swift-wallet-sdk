@@ -78,7 +78,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
     
-    public func listAccounts(completion: @escaping (Result<[AccountUUID], Error>) -> Void) {
+    public func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.listAccounts()
         }

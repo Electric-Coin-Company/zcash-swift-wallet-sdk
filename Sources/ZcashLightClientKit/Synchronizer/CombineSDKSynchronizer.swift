@@ -125,7 +125,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func listAccounts() -> SinglePublisher<[AccountUUID], Error> {
+    public func listAccounts() -> SinglePublisher<[Account], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.listAccounts()
         }

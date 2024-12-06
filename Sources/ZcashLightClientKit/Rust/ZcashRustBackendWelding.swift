@@ -36,7 +36,7 @@ public enum RewindResult {
 
 protocol ZcashRustBackendWelding {
     /// Returns a list of the accounts in the wallet.
-    func listAccounts() async throws -> [AccountUUID]
+    func listAccounts() async throws -> [Account]
 
     func importAccount(
         ufvk: String,
