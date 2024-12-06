@@ -36,7 +36,7 @@ class TestsData {
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountId: AccountId(0),
             blockTime: nil,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -56,7 +56,7 @@ class TestsData {
 
     let clearedTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountId: AccountId(0),
             blockTime: Date().timeIntervalSince1970,
             expiryHeight: 123000,
             fee: Zatoshi(10),
@@ -76,7 +76,7 @@ class TestsData {
 
     let sentTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountId: AccountId(0),
             blockTime: 1,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -96,7 +96,7 @@ class TestsData {
 
     let receivedTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountId: AccountId(0),
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
@@ -122,4 +122,8 @@ class TestsData {
     init(networkType: NetworkType) {
         self.networkType = networkType
     }
+}
+
+extension TestsData {
+    static let mockedAccountUUID = AccountUUID(id: Array<UInt8>(repeating: 0, count: 16))
 }

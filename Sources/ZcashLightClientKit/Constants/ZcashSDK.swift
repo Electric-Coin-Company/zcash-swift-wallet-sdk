@@ -219,3 +219,9 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
     
     public static let defaultDbNamePrefix = "ZcashSdk_testnet_"
 }
+
+/// Used when importing an aaccount `importAccount(..., purpose: AccountPurpose)`
+public enum AccountPurpose: UInt32 {
+    case spending = 0
+    case viewOnly
+}

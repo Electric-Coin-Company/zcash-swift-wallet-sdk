@@ -34,3 +34,15 @@ public struct AccountId: Equatable, Codable, Hashable {
         self.id = id
     }
 }
+
+public struct AccountUUID: Equatable, Codable, Hashable, Identifiable {
+    public let id: [UInt8]
+    
+    init(id: [UInt8]) {
+        guard id.count == 16 else {
+            fatalError("Account UUID must be 16 bytes long. Input value is \(id).")
+        }
+        
+        self.id = id
+    }
+}

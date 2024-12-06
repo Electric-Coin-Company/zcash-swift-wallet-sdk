@@ -130,7 +130,9 @@ public class SDKSynchronizer: Synchronizer {
     public func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
 
@@ -138,7 +140,13 @@ public class SDKSynchronizer: Synchronizer {
             throw error
         }
 
-        if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday, for: walletMode) {
+        if case .seedRequired = try await self.initializer.initialize(
+            with: seed,
+            walletBirthday: walletBirthday,
+            for: walletMode,
+            name: name,
+            keySource: keySource
+        ) {
             return .seedRequired
         }
         
@@ -265,7 +273,11 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Synchronizer methods
 
-    public func proposeTransfer(accountIndex: Zip32AccountIndex, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
+    public func listAccounts() async throws -> [Account] {
+        try await initializer.rustBackend.listAccounts()
+    }
+    
+    public func proposeTransfer(accountUUID: AccountUUID, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
         try throwIfUnprepared()
 
         if case Recipient.transparent = recipient, memo != nil {
@@ -273,7 +285,7 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         let proposal = try await transactionEncoder.proposeTransfer(
-            accountIndex: accountIndex,
+            accountUUID: accountUUID,
             recipient: recipient.stringEncoded,
             amount: amount,
             memoBytes: memo?.asMemoBytes()
@@ -283,7 +295,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress? = nil
@@ -291,7 +303,7 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
 
         return try await transactionEncoder.proposeShielding(
-            accountIndex: accountIndex,
+            accountUUID: accountUUID,
             shieldingThreshold: shieldingThreshold,
             memoBytes: memo.asMemoBytes(),
             transparentReceiver: transparentReceiver?.stringEncoded
@@ -300,13 +312,13 @@ public class SDKSynchronizer: Synchronizer {
 
     public func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> Proposal {
         do {
             try throwIfUnprepared()
             return try await transactionEncoder.proposeFulfillingPaymentFromURI(
                 uri,
-                accountIndex: accountIndex
+                accountUUID: accountUUID
             )
         } catch ZcashError.rustCreateToAddress(let error) {
             throw ZcashError.rustProposeTransferFromURI(error)
@@ -358,111 +370,6 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview {
-        try throwIfUnprepared()
-
-        if case Recipient.transparent = toAddress, memo != nil {
-            throw ZcashError.synchronizerSendMemoToTransparentAddress
-        }
-
-        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
-            spendURL: initializer.spendParamsURL,
-            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
-            outputURL: initializer.outputParamsURL,
-            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
-            logger: logger
-        )
-
-        return try await createToAddress(
-            spendingKey: spendingKey,
-            zatoshi: zatoshi,
-            recipient: toAddress,
-            memo: memo
-        )
-    }
-
-    public func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) async throws -> ZcashTransaction.Overview {
-        try throwIfUnprepared()
-
-        // let's see if there are funds to shield
-        guard let tBalance = try await self.getAccountsBalances()[spendingKey.accountIndex]?.unshielded else {
-            throw ZcashError.synchronizerSpendingKeyDoesNotBelongToTheWallet
-        }
-
-        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
-        guard tBalance >= self.network.constants.defaultFee() else {
-            throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
-        }
-
-        guard let proposal = try await transactionEncoder.proposeShielding(
-            accountIndex: spendingKey.accountIndex,
-            shieldingThreshold: shieldingThreshold,
-            memoBytes: memo.asMemoBytes(),
-            transparentReceiver: nil
-        ) else { throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds }
-
-        let transactions = try await transactionEncoder.createProposedTransactions(
-            proposal: proposal,
-            spendingKey: spendingKey
-        )
-
-        assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
-        let transaction = transactions[0]
-
-        let encodedTx = try transaction.encodedTransaction()
-
-        try await transactionEncoder.submit(transaction: encodedTx)
-
-        return transaction
-    }
-
-    func createToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        recipient: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview {
-        do {
-            if
-                case .transparent = recipient,
-                memo != nil {
-                throw ZcashError.synchronizerSendMemoToTransparentAddress
-            }
-
-            let proposal = try await transactionEncoder.proposeTransfer(
-                accountIndex: spendingKey.accountIndex,
-                recipient: recipient.stringEncoded,
-                amount: zatoshi,
-                memoBytes: memo?.asMemoBytes()
-            )
-
-            let transactions = try await transactionEncoder.createProposedTransactions(
-                proposal: proposal,
-                spendingKey: spendingKey
-            )
-
-            assert(transactions.count == 1, "Rust backend doesn't produce multiple transactions yet")
-            let transaction = transactions[0]
-
-            let encodedTransaction = try transaction.encodedTransaction()
-
-            try await transactionEncoder.submit(transaction: encodedTransaction)
-            
-            return transaction
-        } catch {
-            throw error
-        }
-    }
-
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
@@ -508,7 +415,7 @@ public class SDKSynchronizer: Synchronizer {
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
 
-    public func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance] {
+    public func getAccountsBalances() async throws -> [AccountUUID: AccountBalance] {
         try await initializer.rustBackend.getWalletSummary()?.accountBalances ?? [:]
     }
 
@@ -547,16 +454,16 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
-        try await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
+        try await blockProcessor.getUnifiedAddress(accountUUID: accountUUID)
     }
 
-    public func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress {
-        try await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress {
+        try await blockProcessor.getSaplingAddress(accountUUID: accountUUID)
     }
 
-    public func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress {
-        try await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress {
+        try await blockProcessor.getTransparentAddress(accountUUID: accountUUID)
     }
 
     // MARK: Rewind

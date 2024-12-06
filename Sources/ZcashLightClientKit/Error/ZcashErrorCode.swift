@@ -195,6 +195,8 @@ public enum ZcashErrorCode: String {
     case rustDeriveArbitraryWalletKey = "ZRUST0065"
     /// Error from rust layer when calling ZcashRustBackend.deriveArbitraryAccountKey
     case rustDeriveArbitraryAccountKey = "ZRUST0066"
+    /// Error from rust layer when calling ZcashRustBackend.importAccountUfvk
+    case rustImportAccountUfvk = "ZRUST0067"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
