@@ -14,7 +14,7 @@ public struct Zip32AccountIndex: Equatable, Codable, Hashable {
     
     /// - Parameter index: the ZIP 32 account index, which must be less than ``1<<31``.
     public init(_ index: UInt32) {
-        guard index < (1<<31) else {
+        guard index < (1 << 31) else {
             fatalError("Account index must be less than 1<<31. Input value is \(index).")
         }
         

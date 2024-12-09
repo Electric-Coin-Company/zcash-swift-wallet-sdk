@@ -136,7 +136,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
         
-        var kSource: [CChar]? = nil
+        var kSource: [CChar]?
 
         if let keySource {
             kSource = [CChar](keySource.utf8CString)
@@ -1052,11 +1052,10 @@ extension FfiAccount {
             name: account_name != nil ? String(cString: account_name) : "",
             keySource: key_source != nil ? String(cString: key_source) : nil,
             seedFingerprint: seedFingerprintArray,
-            hdAccountIndex: hd_account_index
+            hdAccountIndex: Zip32AccountIndex(hd_account_index)
         )
     }
 }
-
 
 extension FfiBoxedSlice {
     /// converts an [`FfiBoxedSlice`] into a [`UnifiedSpendingKey`]

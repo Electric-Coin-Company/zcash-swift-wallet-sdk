@@ -15,7 +15,7 @@ public struct Account: Equatable, Hashable, Codable, Identifiable {
     public let name: String
     public let keySource: String?
     public let seedFingerprint: [UInt8]?
-    public let hdAccountIndex: UInt32?
+    public let hdAccountIndex: Zip32AccountIndex?
 }
 
 public struct UnifiedSpendingKey: Equatable, Undescribable {
