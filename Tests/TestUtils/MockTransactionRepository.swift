@@ -135,7 +135,7 @@ extension MockTransactionRepository: TransactionRepository {
 
     func mockSent(_ index: Int) -> ZcashTransaction.Overview {
         return ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
@@ -155,7 +155,7 @@ extension MockTransactionRepository: TransactionRepository {
 
     func mockReceived(_ index: Int) -> ZcashTransaction.Overview {
         return ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),

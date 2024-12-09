@@ -44,7 +44,7 @@ public enum ZcashTransaction {
             }
         }
 
-        public let accountId: AccountId
+        public let accountUUID: AccountUUID
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
@@ -150,7 +150,7 @@ extension ZcashTransaction.Output {
 
 extension ZcashTransaction.Overview {
     enum Column {
-        static let accountId = SQLite.Expression<Int>("account_id")
+        static let accountUUID = SQLite.Expression<Blob>("account_uuid")
         static let minedHeight = SQLite.Expression<BlockHeight?>("mined_height")
         static let index = SQLite.Expression<Int?>("tx_index")
         static let rawID = SQLite.Expression<Blob>("txid")
@@ -169,7 +169,7 @@ extension ZcashTransaction.Overview {
 
     init(row: Row) throws {
         do {
-            self.accountId = AccountId(try row.get(Column.accountId))
+            self.accountUUID = AccountUUID(id: [UInt8](Data(blob: try row.get(Column.accountUUID))))
             self.expiryHeight = try row.get(Column.expiryHeight)
             self.index = try row.get(Column.index)
             self.hasChange = try row.get(Column.hasChange)
