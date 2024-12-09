@@ -277,6 +277,33 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.listAccounts()
     }
     
+    @discardableResult
+    public func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> AccountUUID {
+        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight())
+
+        let checkpointSource = initializer.container.resolve(CheckpointSource.self)
+
+        guard let chainTip else {
+            throw ZcashError.synchronizerNotPrepared
+        }
+        
+        let checkpoint = checkpointSource.birthday(for: BlockHeight(chainTip))
+            
+        return try await initializer.rustBackend.importAccount(
+            ufvk: ufvk,
+            treeState: checkpoint.treeState(),
+            recoverUntil: chainTip,
+            purpose: purpose,
+            name: name,
+            keySource: keySource
+        )
+    }
+
     public func proposeTransfer(accountUUID: AccountUUID, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
         try throwIfUnprepared()
 

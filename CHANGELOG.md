@@ -10,6 +10,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DerivationTool.deriveArbitraryWalletKey`
 - `DerivationTool.deriveArbitraryAccountKey`
 - `SDKSynchronizer.listAccounts` Returns a list of the accounts in the wallet.
+- `SDKSynchronizer.importAccount` Imports a new account for unified full viewing key.
 
 ## Changed
 - `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accpt a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.

@@ -130,7 +130,18 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
             try await self.synchronizer.listAccounts()
         }
     }
-    
+
+    public func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> SinglePublisher<AccountUUID, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.importAccount(ufvk: ufvk, purpose: purpose, name: name, keySource: keySource)
+        }
+    }
+
     public var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.transactions

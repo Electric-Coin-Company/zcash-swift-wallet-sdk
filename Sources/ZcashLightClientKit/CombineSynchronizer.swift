@@ -98,6 +98,13 @@ public protocol CombineSynchronizer {
 
     func listAccounts() -> SinglePublisher<[Account], Error>
     
+    func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> SinglePublisher<AccountUUID, Error>
+
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var receivedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

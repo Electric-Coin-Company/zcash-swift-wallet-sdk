@@ -221,7 +221,7 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
 }
 
 /// Used when importing an aaccount `importAccount(..., purpose: AccountPurpose)`
-public enum AccountPurpose: UInt32 {
+public enum AccountPurpose: UInt32, Equatable {
     case spending = 0
     case viewOnly
 }

@@ -84,6 +84,18 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?,
+        completion: @escaping (Result<AccountUUID, Error>) -> Void
+    ) async throws {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.importAccount(ufvk: ufvk, purpose: purpose, name: name, keySource: keySource)
+        }
+    }
+
     public func proposeTransfer(
         accountUUID: AccountUUID,
         recipient: Recipient,

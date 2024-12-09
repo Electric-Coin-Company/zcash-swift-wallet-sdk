@@ -97,6 +97,14 @@ public protocol ClosureSynchronizer {
 
     func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void)
         
+    func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?,
+        completion: @escaping (Result<AccountUUID, Error>) -> Void
+    ) async throws
+
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)

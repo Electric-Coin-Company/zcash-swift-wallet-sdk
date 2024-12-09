@@ -120,6 +120,8 @@ public protocol Synchronizer: AnyObject {
     ///   - for: [walletMode] Set `.newWallet` when preparing synchronizer for a brand new generated wallet,
     ///   `.restoreWallet` when wallet is about to be restored from a seed
     ///   and  `.existingWallet` for all other scenarios.
+    ///   - name: name of the account.
+    ///   - keySource: custom optional string for clients, used for example to help identify the type of the account.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
     ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
@@ -288,6 +290,20 @@ public protocol Synchronizer: AnyObject {
 
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Account]
+    
+    /// Imports a new account with UnifiedFullViewingKey.
+    /// - Parameters:
+    ///   - ufvk: unified full viewing key
+    ///   - purpose: of the account, either `spending` or `viewOnly`
+    ///   - name: name of the account.
+    ///   - keySource: custom optional string for clients, used for example to help identify the type of the account.
+    @discardableResult
+    func importAccount(
+        ufvk: String,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> AccountUUID
     
     /// Rescans the known blocks with the current keys.
     ///

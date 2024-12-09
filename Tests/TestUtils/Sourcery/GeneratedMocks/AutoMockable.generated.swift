@@ -1807,6 +1807,30 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - importAccount
+
+    var importAccountUfvkPurposeNameKeySourceThrowableError: Error?
+    var importAccountUfvkPurposeNameKeySourceCallsCount = 0
+    var importAccountUfvkPurposeNameKeySourceCalled: Bool {
+        return importAccountUfvkPurposeNameKeySourceCallsCount > 0
+    }
+    var importAccountUfvkPurposeNameKeySourceReceivedArguments: (ufvk: String, purpose: AccountPurpose, name: String, keySource: String?)?
+    var importAccountUfvkPurposeNameKeySourceReturnValue: AccountUUID!
+    var importAccountUfvkPurposeNameKeySourceClosure: ((String, AccountPurpose, String, String?) async throws -> AccountUUID)?
+
+    func importAccount(ufvk: String, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
+        if let error = importAccountUfvkPurposeNameKeySourceThrowableError {
+            throw error
+        }
+        importAccountUfvkPurposeNameKeySourceCallsCount += 1
+        importAccountUfvkPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, purpose: purpose, name: name, keySource: keySource)
+        if let closure = importAccountUfvkPurposeNameKeySourceClosure {
+            return try await closure(ufvk, purpose, name, keySource)
+        } else {
+            return importAccountUfvkPurposeNameKeySourceReturnValue
+        }
+    }
+
     // MARK: - rewind
 
     var rewindCallsCount = 0
