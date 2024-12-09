@@ -36,7 +36,7 @@ class TestsData {
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
         ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: nil,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -56,7 +56,7 @@ class TestsData {
 
     let clearedTransaction = {
         ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: Date().timeIntervalSince1970,
             expiryHeight: 123000,
             fee: Zatoshi(10),
@@ -76,7 +76,7 @@ class TestsData {
 
     let sentTransaction = {
         ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -96,7 +96,7 @@ class TestsData {
 
     let receivedTransaction = {
         ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,

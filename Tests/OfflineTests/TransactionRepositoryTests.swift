@@ -110,7 +110,7 @@ class TransactionRepositoryTests: XCTestCase {
     func _testFindMemoForTransaction() async throws {
         let rawID = Data(fromHexEncodedString: "08cb5838ffd2c18ce15e7e8c50174940cd9526fff37601986f5480b7ca07e534")!
         let transaction = ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: nil,
             expiryHeight: nil,
             fee: nil,
@@ -141,7 +141,7 @@ class TransactionRepositoryTests: XCTestCase {
     func _testFindMemoForReceivedTransaction() async throws {
         let rawID = Data(fromHexEncodedString: "1f49cfcfcdebd5cb9085d9ff2efbcda87121dda13f2c791113fcf2e79ba82108")!
         let transaction = ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
@@ -167,7 +167,7 @@ class TransactionRepositoryTests: XCTestCase {
     func _testFindMemoForSentTransaction() async throws {
         let rawID = Data(fromHexEncodedString: "08cb5838ffd2c18ce15e7e8c50174940cd9526fff37601986f5480b7ca07e534")!
         let transaction = ZcashTransaction.Overview(
-            accountId: AccountId(0),
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
