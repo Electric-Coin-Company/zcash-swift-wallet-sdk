@@ -40,6 +40,8 @@ protocol ZcashRustBackendWelding {
 
     func importAccount(
         ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
         treeState: TreeState,
         recoverUntil: UInt32?,
         purpose: AccountPurpose,

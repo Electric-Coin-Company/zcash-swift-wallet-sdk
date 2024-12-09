@@ -133,12 +133,21 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
 
     public func importAccount(
         ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
         purpose: AccountPurpose,
         name: String,
         keySource: String?
     ) async throws -> SinglePublisher<AccountUUID, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.importAccount(ufvk: ufvk, purpose: purpose, name: name, keySource: keySource)
+            try await self.synchronizer.importAccount(
+                ufvk: ufvk,
+                seedFingerprint: seedFingerprint,
+                zip32AccountIndex: zip32AccountIndex,
+                purpose: purpose,
+                name: name,
+                keySource: keySource
+            )
         }
     }
 

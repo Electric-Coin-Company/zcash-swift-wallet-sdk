@@ -122,6 +122,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func importAccount(
         ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
         treeState: TreeState,
         recoverUntil: UInt32?,
         purpose: AccountPurpose,
@@ -141,6 +143,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         if let keySource {
             kSource = [CChar](keySource.utf8CString)
         }
+        
+        let index: UInt32 = zip32AccountIndex?.index ?? UINT32_MAX
 
         let uuidPtr = zcashlc_import_account_ufvk(
             dbData.0,
@@ -153,8 +157,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             purpose.rawValue,
             [CChar](name.utf8CString),
             kSource,
-            nil,
-            UINT32_MAX
+            seedFingerprint,
+            index
         )
         
         guard let uuidPtr else {

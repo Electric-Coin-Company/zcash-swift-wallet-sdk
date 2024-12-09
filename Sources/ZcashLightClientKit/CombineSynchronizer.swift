@@ -100,6 +100,8 @@ public protocol CombineSynchronizer {
     
     func importAccount(
         ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
         purpose: AccountPurpose,
         name: String,
         keySource: String?

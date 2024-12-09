@@ -280,6 +280,8 @@ public class SDKSynchronizer: Synchronizer {
     @discardableResult
     public func importAccount(
         ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
         purpose: AccountPurpose,
         name: String,
         keySource: String?
@@ -296,6 +298,8 @@ public class SDKSynchronizer: Synchronizer {
             
         return try await initializer.rustBackend.importAccount(
             ufvk: ufvk,
+            seedFingerprint: seedFingerprint,
+            zip32AccountIndex: zip32AccountIndex,
             treeState: checkpoint.treeState(),
             recoverUntil: chainTip,
             purpose: purpose,

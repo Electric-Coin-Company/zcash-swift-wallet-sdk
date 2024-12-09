@@ -1809,25 +1809,25 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - importAccount
 
-    var importAccountUfvkPurposeNameKeySourceThrowableError: Error?
-    var importAccountUfvkPurposeNameKeySourceCallsCount = 0
-    var importAccountUfvkPurposeNameKeySourceCalled: Bool {
-        return importAccountUfvkPurposeNameKeySourceCallsCount > 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceThrowableError: Error?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount = 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCalled: Bool {
+        return importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount > 0
     }
-    var importAccountUfvkPurposeNameKeySourceReceivedArguments: (ufvk: String, purpose: AccountPurpose, name: String, keySource: String?)?
-    var importAccountUfvkPurposeNameKeySourceReturnValue: AccountUUID!
-    var importAccountUfvkPurposeNameKeySourceClosure: ((String, AccountPurpose, String, String?) async throws -> AccountUUID)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReceivedArguments: (ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, purpose: AccountPurpose, name: String, keySource: String?)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReturnValue: AccountUUID!
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceClosure: ((String, [UInt8]?, Zip32AccountIndex?, AccountPurpose, String, String?) async throws -> AccountUUID)?
 
-    func importAccount(ufvk: String, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
-        if let error = importAccountUfvkPurposeNameKeySourceThrowableError {
+    func importAccount(ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
+        if let error = importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceThrowableError {
             throw error
         }
-        importAccountUfvkPurposeNameKeySourceCallsCount += 1
-        importAccountUfvkPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, purpose: purpose, name: name, keySource: keySource)
-        if let closure = importAccountUfvkPurposeNameKeySourceClosure {
-            return try await closure(ufvk, purpose, name, keySource)
+        importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount += 1
+        importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, seedFingerprint: seedFingerprint, zip32AccountIndex: zip32AccountIndex, purpose: purpose, name: name, keySource: keySource)
+        if let closure = importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceClosure {
+            return try await closure(ufvk, seedFingerprint, zip32AccountIndex, purpose, name, keySource)
         } else {
-            return importAccountUfvkPurposeNameKeySourceReturnValue
+            return importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReturnValue
         }
     }
 
@@ -2438,25 +2438,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - importAccount
 
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceThrowableError: Error?
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceCallsCount = 0
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceCalled: Bool {
-        return importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceCallsCount > 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceThrowableError: Error?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount = 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCalled: Bool {
+        return importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount > 0
     }
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments: (ufvk: String, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?)?
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceReturnValue: AccountUUID!
-    var importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceClosure: ((String, TreeState, UInt32?, AccountPurpose, String, String?) async throws -> AccountUUID)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments: (ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReturnValue: AccountUUID!
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceClosure: ((String, [UInt8]?, Zip32AccountIndex?, TreeState, UInt32?, AccountPurpose, String, String?) async throws -> AccountUUID)?
 
-    func importAccount(ufvk: String, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
-        if let error = importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceThrowableError {
+    func importAccount(ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
+        if let error = importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceThrowableError {
             throw error
         }
-        importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceCallsCount += 1
-        importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, treeState: treeState, recoverUntil: recoverUntil, purpose: purpose, name: name, keySource: keySource)
-        if let closure = importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceClosure {
-            return try await closure(ufvk, treeState, recoverUntil, purpose, name, keySource)
+        importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount += 1
+        importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, seedFingerprint: seedFingerprint, zip32AccountIndex: zip32AccountIndex, treeState: treeState, recoverUntil: recoverUntil, purpose: purpose, name: name, keySource: keySource)
+        if let closure = importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceClosure {
+            return try await closure(ufvk, seedFingerprint, zip32AccountIndex, treeState, recoverUntil, purpose, name, keySource)
         } else {
-            return importAccountUfvkTreeStateRecoverUntilPurposeNameKeySourceReturnValue
+            return importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReturnValue
         }
     }
 
