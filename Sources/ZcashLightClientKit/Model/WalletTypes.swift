@@ -170,7 +170,7 @@ public struct SaplingAddress: Equatable, StringEncoded {
     }
 }
 
-public struct UnifiedAddress: Equatable, StringEncoded {
+public struct UnifiedAddress: Equatable, StringEncoded, Codable, Hashable {
     let networkType: NetworkType
 
     public enum ReceiverTypecodes: Hashable {

@@ -11,7 +11,7 @@ public protocol ZcashNetwork {
     var constants: NetworkConstants.Type { get }
 }
 
-public enum NetworkType {
+public enum NetworkType: Equatable, Codable, Hashable {
     case mainnet
     case testnet
     
