@@ -96,7 +96,8 @@ public protocol ClosureSynchronizer {
     )
 
     func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void)
-        
+
+    // swiftlint:disable:next function_parameter_count
     func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

@@ -38,6 +38,7 @@ protocol ZcashRustBackendWelding {
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Account]
 
+    // swiftlint:disable:next function_parameter_count
     func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

@@ -297,7 +297,7 @@ public protocol Synchronizer: AnyObject {
     ///   - purpose: of the account, either `spending` or `viewOnly`
     ///   - name: name of the account.
     ///   - keySource: custom optional string for clients, used for example to help identify the type of the account.
-    @discardableResult
+    // swiftlint:disable:next function_parameter_count
     func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

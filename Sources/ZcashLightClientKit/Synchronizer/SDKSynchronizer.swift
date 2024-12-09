@@ -277,7 +277,7 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.listAccounts()
     }
     
-    @discardableResult
+    // swiftlint:disable:next function_parameter_count
     public func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

@@ -84,6 +84,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    // swiftlint:disable:next function_parameter_count
     public func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

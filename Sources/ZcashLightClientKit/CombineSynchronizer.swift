@@ -97,7 +97,8 @@ public protocol CombineSynchronizer {
     ) -> SinglePublisher<Proposal, Error>
 
     func listAccounts() -> SinglePublisher<[Account], Error>
-    
+
+    // swiftlint:disable:next function_parameter_count
     func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,

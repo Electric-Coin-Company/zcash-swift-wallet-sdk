@@ -119,6 +119,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         return accountPtr.pointee.unsafeToAccount()
     }
     
+    // swiftlint:disable:next function_parameter_count
     @DBActor
     func importAccount(
         ufvk: String,
@@ -1053,7 +1054,7 @@ extension FfiAccount {
     func unsafeToAccount() -> Account {
         .init(
             id: AccountUUID(id: uuidArray),
-            name: account_name != nil ? String(cString: account_name) : "",
+            name: account_name != nil ? String(cString: account_name) : nil,
             keySource: key_source != nil ? String(cString: key_source) : nil,
             seedFingerprint: seedFingerprintArray,
             hdAccountIndex: Zip32AccountIndex(hd_account_index)
