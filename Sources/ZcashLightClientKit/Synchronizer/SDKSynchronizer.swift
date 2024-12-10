@@ -402,12 +402,10 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func createPCZTFromProposal(
-        ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: Proposal
     ) async throws -> Data {
         try await initializer.rustBackend.createPCZTFromProposal(
-            ufvk: ufvk,
             accountUUID: accountUUID,
             proposal: proposal.inner
         )

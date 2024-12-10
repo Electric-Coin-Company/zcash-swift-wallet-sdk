@@ -228,7 +228,6 @@ public protocol Synchronizer: AnyObject {
     ) async throws -> Proposal
 
     func createPCZTFromProposal(
-        ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: Proposal
     ) async throws -> Data

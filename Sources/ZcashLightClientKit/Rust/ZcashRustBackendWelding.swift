@@ -285,7 +285,6 @@ protocol ZcashRustBackendWelding {
 
     /// PCZT logic
     func createPCZTFromProposal(
-        ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: FfiProposal
     ) async throws -> Data

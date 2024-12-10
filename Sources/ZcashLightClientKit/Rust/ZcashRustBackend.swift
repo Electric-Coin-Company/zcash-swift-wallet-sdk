@@ -294,7 +294,6 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     
     @DBActor
     func createPCZTFromProposal(
-        ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: FfiProposal
     ) async throws -> Data {
@@ -307,7 +306,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
                 networkType.networkId,
                 proposalPtr.baseAddress,
                 UInt(proposalBytes.count),
-                [CChar](ufvk.encoding.utf8CString)
+                accountUUID.id
             )
         }
         
