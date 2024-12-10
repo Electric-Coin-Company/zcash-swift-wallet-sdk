@@ -187,7 +187,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
         
-        var kSource: [CChar]? = nil
+        var kSource: [CChar]?
 
         if let keySource {
             kSource = [CChar](keySource.utf8CString)
@@ -1033,6 +1033,14 @@ extension String {
 
     func isDbNotEmptyErrorMessage() -> Bool {
         return contains("is not empty")
+    }
+}
+
+extension FfiAddress {
+    /// converts an [`FfiAddress`] into a [`UnifiedAddress`]
+    /// - Note: This does not check that the converted value actually holds a valid UnifiedAddress
+    func unsafeToUnifiedAddress(_ networkType: NetworkType) -> UnifiedAddress {
+        .init(validatedEncoding: String(cString: address), networkType: networkType)
     }
 }
 

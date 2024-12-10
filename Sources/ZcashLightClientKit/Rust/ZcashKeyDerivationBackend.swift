@@ -93,6 +93,22 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     // MARK: Address Derivation
 
+    func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress {
+        let ffiAddressPtr = zcashlc_derive_address_ufvk(
+            networkType.networkId,
+            [CChar](ufvk.utf8CString),
+            nil
+        )
+        
+        guard let ffiAddressPtr else {
+            throw ZcashError.rustDeriveAddressFromUfvk(ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_ffi_address(ffiAddressPtr) }
+        
+        return ffiAddressPtr.pointee.unsafeToUnifiedAddress(networkType)
+    }
+    
     func deriveUnifiedSpendingKey(
         from seed: [UInt8],
         accountIndex: Zip32AccountIndex

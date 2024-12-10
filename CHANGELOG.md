@@ -9,6 +9,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 - `DerivationTool.deriveArbitraryWalletKey`
 - `DerivationTool.deriveArbitraryAccountKey`
+- `DerivationTool.deriveUnifiedAddressFrom(ufvk)`
 - `SDKSynchronizer.listAccounts` Returns a list of the accounts in the wallet.
 - `SDKSynchronizer.importAccount` Imports a new account for unified full viewing key.
 
