@@ -18,8 +18,8 @@ let package = Package(
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.15.3"),
 //        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", exact: "0.11.0")
 //        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", branch: "preview/account_uuids")
-        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "a04a3081dca0c35d503b68615077ecc18868c812")
-        
+//        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "a04a3081dca0c35d503b68615077ecc18868c812")
+        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "78627722c39131fe57bfdf6645eab54a4760de40")
     ],
     targets: [
         .target(
