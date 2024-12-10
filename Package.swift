@@ -19,7 +19,8 @@ let package = Package(
 //        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", exact: "0.11.0")
 //        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", branch: "preview/account_uuids")
 //        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "a04a3081dca0c35d503b68615077ecc18868c812")
-        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "78627722c39131fe57bfdf6645eab54a4760de40")
+//        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "78627722c39131fe57bfdf6645eab54a4760de40")
+        .package(url: "https://github.com/Electric-Coin-Company/zcash-light-client-ffi", revision: "4be72b19a2262e56e7e5c2e09a618f4e2324263d")
     ],
     targets: [
         .target(

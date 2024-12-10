@@ -94,7 +94,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
     // MARK: Address Derivation
 
     func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress {
-        let ffiAddressPtr = zcashlc_derive_address_ufvk(
+        let ffiAddressPtr = zcashlc_derive_address_from_ufvk(
             networkType.networkId,
             [CChar](ufvk.utf8CString),
             nil
