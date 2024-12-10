@@ -405,35 +405,29 @@ public class SDKSynchronizer: Synchronizer {
         ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: Proposal
-    ) async throws -> Proposal {
-        try await Proposal(
-            inner: initializer.rustBackend.createPCZTFromProposal(
-                ufvk: ufvk,
-                accountUUID: accountUUID,
-                proposal: proposal.inner
-            )
+    ) async throws -> Data {
+        try await initializer.rustBackend.createPCZTFromProposal(
+            ufvk: ufvk,
+            accountUUID: accountUUID,
+            proposal: proposal.inner
         )
     }
     
     public func addProofsToPCZT(
-        pczt: Proposal
-    ) async throws -> Proposal {
-        try await Proposal(
-            inner: initializer.rustBackend.addProofsToPCZT(
-                pczt: pczt.inner
-            )
+        pczt: Data
+    ) async throws -> Data {
+        try await initializer.rustBackend.addProofsToPCZT(
+            pczt: pczt
         )
     }
     
     public func extractAndStoreTxFromPCZT(
-        pcztWithProofs: Proposal,
-        pcztWithSigs: Proposal
-    ) async throws -> Proposal {
-        try await Proposal(
-            inner: initializer.rustBackend.extractAndStoreTxFromPCZT(
-                pcztWithProofs: pcztWithProofs.inner,
-                pcztWithSigs: pcztWithSigs.inner
-            )
+        pcztWithProofs: Data,
+        pcztWithSigs: Data
+    ) async throws -> Data {
+        try await initializer.rustBackend.extractAndStoreTxFromPCZT(
+            pcztWithProofs: pcztWithProofs,
+            pcztWithSigs: pcztWithSigs
         )
     }
 

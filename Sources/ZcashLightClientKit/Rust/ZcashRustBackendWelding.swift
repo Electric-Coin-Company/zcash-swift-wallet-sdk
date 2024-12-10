@@ -288,16 +288,16 @@ protocol ZcashRustBackendWelding {
         ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: FfiProposal
-    ) async throws -> FfiProposal
+    ) async throws -> Data
     
     func addProofsToPCZT(
-        pczt: FfiProposal
-    ) async throws -> FfiProposal
+        pczt: Data
+    ) async throws -> Data
     
     func extractAndStoreTxFromPCZT(
-        pcztWithProofs: FfiProposal,
-        pcztWithSigs: FfiProposal
-    ) async throws -> FfiProposal
+        pcztWithProofs: Data,
+        pcztWithSigs: Data
+    ) async throws -> Data
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for

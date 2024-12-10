@@ -1572,6 +1572,78 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - createPCZTFromProposal
+
+    var createPCZTFromProposalUfvkAccountUUIDProposalThrowableError: Error?
+    var createPCZTFromProposalUfvkAccountUUIDProposalCallsCount = 0
+    var createPCZTFromProposalUfvkAccountUUIDProposalCalled: Bool {
+        return createPCZTFromProposalUfvkAccountUUIDProposalCallsCount > 0
+    }
+    var createPCZTFromProposalUfvkAccountUUIDProposalReceivedArguments: (ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: Proposal)?
+    var createPCZTFromProposalUfvkAccountUUIDProposalReturnValue: Data!
+    var createPCZTFromProposalUfvkAccountUUIDProposalClosure: ((UnifiedFullViewingKey, AccountUUID, Proposal) async throws -> Data)?
+
+    func createPCZTFromProposal(ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: Proposal) async throws -> Data {
+        if let error = createPCZTFromProposalUfvkAccountUUIDProposalThrowableError {
+            throw error
+        }
+        createPCZTFromProposalUfvkAccountUUIDProposalCallsCount += 1
+        createPCZTFromProposalUfvkAccountUUIDProposalReceivedArguments = (ufvk: ufvk, accountUUID: accountUUID, proposal: proposal)
+        if let closure = createPCZTFromProposalUfvkAccountUUIDProposalClosure {
+            return try await closure(ufvk, accountUUID, proposal)
+        } else {
+            return createPCZTFromProposalUfvkAccountUUIDProposalReturnValue
+        }
+    }
+
+    // MARK: - addProofsToPCZT
+
+    var addProofsToPCZTPcztThrowableError: Error?
+    var addProofsToPCZTPcztCallsCount = 0
+    var addProofsToPCZTPcztCalled: Bool {
+        return addProofsToPCZTPcztCallsCount > 0
+    }
+    var addProofsToPCZTPcztReceivedPczt: Proposal?
+    var addProofsToPCZTPcztReturnValue: Proposal!
+    var addProofsToPCZTPcztClosure: ((Proposal) async throws -> Proposal)?
+
+    func addProofsToPCZT(pczt: Proposal) async throws -> Proposal {
+        if let error = addProofsToPCZTPcztThrowableError {
+            throw error
+        }
+        addProofsToPCZTPcztCallsCount += 1
+        addProofsToPCZTPcztReceivedPczt = pczt
+        if let closure = addProofsToPCZTPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return addProofsToPCZTPcztReturnValue
+        }
+    }
+
+    // MARK: - extractAndStoreTxFromPCZT
+
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
+        return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
+    }
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Proposal, pcztWithSigs: Proposal)?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue: Proposal!
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((Proposal, Proposal) async throws -> Proposal)?
+
+    func extractAndStoreTxFromPCZT(pcztWithProofs: Proposal, pcztWithSigs: Proposal) async throws -> Proposal {
+        if let error = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError {
+            throw error
+        }
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        if let closure = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure {
+            return try await closure(pcztWithProofs, pcztWithSigs)
+        } else {
+            return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue
+        }
+    }
+
     // MARK: - paginatedTransactions
 
     var paginatedTransactionsOfCallsCount = 0
@@ -3030,10 +3102,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return createPCZTFromProposalUfvkAccountUUIDProposalCallsCount > 0
     }
     var createPCZTFromProposalUfvkAccountUUIDProposalReceivedArguments: (ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: FfiProposal)?
-    var createPCZTFromProposalUfvkAccountUUIDProposalReturnValue: FfiProposal!
-    var createPCZTFromProposalUfvkAccountUUIDProposalClosure: ((UnifiedFullViewingKey, AccountUUID, FfiProposal) async throws -> FfiProposal)?
+    var createPCZTFromProposalUfvkAccountUUIDProposalReturnValue: Data!
+    var createPCZTFromProposalUfvkAccountUUIDProposalClosure: ((UnifiedFullViewingKey, AccountUUID, FfiProposal) async throws -> Data)?
 
-    func createPCZTFromProposal(ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: FfiProposal) async throws -> FfiProposal {
+    func createPCZTFromProposal(ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Data {
         if let error = createPCZTFromProposalUfvkAccountUUIDProposalThrowableError {
             throw error
         }

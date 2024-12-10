@@ -231,16 +231,16 @@ public protocol Synchronizer: AnyObject {
         ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: Proposal
-    ) async throws -> Proposal
+    ) async throws -> Data
     
     func addProofsToPCZT(
-        pczt: Proposal
-    ) async throws -> Proposal
+        pczt: Data
+    ) async throws -> Data
     
     func extractAndStoreTxFromPCZT(
-        pcztWithProofs: Proposal,
-        pcztWithSigs: Proposal
-    ) async throws -> Proposal
+        pcztWithProofs: Data,
+        pcztWithSigs: Data
+    ) async throws -> Data
 
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }

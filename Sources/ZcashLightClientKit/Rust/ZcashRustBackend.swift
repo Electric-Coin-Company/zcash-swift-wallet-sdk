@@ -297,7 +297,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         ufvk: UnifiedFullViewingKey,
         accountUUID: AccountUUID,
         proposal: FfiProposal
-    ) async throws -> FfiProposal {
+    ) async throws -> Data {
         let proposalBytes = try proposal.serializedData(partial: false).bytes
 
         let pcztPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
@@ -317,22 +317,28 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return try FfiProposal(serializedBytes: Data(
+        let data = Data(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
-        ))
+        )
+        
+        // The data are expected to be hex encoded
+//        return Data(data.map { String(format: "%02x", $0) }.joined().utf8)
+        return data
     }
     
     @DBActor
     func addProofsToPCZT(
-        pczt: FfiProposal
-    ) async throws -> FfiProposal {
-        let pcztBytes = try pczt.serializedData(partial: false).bytes
-
-        let pcztPtr = pcztBytes.withUnsafeBufferPointer { pcztPtr in
-            zcashlc_add_proofs_to_pczt(
-                pcztPtr.baseAddress,
-                UInt(pcztPtr.count),
+        pczt: Data
+    ) async throws -> Data {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+            
+            return zcashlc_add_proofs_to_pczt(
+                bufferPtr,
+                UInt(pczt.count),
                 spendParamsPath.0,
                 spendParamsPath.1,
                 outputParamsPath.0,
@@ -346,30 +352,35 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return try FfiProposal(serializedBytes: Data(
+        return Data(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
-        ))
+        )
     }
 
     @DBActor
     func extractAndStoreTxFromPCZT(
-        pcztWithProofs: FfiProposal,
-        pcztWithSigs: FfiProposal
-    ) async throws -> FfiProposal {
-        let pcztWithProofsBytes = try pcztWithProofs.serializedData(partial: false).bytes
-        let pcztWithSigsBytes = try pcztWithSigs.serializedData(partial: false).bytes
-
-        let pcztPtr = pcztWithProofsBytes.withUnsafeBufferPointer { pcztWithProofsBytesPtr in
-            pcztWithSigsBytes.withUnsafeBufferPointer { pcztWithSigsBytesPtr in
-                zcashlc_extract_and_store_from_pczt(
+        pcztWithProofs: Data,
+        pcztWithSigs: Data
+    ) async throws -> Data {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
+            guard let pcztWithProofsBufferPtr = pcztWithProofsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+            
+            return pcztWithSigs.withUnsafeBytes { pcztWithSigsBuffer in
+                guard let pcztWithSigsBufferPtr = pcztWithSigsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    return nil
+                }
+                
+                return zcashlc_extract_and_store_from_pczt(
                     dbData.0,
                     dbData.1,
                     networkType.networkId,
-                    pcztWithProofsBytesPtr.baseAddress,
-                    UInt(pcztWithProofsBytesPtr.count),
-                    pcztWithSigsBytesPtr.baseAddress,
-                    UInt(pcztWithSigsBytesPtr.count),
+                    pcztWithProofsBufferPtr,
+                    UInt(pcztWithProofs.count),
+                    pcztWithSigsBufferPtr,
+                    UInt(pcztWithSigs.count),
                     spendParamsPath.0,
                     spendParamsPath.1,
                     outputParamsPath.0,
@@ -384,10 +395,10 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return try FfiProposal(serializedBytes: Data(
+        return Data(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
-        ))
+        )
     }
 
     @DBActor
