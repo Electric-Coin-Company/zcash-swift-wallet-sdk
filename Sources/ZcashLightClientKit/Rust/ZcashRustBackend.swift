@@ -291,6 +291,104 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             count: Int(proposal.pointee.len)
         ))
     }
+    
+    @DBActor
+    func createPCZTFromProposal(
+        ufvk: UnifiedFullViewingKey,
+        accountUUID: AccountUUID,
+        proposal: FfiProposal
+    ) async throws -> FfiProposal {
+        let proposalBytes = try proposal.serializedData(partial: false).bytes
+
+        let pcztPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
+            zcashlc_create_pczt_from_proposal(
+                dbData.0,
+                dbData.1,
+                networkType.networkId,
+                proposalPtr.baseAddress,
+                UInt(proposalBytes.count),
+                [CChar](ufvk.encoding.utf8CString)
+            )
+        }
+        
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createPCZTFromProposal` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return try FfiProposal(serializedBytes: Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        ))
+    }
+    
+    @DBActor
+    func addProofsToPCZT(
+        pczt: FfiProposal
+    ) async throws -> FfiProposal {
+        let pcztBytes = try pczt.serializedData(partial: false).bytes
+
+        let pcztPtr = pcztBytes.withUnsafeBufferPointer { pcztPtr in
+            zcashlc_add_proofs_to_pczt(
+                pcztPtr.baseAddress,
+                UInt(pcztPtr.count),
+                spendParamsPath.0,
+                spendParamsPath.1,
+                outputParamsPath.0,
+                outputParamsPath.1
+            )
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return try FfiProposal(serializedBytes: Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        ))
+    }
+
+    @DBActor
+    func extractAndStoreTxFromPCZT(
+        pcztWithProofs: FfiProposal,
+        pcztWithSigs: FfiProposal
+    ) async throws -> FfiProposal {
+        let pcztWithProofsBytes = try pcztWithProofs.serializedData(partial: false).bytes
+        let pcztWithSigsBytes = try pcztWithSigs.serializedData(partial: false).bytes
+
+        let pcztPtr = pcztWithProofsBytes.withUnsafeBufferPointer { pcztWithProofsBytesPtr in
+            pcztWithSigsBytes.withUnsafeBufferPointer { pcztWithSigsBytesPtr in
+                zcashlc_extract_and_store_from_pczt(
+                    dbData.0,
+                    dbData.1,
+                    networkType.networkId,
+                    pcztWithProofsBytesPtr.baseAddress,
+                    UInt(pcztWithProofsBytesPtr.count),
+                    pcztWithSigsBytesPtr.baseAddress,
+                    UInt(pcztWithSigsBytesPtr.count),
+                    spendParamsPath.0,
+                    spendParamsPath.1,
+                    outputParamsPath.0,
+                    outputParamsPath.1
+                )
+            }
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return try FfiProposal(serializedBytes: Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        ))
+    }
 
     @DBActor
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {

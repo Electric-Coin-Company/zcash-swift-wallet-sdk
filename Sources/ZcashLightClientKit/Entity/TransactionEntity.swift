@@ -85,7 +85,7 @@ public enum ZcashTransaction {
         public let rawID: Data
         public let pool: Pool
         public let index: Int
-        public let fromAccount: AccountId?
+        public let fromAccount: AccountUUID?
         public let recipient: TransactionRecipient
         public let value: Zatoshi
         public let isChange: Bool
@@ -105,8 +105,8 @@ extension ZcashTransaction.Output {
         static let rawID = SQLite.Expression<Blob>("txid")
         static let pool = SQLite.Expression<Int>("output_pool")
         static let index = SQLite.Expression<Int>("output_index")
-        static let toAccount = SQLite.Expression<Int?>("to_account_id")
-        static let fromAccount = SQLite.Expression<Int?>("from_account_id")
+        static let toAccount = SQLite.Expression<Blob?>("to_account_uuid")
+        static let fromAccount = SQLite.Expression<Blob?>("from_account_uuid")
         static let toAddress = SQLite.Expression<String?>("to_address")
         static let value = SQLite.Expression<Int64>("value")
         static let isChange = SQLite.Expression<Bool>("is_change")
@@ -119,7 +119,7 @@ extension ZcashTransaction.Output {
             pool = .init(rawValue: try row.get(Column.pool))
             index = try row.get(Column.index)
             if let accountId = try row.get(Column.fromAccount) {
-                fromAccount = AccountId(accountId)
+                fromAccount = AccountUUID(id: [UInt8](Data(blob: accountId)))
             } else {
                 fromAccount = nil
             }
@@ -132,7 +132,7 @@ extension ZcashTransaction.Output {
             {
                 recipient = TransactionRecipient.address(try Recipient(outputRecipient, network: metadata.networkType))
             } else if let toAccount = try row.get(Column.toAccount) {
-                recipient = .internalAccount(UInt32(toAccount))
+                recipient = .internalAccount(AccountUUID(id: [UInt8](Data(blob: toAccount))))
             } else {
                 throw ZcashError.zcashTransactionOutputInconsistentRecipient
             }

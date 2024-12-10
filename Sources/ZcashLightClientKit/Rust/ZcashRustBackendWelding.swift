@@ -283,6 +283,22 @@ protocol ZcashRustBackendWelding {
         usk: UnifiedSpendingKey
     ) async throws -> [Data]
 
+    /// PCZT logic
+    func createPCZTFromProposal(
+        ufvk: UnifiedFullViewingKey,
+        accountUUID: AccountUUID,
+        proposal: FfiProposal
+    ) async throws -> FfiProposal
+    
+    func addProofsToPCZT(
+        pczt: FfiProposal
+    ) async throws -> FfiProposal
+    
+    func extractAndStoreTxFromPCZT(
+        pcztWithProofs: FfiProposal,
+        pcztWithSigs: FfiProposal
+    ) async throws -> FfiProposal
+
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
     /// - Throws: `rustNoConsensusBranchId` if rust layer returns error.

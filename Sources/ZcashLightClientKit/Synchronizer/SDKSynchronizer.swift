@@ -400,6 +400,42 @@ public class SDKSynchronizer: Synchronizer {
             }
         }
     }
+    
+    public func createPCZTFromProposal(
+        ufvk: UnifiedFullViewingKey,
+        accountUUID: AccountUUID,
+        proposal: Proposal
+    ) async throws -> Proposal {
+        try await Proposal(
+            inner: initializer.rustBackend.createPCZTFromProposal(
+                ufvk: ufvk,
+                accountUUID: accountUUID,
+                proposal: proposal.inner
+            )
+        )
+    }
+    
+    public func addProofsToPCZT(
+        pczt: Proposal
+    ) async throws -> Proposal {
+        try await Proposal(
+            inner: initializer.rustBackend.addProofsToPCZT(
+                pczt: pczt.inner
+            )
+        )
+    }
+    
+    public func extractAndStoreTxFromPCZT(
+        pcztWithProofs: Proposal,
+        pcztWithSigs: Proposal
+    ) async throws -> Proposal {
+        try await Proposal(
+            inner: initializer.rustBackend.extractAndStoreTxFromPCZT(
+                pcztWithProofs: pcztWithProofs.inner,
+                pcztWithSigs: pcztWithSigs.inner
+            )
+        )
+    }
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)

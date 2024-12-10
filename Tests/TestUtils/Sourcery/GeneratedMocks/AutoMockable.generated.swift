@@ -3022,6 +3022,78 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
+    // MARK: - createPCZTFromProposal
+
+    var createPCZTFromProposalUfvkAccountUUIDProposalThrowableError: Error?
+    var createPCZTFromProposalUfvkAccountUUIDProposalCallsCount = 0
+    var createPCZTFromProposalUfvkAccountUUIDProposalCalled: Bool {
+        return createPCZTFromProposalUfvkAccountUUIDProposalCallsCount > 0
+    }
+    var createPCZTFromProposalUfvkAccountUUIDProposalReceivedArguments: (ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: FfiProposal)?
+    var createPCZTFromProposalUfvkAccountUUIDProposalReturnValue: FfiProposal!
+    var createPCZTFromProposalUfvkAccountUUIDProposalClosure: ((UnifiedFullViewingKey, AccountUUID, FfiProposal) async throws -> FfiProposal)?
+
+    func createPCZTFromProposal(ufvk: UnifiedFullViewingKey, accountUUID: AccountUUID, proposal: FfiProposal) async throws -> FfiProposal {
+        if let error = createPCZTFromProposalUfvkAccountUUIDProposalThrowableError {
+            throw error
+        }
+        createPCZTFromProposalUfvkAccountUUIDProposalCallsCount += 1
+        createPCZTFromProposalUfvkAccountUUIDProposalReceivedArguments = (ufvk: ufvk, accountUUID: accountUUID, proposal: proposal)
+        if let closure = createPCZTFromProposalUfvkAccountUUIDProposalClosure {
+            return try await closure(ufvk, accountUUID, proposal)
+        } else {
+            return createPCZTFromProposalUfvkAccountUUIDProposalReturnValue
+        }
+    }
+
+    // MARK: - addProofsToPCZT
+
+    var addProofsToPCZTPcztThrowableError: Error?
+    var addProofsToPCZTPcztCallsCount = 0
+    var addProofsToPCZTPcztCalled: Bool {
+        return addProofsToPCZTPcztCallsCount > 0
+    }
+    var addProofsToPCZTPcztReceivedPczt: FfiProposal?
+    var addProofsToPCZTPcztReturnValue: FfiProposal!
+    var addProofsToPCZTPcztClosure: ((FfiProposal) async throws -> FfiProposal)?
+
+    func addProofsToPCZT(pczt: FfiProposal) async throws -> FfiProposal {
+        if let error = addProofsToPCZTPcztThrowableError {
+            throw error
+        }
+        addProofsToPCZTPcztCallsCount += 1
+        addProofsToPCZTPcztReceivedPczt = pczt
+        if let closure = addProofsToPCZTPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return addProofsToPCZTPcztReturnValue
+        }
+    }
+
+    // MARK: - extractAndStoreTxFromPCZT
+
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
+        return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
+    }
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: FfiProposal, pcztWithSigs: FfiProposal)?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue: FfiProposal!
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((FfiProposal, FfiProposal) async throws -> FfiProposal)?
+
+    func extractAndStoreTxFromPCZT(pcztWithProofs: FfiProposal, pcztWithSigs: FfiProposal) async throws -> FfiProposal {
+        if let error = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError {
+            throw error
+        }
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        if let closure = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure {
+            return try await closure(pcztWithProofs, pcztWithSigs)
+        } else {
+            return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue
+        }
+    }
+
     // MARK: - consensusBranchIdFor
 
     var consensusBranchIdForHeightThrowableError: Error?

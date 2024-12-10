@@ -251,7 +251,7 @@ public struct TexAddress: Equatable, StringEncoded, Comparable {
 
 public enum TransactionRecipient: Equatable {
     case address(Recipient)
-    case internalAccount(UInt32)
+    case internalAccount(AccountUUID)
 }
 
 /// Represents a valid recipient of Zcash
