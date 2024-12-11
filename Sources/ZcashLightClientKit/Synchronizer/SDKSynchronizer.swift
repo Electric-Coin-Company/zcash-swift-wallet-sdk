@@ -587,6 +587,8 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
 
+            UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
+            
             let context = AfterSyncHooksManager.WipeContext(
                 prewipe: { [weak self] in
                     self?.transactionEncoder.closeDBConnection()
