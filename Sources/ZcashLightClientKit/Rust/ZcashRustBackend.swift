@@ -72,7 +72,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listAccounts() async throws -> [Zip32AccountIndex] {
+    func listAccounts() async throws -> [Account] {
         let accountsPtr = zcashlc_list_accounts(
             dbData.0,
             dbData.1,
@@ -85,18 +85,100 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_accounts(accountsPtr) }
 
-        var accounts: [Zip32AccountIndex] = []
+        var accounts: [Account] = []
 
         for i in (0 ..< Int(accountsPtr.pointee.len)) {
-            let account = accountsPtr.pointee.ptr.advanced(by: i).pointee
-            accounts.append(Zip32AccountIndex(account.account_index))
+            let accountUUIDPtr = accountsPtr.pointee.ptr.advanced(by: i).pointee
+            let accountUUID = AccountUUID(id: accountUUIDPtr.uuidArray)
+
+            let account = try await getAccount(for: accountUUID)
+            
+            accounts.append(account)
         }
 
         return accounts
     }
 
     @DBActor
-    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
+    func getAccount(
+        for accountUUID: AccountUUID
+    ) async throws -> Account {
+        let accountPtr: UnsafeMutablePointer<FfiAccount>? = zcashlc_get_account(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+        
+        guard let accountPtr else {
+            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`importAccount` failed with unknown error"))
+        }
+        
+        defer { zcashlc_free_account(accountPtr) }
+
+        return accountPtr.pointee.unsafeToAccount()
+    }
+    
+    // swiftlint:disable:next function_parameter_count
+    @DBActor
+    func importAccount(
+        ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
+        treeState: TreeState,
+        recoverUntil: UInt32?,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> AccountUUID {
+        var rUntil: Int64 = -1
+        
+        if let recoverUntil {
+            rUntil = Int64(recoverUntil)
+        }
+
+        let treeStateBytes = try treeState.serializedData(partial: false).bytes
+        
+        var kSource: [CChar]?
+
+        if let keySource {
+            kSource = [CChar](keySource.utf8CString)
+        }
+        
+        let index: UInt32 = zip32AccountIndex?.index ?? UINT32_MAX
+
+        let uuidPtr = zcashlc_import_account_ufvk(
+            dbData.0,
+            dbData.1,
+            [CChar](ufvk.utf8CString),
+            treeStateBytes,
+            UInt(treeStateBytes.count),
+            rUntil,
+            networkType.networkId,
+            purpose.rawValue,
+            [CChar](name.utf8CString),
+            kSource,
+            seedFingerprint,
+            index
+        )
+        
+        guard let uuidPtr else {
+            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`importAccount` failed with unknown error"))
+        }
+        
+        defer { zcashlc_free_ffi_uuid(uuidPtr) }
+
+        return uuidPtr.pointee.unsafeToAccountUUID()
+    }
+    
+    @DBActor
+    func createAccount(
+        seed: [UInt8],
+        treeState: TreeState,
+        recoverUntil: UInt32?,
+        name: String,
+        keySource: String?
+    ) async throws -> UnifiedSpendingKey {
         var rUntil: Int64 = -1
         
         if let recoverUntil {
@@ -105,6 +187,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         
         let treeStateBytes = try treeState.serializedData(partial: false).bytes
         
+        var kSource: [CChar]?
+
+        if let keySource {
+            kSource = [CChar](keySource.utf8CString)
+        }
+
         let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
@@ -113,7 +201,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             treeStateBytes,
             UInt(treeStateBytes.count),
             rUntil,
-            networkType.networkId
+            networkType.networkId,
+            [CChar](name.utf8CString),
+            kSource
         )
 
         guard let ffiBinaryKeyPtr else {
@@ -148,7 +238,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         to address: String,
         value: Int64,
         memo: MemoBytes?
@@ -156,7 +246,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             [CChar](address.utf8CString),
             value,
             memo?.bytes,
@@ -170,7 +260,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(proposal) }
 
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
@@ -179,12 +269,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func proposeTransferFromURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             [CChar](uri.utf8CString),
             networkType.networkId,
             minimumConfirmations
@@ -196,10 +286,120 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(proposal) }
 
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
+    }
+    
+    @DBActor
+    func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: FfiProposal
+    ) async throws -> Data {
+        let proposalBytes = try proposal.serializedData(partial: false).bytes
+
+        let pcztPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
+            zcashlc_create_pczt_from_proposal(
+                dbData.0,
+                dbData.1,
+                networkType.networkId,
+                proposalPtr.baseAddress,
+                UInt(proposalBytes.count),
+                accountUUID.id
+            )
+        }
+        
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createPCZTFromProposal` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        let data = Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        )
+        
+        // The data are expected to be hex encoded
+//        return Data(data.map { String(format: "%02x", $0) }.joined().utf8)
+        return data
+    }
+    
+    @DBActor
+    func addProofsToPCZT(
+        pczt: Data
+    ) async throws -> Data {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+            
+            return zcashlc_add_proofs_to_pczt(
+                bufferPtr,
+                UInt(pczt.count),
+                spendParamsPath.0,
+                spendParamsPath.1,
+                outputParamsPath.0,
+                outputParamsPath.1
+            )
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        )
+    }
+
+    @DBActor
+    func extractAndStoreTxFromPCZT(
+        pcztWithProofs: Data,
+        pcztWithSigs: Data
+    ) async throws -> [Data] {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
+            guard let pcztWithProofsBufferPtr = pcztWithProofsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+            
+            return pcztWithSigs.withUnsafeBytes { pcztWithSigsBuffer in
+                guard let pcztWithSigsBufferPtr = pcztWithSigsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    return nil
+                }
+                
+                return zcashlc_extract_and_store_from_pczt(
+                    dbData.0,
+                    dbData.1,
+                    networkType.networkId,
+                    pcztWithProofsBufferPtr,
+                    UInt(pcztWithProofs.count),
+                    pcztWithSigsBufferPtr,
+                    UInt(pcztWithSigs.count),
+                    spendParamsPath.0,
+                    spendParamsPath.1,
+                    outputParamsPath.0,
+                    outputParamsPath.1
+                )
+            }
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return [
+            Data(
+                bytes: pcztPtr.pointee.ptr,
+                count: Int(pcztPtr.pointee.len)
+            )
+        ]
     }
 
     @DBActor
@@ -219,11 +419,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getCurrentAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+    func getCurrentAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -241,11 +441,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getNextAvailableAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -281,18 +481,18 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
+    func getTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
         let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            LCZip32Index(accountIndex.index)
+            accountUUID.id
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetTransparentBalance(
-                Int(accountIndex.index),
-                lastErrorMessage(fallback: "Error getting Total Transparent balance from accountIndex \(accountIndex.index)")
+                accountUUID,
+                lastErrorMessage(fallback: "Error getting Total Transparent balance from accountUUID \(accountUUID.id)")
             )
         }
 
@@ -300,19 +500,19 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getVerifiedTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
+    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             minimumShieldingConfirmations
         )
 
         guard balance >= 0 else {
             throw ZcashError.rustGetVerifiedTransparentBalance(
-                Int(accountIndex.index),
-                lastErrorMessage(fallback: "Error getting verified transparent balance from accountIndex \(accountIndex.index)")
+                accountUUID,
+                lastErrorMessage(fallback: "Error getting verified transparent balance from accountUUID \(accountUUID.id)")
             )
         }
 
@@ -416,11 +616,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func listTransparentReceivers(accountIndex: Zip32AccountIndex) async throws -> [TransparentAddress] {
+    func listTransparentReceivers(accountUUID: AccountUUID) async throws -> [TransparentAddress] {
         let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             networkType.networkId
         )
 
@@ -659,11 +859,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
 
-        var accountBalances: [Zip32AccountIndex: AccountBalance] = [:]
+        var accountBalances: [AccountUUID: AccountBalance] = [:]
 
         for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
             let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
-            accountBalances[Zip32AccountIndex(accountBalance.account_id)] = accountBalance.toAccountBalance()
+            accountBalances[AccountUUID(id: accountBalance.uuidArray)] = accountBalance.toAccountBalance()
         }
 
         return WalletSummary(
@@ -739,7 +939,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
         transparentReceiver: String?
@@ -747,7 +947,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         let proposal = zcashlc_propose_shielding(
             dbData.0,
             dbData.1,
-            LCZip32Index(accountIndex.index),
+            accountUUID.id,
             memo?.bytes,
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
@@ -765,7 +965,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "Failed with nil pointer."))
         }
         
-        return try FfiProposal(contiguousBytes: Data(
+        return try FfiProposal(serializedBytes: Data(
             bytes: proposal.pointee.ptr,
             count: Int(proposal.pointee.len)
         ))
@@ -946,7 +1146,73 @@ extension String {
     }
 }
 
+extension FfiAddress {
+    /// converts an [`FfiAddress`] into a [`UnifiedAddress`]
+    /// - Note: This does not check that the converted value actually holds a valid UnifiedAddress
+    func unsafeToUnifiedAddress(_ networkType: NetworkType) -> UnifiedAddress {
+        .init(validatedEncoding: String(cString: address), networkType: networkType)
+    }
+}
+
+extension FfiAccount {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: uuid_bytes) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    var seedFingerprintArray: [UInt8] {
+        withUnsafeBytes(of: seed_fingerprint) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    /// converts an [`FfiAccount`] into a [`Account`]
+    /// - Note: This does not check that the converted value actually holds a valid Account
+    func unsafeToAccount() -> Account {
+        .init(
+            id: AccountUUID(id: uuidArray),
+            name: account_name != nil ? String(cString: account_name) : nil,
+            keySource: key_source != nil ? String(cString: key_source) : nil,
+            seedFingerprint: seedFingerprintArray,
+            hdAccountIndex: Zip32AccountIndex(hd_account_index)
+        )
+    }
+}
+
+extension FfiBoxedSlice {
+    /// converts an [`FfiBoxedSlice`] into a [`UnifiedSpendingKey`]
+    /// - Note: This does not check that the converted value actually holds a valid USK
+    func unsafeToUnifiedSpendingKey(network: NetworkType) -> UnifiedSpendingKey {
+        .init(
+            network: network,
+            bytes: self.ptr.toByteArray(length: Int(self.len))
+        )
+    }
+}
+
+extension FfiUuid {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.uuid_bytes) { buf in
+            [UInt8](buf)
+        }
+    }
+
+    /// converts an [`FfiUuid`] into a [`AccountUUID`]
+    func unsafeToAccountUUID() -> AccountUUID {
+        .init(
+            id: self.uuidArray
+        )
+    }
+}
+
 extension FFIBinaryKey {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.account_uuid) { buf in
+            [UInt8](buf)
+        }
+    }
+
     /// converts an [`FFIBinaryKey`] into a [`UnifiedSpendingKey`]
     /// - Note: This does not check that the converted value actually holds a valid USK
     func unsafeToUnifiedSpendingKey(network: NetworkType) -> UnifiedSpendingKey {
@@ -954,8 +1220,7 @@ extension FFIBinaryKey {
             network: network,
             bytes: self.encoding.toByteArray(
                 length: Int(self.encoding_len)
-            ),
-            accountIndex: Zip32AccountIndex(self.account_id)
+            )
         )
     }
 }
@@ -1001,6 +1266,12 @@ extension FfiBalance {
 }
 
 extension FfiAccountBalance {
+    var uuidArray: [UInt8] {
+        withUnsafeBytes(of: self.account_uuid) { buf in
+            [UInt8](buf)
+        }
+    }
+
     /// Converts an [`FfiAccountBalance`] into a [`AccountBalance`].
     func toAccountBalance() -> AccountBalance {
         .init(

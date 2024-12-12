@@ -70,7 +70,9 @@ class SyncBlocksListViewController: UIViewController {
                         _ = try! await synchronizer.prepare(
                             with: synchronizerData.seed,
                             walletBirthday: synchronizerData.birthday,
-                            for: .existingWallet
+                            for: .existingWallet,
+                            name: "",
+                            keySource: nil
                         )
                     }
 

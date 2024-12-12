@@ -56,13 +56,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeTransfer(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransfer(
-            accountIndex: accountIndex,
+            accountUUID: accountUUID,
             to: recipient,
             value: amount.amount,
             memo: memoBytes
@@ -72,13 +72,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeShielding(
-        accountIndex: Zip32AccountIndex,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String? = nil
     ) async throws -> Proposal? {
         guard let proposal = try await rustBackend.proposeShielding(
-            accountIndex: accountIndex,
+            accountUUID: accountUUID,
             memo: memoBytes,
             shieldingThreshold: shieldingThreshold,
             transparentReceiver: transparentReceiver
@@ -89,11 +89,11 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountIndex: Zip32AccountIndex
+        accountUUID: AccountUUID
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransferFromURI(
             uri,
-            accountIndex: accountIndex
+            accountUUID: accountUUID
         )
         return Proposal(inner: proposal)
     }
@@ -111,6 +111,24 @@ class WalletTransactionEncoder: TransactionEncoder {
             usk: spendingKey
         )
 
+        return try await createTransactionsFromTxIds(txIds)
+        
+//        logger.debug("transaction ids: \(txIds)")
+//
+//        var txs: [ZcashTransaction.Overview] = []
+//
+//        for txId in txIds {
+//            txs.append(try await repository.find(rawID: txId))
+//        }
+//
+//        return txs
+    }
+
+    func createTransactionsFromTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview] {
+        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
+            throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
+        }
+
         logger.debug("transaction ids: \(txIds)")
 
         var txs: [ZcashTransaction.Overview] = []
@@ -121,7 +139,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 
         return txs
     }
-
+    
     func submit(
         transaction: EncodedTransaction
     ) async throws {
