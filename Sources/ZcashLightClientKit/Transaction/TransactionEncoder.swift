@@ -91,5 +91,7 @@ protocol TransactionEncoder {
     /// - Parameter transaction: a transaction overview
     func submit(transaction: EncodedTransaction) async throws
 
+    func createTransactionsFromTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview]
+    
     func closeDBConnection()
 }

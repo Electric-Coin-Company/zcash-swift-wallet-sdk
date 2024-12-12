@@ -376,6 +376,11 @@ public class SDKSynchronizer: Synchronizer {
             proposal: proposal,
             spendingKey: spendingKey
         )
+        
+        return submitTransactions(transactions)
+    }
+    
+    func submitTransactions(_ transactions: [ZcashTransaction.Overview]) -> AsyncThrowingStream<TransactionSubmitResult, Error> {
         var iterator = transactions.makeIterator()
         var submitFailed = false
 
@@ -419,14 +424,28 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
     
-    public func extractAndStoreTxFromPCZT(
+    public func createTransactionFromPCZT(
         pcztWithProofs: Data,
         pcztWithSigs: Data
-    ) async throws -> Data {
-        try await initializer.rustBackend.extractAndStoreTxFromPCZT(
+    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+        try throwIfUnprepared()
+
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: initializer.spendParamsURL,
+            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: initializer.outputParamsURL,
+            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
+        )
+
+        let txIds = try await initializer.rustBackend.extractAndStoreTxFromPCZT(
             pcztWithProofs: pcztWithProofs,
             pcztWithSigs: pcztWithSigs
         )
+
+        let transactions = try await transactionEncoder.createTransactionsFromTxIds(txIds)
+        
+        return submitTransactions(transactions)
     }
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {

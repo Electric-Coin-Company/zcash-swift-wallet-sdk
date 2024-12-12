@@ -236,10 +236,10 @@ public protocol Synchronizer: AnyObject {
         pczt: Data
     ) async throws -> Data
     
-    func extractAndStoreTxFromPCZT(
+    func createTransactionFromPCZT(
         pcztWithProofs: Data,
         pcztWithSigs: Data
-    ) async throws -> Data
+    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
 
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }

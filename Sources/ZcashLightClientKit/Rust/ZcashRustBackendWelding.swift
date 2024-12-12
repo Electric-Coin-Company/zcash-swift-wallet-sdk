@@ -296,7 +296,7 @@ protocol ZcashRustBackendWelding {
     func extractAndStoreTxFromPCZT(
         pcztWithProofs: Data,
         pcztWithSigs: Data
-    ) async throws -> Data
+    ) async throws -> [Data]
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for

@@ -1620,27 +1620,27 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - extractAndStoreTxFromPCZT
+    // MARK: - createTransactionFromPCZT
 
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
-        return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
+        return createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
     }
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Data, pcztWithSigs: Data)?
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue: Data!
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((Data, Data) async throws -> Data)?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Data, pcztWithSigs: Data)?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReturnValue: AsyncThrowingStream<TransactionSubmitResult, Error>!
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure: ((Data, Data) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>)?
 
-    func extractAndStoreTxFromPCZT(pcztWithProofs: Data, pcztWithSigs: Data) async throws -> Data {
-        if let error = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError {
+    func createTransactionFromPCZT(pcztWithProofs: Data, pcztWithSigs: Data) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+        if let error = createTransactionFromPCZTPcztWithProofsPcztWithSigsThrowableError {
             throw error
         }
-        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
-        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
-        if let closure = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure {
+        createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
+        createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        if let closure = createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure {
             return try await closure(pcztWithProofs, pcztWithSigs)
         } else {
-            return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue
+            return createTransactionFromPCZTPcztWithProofsPcztWithSigsReturnValue
         }
     }
 

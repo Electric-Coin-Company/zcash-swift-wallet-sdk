@@ -361,7 +361,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     func extractAndStoreTxFromPCZT(
         pcztWithProofs: Data,
         pcztWithSigs: Data
-    ) async throws -> Data {
+    ) async throws -> [Data] {
         let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
             guard let pcztWithProofsBufferPtr = pcztWithProofsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return nil
@@ -394,10 +394,10 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return Data(
+        return [Data(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
-        )
+        )]
     }
 
     @DBActor
