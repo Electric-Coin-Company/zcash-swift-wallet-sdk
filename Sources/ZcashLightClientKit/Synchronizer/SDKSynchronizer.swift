@@ -97,7 +97,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     deinit {
-        UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
+        //UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
         Task { [blockProcessor] in
             await blockProcessor.stop()
         }
@@ -120,9 +120,9 @@ public class SDKSynchronizer: Synchronizer {
             return initialisationError
         }
 
-        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
-            return .initializerAliasAlreadyInUse(initializer.alias)
-        }
+//        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
+//            return .initializerAliasAlreadyInUse(initializer.alias)
+//        }
 
         return nil
     }
@@ -606,7 +606,7 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
 
-            UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
+//            UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
             
             let context = AfterSyncHooksManager.WipeContext(
                 prewipe: { [weak self] in

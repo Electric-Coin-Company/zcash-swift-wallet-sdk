@@ -394,10 +394,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return [Data(
-            bytes: pcztPtr.pointee.ptr,
-            count: Int(pcztPtr.pointee.len)
-        )]
+        return [
+            Data(
+                bytes: pcztPtr.pointee.ptr,
+                count: Int(pcztPtr.pointee.len)
+            )
+        ]
     }
 
     @DBActor
