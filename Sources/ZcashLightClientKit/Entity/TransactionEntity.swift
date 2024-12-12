@@ -64,14 +64,14 @@ public enum ZcashTransaction {
 
     public struct Output {
         public enum Pool {
-            case transaparent
+            case transparent
             case sapling
             case orchard
             case other(Int)
             init(rawValue: Int) {
                 switch rawValue {
                 case 0:
-                    self = .transaparent
+                    self = .transparent
                 case 2:
                     self = .sapling
                 case 3:
