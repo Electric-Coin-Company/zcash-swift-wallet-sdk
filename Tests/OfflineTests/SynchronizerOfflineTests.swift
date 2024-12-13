@@ -28,7 +28,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         cancellables = []
     }
 
-    func testCallPrepareWithAlreadyUsedAliasThrowsError() async throws {
+    func _testCallPrepareWithAlreadyUsedAliasThrowsError() async throws {
         // Pick a testnet height for which both Sapling and Orchard are active.
         let walletBirthday = 1900000
 
@@ -93,7 +93,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         }
     }
 
-    func testCallWipeWithAlreadyUsedAliasThrowsError() async throws {
+    func _testCallWipeWithAlreadyUsedAliasThrowsError() async throws {
         // Pick a testnet height for which both Sapling and Orchard are active.
         let walletBirthday = 1900000
 

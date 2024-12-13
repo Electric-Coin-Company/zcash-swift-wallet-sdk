@@ -97,7 +97,6 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     deinit {
-        //UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
         Task { [blockProcessor] in
             await blockProcessor.stop()
         }
@@ -119,10 +118,6 @@ public class SDKSynchronizer: Synchronizer {
         if let initialisationError = initializer.urlsParsingError {
             return initialisationError
         }
-
-//        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
-//            return .initializerAliasAlreadyInUse(initializer.alias)
-//        }
 
         return nil
     }
@@ -406,28 +401,20 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public func createPCZTFromProposal(
-        accountUUID: AccountUUID,
-        proposal: Proposal
-    ) async throws -> Data {
+    public func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt {
         try await initializer.rustBackend.createPCZTFromProposal(
             accountUUID: accountUUID,
             proposal: proposal.inner
         )
     }
     
-    public func addProofsToPCZT(
-        pczt: Data
-    ) async throws -> Data {
+    public func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
         try await initializer.rustBackend.addProofsToPCZT(
             pczt: pczt
         )
     }
     
-    public func createTransactionFromPCZT(
-        pcztWithProofs: Data,
-        pcztWithSigs: Data
-    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+    public func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
         try throwIfUnprepared()
 
         try await SaplingParameterDownloader.downloadParamsIfnotPresent(
@@ -443,7 +430,7 @@ public class SDKSynchronizer: Synchronizer {
             pcztWithSigs: pcztWithSigs
         )
 
-        let transactions = try await transactionEncoder.createTransactionsFromTxIds(txIds)
+        let transactions = try await transactionEncoder.createTransactionsFromTxIds([txIds])
         
         return submitTransactions(transactions)
     }
@@ -606,8 +593,6 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
 
-//            UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
-            
             let context = AfterSyncHooksManager.WipeContext(
                 prewipe: { [weak self] in
                     self?.transactionEncoder.closeDBConnection()

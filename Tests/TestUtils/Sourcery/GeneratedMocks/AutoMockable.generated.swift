@@ -1580,10 +1580,10 @@ class SynchronizerMock: Synchronizer {
         return createPCZTFromProposalAccountUUIDProposalCallsCount > 0
     }
     var createPCZTFromProposalAccountUUIDProposalReceivedArguments: (accountUUID: AccountUUID, proposal: Proposal)?
-    var createPCZTFromProposalAccountUUIDProposalReturnValue: Data!
-    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, Proposal) async throws -> Data)?
+    var createPCZTFromProposalAccountUUIDProposalReturnValue: Pczt!
+    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, Proposal) async throws -> Pczt)?
 
-    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Data {
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt {
         if let error = createPCZTFromProposalAccountUUIDProposalThrowableError {
             throw error
         }
@@ -1603,11 +1603,11 @@ class SynchronizerMock: Synchronizer {
     var addProofsToPCZTPcztCalled: Bool {
         return addProofsToPCZTPcztCallsCount > 0
     }
-    var addProofsToPCZTPcztReceivedPczt: Data?
-    var addProofsToPCZTPcztReturnValue: Data!
-    var addProofsToPCZTPcztClosure: ((Data) async throws -> Data)?
+    var addProofsToPCZTPcztReceivedPczt: Pczt?
+    var addProofsToPCZTPcztReturnValue: Pczt!
+    var addProofsToPCZTPcztClosure: ((Pczt) async throws -> Pczt)?
 
-    func addProofsToPCZT(pczt: Data) async throws -> Data {
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
         if let error = addProofsToPCZTPcztThrowableError {
             throw error
         }
@@ -1627,11 +1627,11 @@ class SynchronizerMock: Synchronizer {
     var createTransactionFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
         return createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
     }
-    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Data, pcztWithSigs: Data)?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Pczt, pcztWithSigs: Pczt)?
     var createTransactionFromPCZTPcztWithProofsPcztWithSigsReturnValue: AsyncThrowingStream<TransactionSubmitResult, Error>!
-    var createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure: ((Data, Data) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>)?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure: ((Pczt, Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>)?
 
-    func createTransactionFromPCZT(pcztWithProofs: Data, pcztWithSigs: Data) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+    func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
         if let error = createTransactionFromPCZTPcztWithProofsPcztWithSigsThrowableError {
             throw error
         }
@@ -3102,10 +3102,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return createPCZTFromProposalAccountUUIDProposalCallsCount > 0
     }
     var createPCZTFromProposalAccountUUIDProposalReceivedArguments: (accountUUID: AccountUUID, proposal: FfiProposal)?
-    var createPCZTFromProposalAccountUUIDProposalReturnValue: Data!
-    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, FfiProposal) async throws -> Data)?
+    var createPCZTFromProposalAccountUUIDProposalReturnValue: Pczt!
+    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, FfiProposal) async throws -> Pczt)?
 
-    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Data {
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Pczt {
         if let error = createPCZTFromProposalAccountUUIDProposalThrowableError {
             throw error
         }
@@ -3125,11 +3125,11 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var addProofsToPCZTPcztCalled: Bool {
         return addProofsToPCZTPcztCallsCount > 0
     }
-    var addProofsToPCZTPcztReceivedPczt: Data?
-    var addProofsToPCZTPcztReturnValue: Data!
-    var addProofsToPCZTPcztClosure: ((Data) async throws -> Data)?
+    var addProofsToPCZTPcztReceivedPczt: Pczt?
+    var addProofsToPCZTPcztReturnValue: Pczt!
+    var addProofsToPCZTPcztClosure: ((Pczt) async throws -> Pczt)?
 
-    func addProofsToPCZT(pczt: Data) async throws -> Data {
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
         if let error = addProofsToPCZTPcztThrowableError {
             throw error
         }
@@ -3149,11 +3149,11 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
         return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
     }
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Data, pcztWithSigs: Data)?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Pczt, pcztWithSigs: Pczt)?
     var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue: Data!
-    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((Data, Data) async throws -> Data)?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((Pczt, Pczt) async throws -> Data)?
 
-    func extractAndStoreTxFromPCZT(pcztWithProofs: Data, pcztWithSigs: Data) async throws -> Data {
+    func extractAndStoreTxFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> Data {
         if let error = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError {
             throw error
         }

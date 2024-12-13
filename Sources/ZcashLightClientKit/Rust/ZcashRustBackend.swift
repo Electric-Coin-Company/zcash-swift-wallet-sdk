@@ -296,7 +296,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     func createPCZTFromProposal(
         accountUUID: AccountUUID,
         proposal: FfiProposal
-    ) async throws -> Data {
+    ) async throws -> Pczt {
         let proposalBytes = try proposal.serializedData(partial: false).bytes
 
         let pcztPtr = proposalBytes.withUnsafeBufferPointer { proposalPtr in
@@ -311,25 +311,21 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
         
         guard let pcztPtr else {
-            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createPCZTFromProposal` failed with unknown error"))
+            throw ZcashError.rustCreatePCZTFromProposal(lastErrorMessage(fallback: "`createPCZTFromProposal` failed with unknown error"))
         }
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        let data = Data(
+        return Pczt(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
         )
-        
-        // The data are expected to be hex encoded
-//        return Data(data.map { String(format: "%02x", $0) }.joined().utf8)
-        return data
     }
     
     @DBActor
     func addProofsToPCZT(
-        pczt: Data
-    ) async throws -> Data {
+        pczt: Pczt
+    ) async throws -> Pczt {
         let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
             guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return nil
@@ -346,12 +342,12 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         guard let pcztPtr else {
-            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+            throw ZcashError.rustAddProofsToPCZT(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
         }
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return Data(
+        return Pczt(
             bytes: pcztPtr.pointee.ptr,
             count: Int(pcztPtr.pointee.len)
         )
@@ -359,9 +355,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func extractAndStoreTxFromPCZT(
-        pcztWithProofs: Data,
-        pcztWithSigs: Data
-    ) async throws -> [Data] {
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt
+    ) async throws -> Data {
         let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
             guard let pcztWithProofsBufferPtr = pcztWithProofsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return nil
@@ -389,17 +385,15 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         guard let pcztPtr else {
-            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`addProofsToPCZT` failed with unknown error"))
+            throw ZcashError.rustExtractAndStoreTxFromPCZT(lastErrorMessage(fallback: "`extractAndStoreTxFromPCZT` failed with unknown error"))
         }
 
         defer { zcashlc_free_boxed_slice(pcztPtr) }
 
-        return [
-            Data(
-                bytes: pcztPtr.pointee.ptr,
-                count: Int(pcztPtr.pointee.len)
-            )
-        ]
+        return Data(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        )
     }
 
     @DBActor

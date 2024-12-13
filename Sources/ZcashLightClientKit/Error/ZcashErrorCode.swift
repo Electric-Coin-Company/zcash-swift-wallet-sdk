@@ -199,6 +199,12 @@ public enum ZcashErrorCode: String {
     case rustImportAccountUfvk = "ZRUST0067"
     /// Error from rust layer when calling ZcashRustBackend.deriveAddressFromUfvk
     case rustDeriveAddressFromUfvk = "ZRUST0068"
+    /// Error from rust layer when calling ZcashRustBackend.createPCZTFromProposal
+    case rustCreatePCZTFromProposal = "ZRUST0069"
+    /// Error from rust layer when calling ZcashRustBackend.addProofsToPCZT
+    case rustAddProofsToPCZT = "ZRUST0070"
+    /// Error from rust layer when calling ZcashRustBackend.extractAndStoreTxFromPCZT
+    case rustExtractAndStoreTxFromPCZT = "ZRUST0071"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

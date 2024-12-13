@@ -283,20 +283,37 @@ protocol ZcashRustBackendWelding {
         usk: UnifiedSpendingKey
     ) async throws -> [Data]
 
-    /// PCZT logic
-    func createPCZTFromProposal(
-        accountUUID: AccountUUID,
-        proposal: FfiProposal
-    ) async throws -> Data
+    /// Creates a partially-created (unsigned without proofs) transaction from the given proposal.
+    ///
+    /// Do not call this multiple times in parallel, or you will generate PCZT instances that, if
+    /// finalized, would double-spend the same notes.
+    ///
+    /// - Parameter accountUUID: The account for which the proposal was created.
+    /// - Parameter proposal: The proposal for which to create the transaction.
+    /// - Returns The partially created transaction in [Pczt] format.
+    ///
+    /// - Throws rustCreatePCZTFromProposal as a common indicator of the operation failure
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Pczt
     
-    func addProofsToPCZT(
-        pczt: Data
-    ) async throws -> Data
+    /// Adds proofs to the given PCZT.
+    ///
+    /// - Parameter pczt: The partially created transaction in its serialized format.
+    ///
+    /// - Returns The updated PCZT in its serialized format.
+    ///
+    /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
     
-    func extractAndStoreTxFromPCZT(
-        pcztWithProofs: Data,
-        pcztWithSigs: Data
-    ) async throws -> [Data]
+    /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
+    /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
+    ///
+    /// - Parameter pcztWithProofs
+    /// - Parameter pcztWithSigs
+    ///
+    /// - Returns The submission result of the completed transaction.
+    ///
+    /// - Throws  PcztException.ExtractAndStoreTxFromPcztException as a common indicator of the operation failure
+    func extractAndStoreTxFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> Data
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for

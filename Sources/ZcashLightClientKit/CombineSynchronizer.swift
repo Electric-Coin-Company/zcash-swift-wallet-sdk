@@ -91,6 +91,20 @@ public protocol CombineSynchronizer {
         spendingKey: UnifiedSpendingKey
     ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
 
+    func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: Proposal
+    ) -> SinglePublisher<Pczt, Error>
+
+    func addProofsToPCZT(
+        pczt: Pczt
+    ) -> SinglePublisher<Pczt, Error>
+
+    func createTransactionFromPCZT(
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt
+    ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
+    
     func proposefulfillingPaymentURI(
         _ uri: String,
         accountUUID: AccountUUID

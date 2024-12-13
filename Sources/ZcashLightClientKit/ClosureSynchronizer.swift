@@ -95,6 +95,23 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
     )
 
+    func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: Proposal,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    )
+    
+    func addProofsToPCZT(
+        pczt: Pczt,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    )
+    
+    func createTransactionFromPCZT(
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt,
+        completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
+    )
+
     func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void)
 
     // swiftlint:disable:next function_parameter_count

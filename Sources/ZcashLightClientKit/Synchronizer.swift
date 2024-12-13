@@ -227,19 +227,37 @@ public protocol Synchronizer: AnyObject {
         accountUUID: AccountUUID
     ) async throws -> Proposal
 
-    func createPCZTFromProposal(
-        accountUUID: AccountUUID,
-        proposal: Proposal
-    ) async throws -> Data
+    /// Creates a partially-created (unsigned without proofs) transaction from the given proposal.
+    ///
+    /// Do not call this multiple times in parallel, or you will generate PCZT instances that, if
+    /// finalized, would double-spend the same notes.
+    ///
+    /// - Parameter accountUUID: The account for which the proposal was created.
+    /// - Parameter proposal: The proposal for which to create the transaction.
+    /// - Returns The partially created transaction in [Pczt] format.
+    ///
+    /// - Throws rustCreatePCZTFromProposal as a common indicator of the operation failure
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt
+
+    /// Adds proofs to the given PCZT.
+    ///
+    /// - Parameter pczt: The partially created transaction in its serialized format.
+    ///
+    /// - Returns The updated PCZT in its serialized format.
+    ///
+    /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
     
-    func addProofsToPCZT(
-        pczt: Data
-    ) async throws -> Data
-    
-    func createTransactionFromPCZT(
-        pcztWithProofs: Data,
-        pcztWithSigs: Data
-    ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
+    /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
+    /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
+    ///
+    /// - Parameter pcztWithProofs
+    /// - Parameter pcztWithSigs
+    ///
+    /// - Returns The submission result of the completed transaction.
+    ///
+    /// - Throws  PcztException.ExtractAndStoreTxFromPcztException as a common indicator of the operation failure
+    func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
 
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }

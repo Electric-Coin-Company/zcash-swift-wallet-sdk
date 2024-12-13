@@ -145,6 +145,35 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: Proposal,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.createPCZTFromProposal(accountUUID: accountUUID, proposal: proposal)
+        }
+    }
+
+    public func addProofsToPCZT(
+        pczt: Pczt,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.addProofsToPCZT(pczt: pczt)
+        }
+    }
+
+    public func createTransactionFromPCZT(
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt,
+        completion: @escaping (Result<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.createTransactionFromPCZT(pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        }
+    }
+
     public func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.transactions

@@ -125,6 +125,32 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: Proposal
+    ) -> SinglePublisher<Pczt, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.createPCZTFromProposal(accountUUID: accountUUID, proposal: proposal)
+        }
+    }
+
+    public func addProofsToPCZT(
+        pczt: Pczt
+    ) -> SinglePublisher<Pczt, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.addProofsToPCZT(pczt: pczt)
+        }
+    }
+
+    public func createTransactionFromPCZT(
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt
+    ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.createTransactionFromPCZT(pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        }
+    }
+
     public func listAccounts() -> SinglePublisher<[Account], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.listAccounts()

@@ -616,7 +616,7 @@ class AdvancedReOrgTests: ZcashTestCase {
 
         let output = transactionOutputs[0]
 
-        XCTAssertEqual(output.recipient, .internalAccount(0))
+        XCTAssertEqual(output.recipient, .internalAccount(TestsData.mockedAccountUUID))
         XCTAssertEqual(output.value, Zatoshi(100000))
     }
     
