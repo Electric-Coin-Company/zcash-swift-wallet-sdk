@@ -112,16 +112,6 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
 
         return try await createTransactionsFromTxIds(txIds)
-        
-//        logger.debug("transaction ids: \(txIds)")
-//
-//        var txs: [ZcashTransaction.Overview] = []
-//
-//        for txId in txIds {
-//            txs.append(try await repository.find(rawID: txId))
-//        }
-//
-//        return txs
     }
 
     func createTransactionsFromTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview] {
@@ -139,7 +129,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 
         return txs
     }
-    
+
     func submit(
         transaction: EncodedTransaction
     ) async throws {
