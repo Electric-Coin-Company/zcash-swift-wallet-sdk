@@ -1350,25 +1350,25 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - prepare
 
-    var prepareWithWalletBirthdayForThrowableError: Error?
-    var prepareWithWalletBirthdayForCallsCount = 0
-    var prepareWithWalletBirthdayForCalled: Bool {
-        return prepareWithWalletBirthdayForCallsCount > 0
+    var prepareWithWalletBirthdayForNameKeySourceThrowableError: Error?
+    var prepareWithWalletBirthdayForNameKeySourceCallsCount = 0
+    var prepareWithWalletBirthdayForNameKeySourceCalled: Bool {
+        return prepareWithWalletBirthdayForNameKeySourceCallsCount > 0
     }
-    var prepareWithWalletBirthdayForReceivedArguments: (seed: [UInt8]?, walletBirthday: BlockHeight, walletMode: WalletInitMode)?
-    var prepareWithWalletBirthdayForReturnValue: Initializer.InitializationResult!
-    var prepareWithWalletBirthdayForClosure: (([UInt8]?, BlockHeight, WalletInitMode) async throws -> Initializer.InitializationResult)?
+    var prepareWithWalletBirthdayForNameKeySourceReceivedArguments: (seed: [UInt8]?, walletBirthday: BlockHeight, walletMode: WalletInitMode, name: String, keySource: String?)?
+    var prepareWithWalletBirthdayForNameKeySourceReturnValue: Initializer.InitializationResult!
+    var prepareWithWalletBirthdayForNameKeySourceClosure: (([UInt8]?, BlockHeight, WalletInitMode, String, String?) async throws -> Initializer.InitializationResult)?
 
-    func prepare(with seed: [UInt8]?, walletBirthday: BlockHeight, for walletMode: WalletInitMode) async throws -> Initializer.InitializationResult {
-        if let error = prepareWithWalletBirthdayForThrowableError {
+    func prepare(with seed: [UInt8]?, walletBirthday: BlockHeight, for walletMode: WalletInitMode, name: String, keySource: String?) async throws -> Initializer.InitializationResult {
+        if let error = prepareWithWalletBirthdayForNameKeySourceThrowableError {
             throw error
         }
-        prepareWithWalletBirthdayForCallsCount += 1
-        prepareWithWalletBirthdayForReceivedArguments = (seed: seed, walletBirthday: walletBirthday, walletMode: walletMode)
-        if let closure = prepareWithWalletBirthdayForClosure {
-            return try await closure(seed, walletBirthday, walletMode)
+        prepareWithWalletBirthdayForNameKeySourceCallsCount += 1
+        prepareWithWalletBirthdayForNameKeySourceReceivedArguments = (seed: seed, walletBirthday: walletBirthday, walletMode: walletMode, name: name, keySource: keySource)
+        if let closure = prepareWithWalletBirthdayForNameKeySourceClosure {
+            return try await closure(seed, walletBirthday, walletMode, name, keySource)
         } else {
-            return prepareWithWalletBirthdayForReturnValue
+            return prepareWithWalletBirthdayForNameKeySourceReturnValue
         }
     }
 
@@ -1406,121 +1406,121 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - getSaplingAddress
 
-    var getSaplingAddressAccountIndexThrowableError: Error?
-    var getSaplingAddressAccountIndexCallsCount = 0
-    var getSaplingAddressAccountIndexCalled: Bool {
-        return getSaplingAddressAccountIndexCallsCount > 0
+    var getSaplingAddressAccountUUIDThrowableError: Error?
+    var getSaplingAddressAccountUUIDCallsCount = 0
+    var getSaplingAddressAccountUUIDCalled: Bool {
+        return getSaplingAddressAccountUUIDCallsCount > 0
     }
-    var getSaplingAddressAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getSaplingAddressAccountIndexReturnValue: SaplingAddress!
-    var getSaplingAddressAccountIndexClosure: ((Zip32AccountIndex) async throws -> SaplingAddress)?
+    var getSaplingAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getSaplingAddressAccountUUIDReturnValue: SaplingAddress!
+    var getSaplingAddressAccountUUIDClosure: ((AccountUUID) async throws -> SaplingAddress)?
 
-    func getSaplingAddress(accountIndex: Zip32AccountIndex) async throws -> SaplingAddress {
-        if let error = getSaplingAddressAccountIndexThrowableError {
+    func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress {
+        if let error = getSaplingAddressAccountUUIDThrowableError {
             throw error
         }
-        getSaplingAddressAccountIndexCallsCount += 1
-        getSaplingAddressAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getSaplingAddressAccountIndexClosure {
-            return try await closure(accountIndex)
+        getSaplingAddressAccountUUIDCallsCount += 1
+        getSaplingAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getSaplingAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getSaplingAddressAccountIndexReturnValue
+            return getSaplingAddressAccountUUIDReturnValue
         }
     }
 
     // MARK: - getUnifiedAddress
 
-    var getUnifiedAddressAccountIndexThrowableError: Error?
-    var getUnifiedAddressAccountIndexCallsCount = 0
-    var getUnifiedAddressAccountIndexCalled: Bool {
-        return getUnifiedAddressAccountIndexCallsCount > 0
+    var getUnifiedAddressAccountUUIDThrowableError: Error?
+    var getUnifiedAddressAccountUUIDCallsCount = 0
+    var getUnifiedAddressAccountUUIDCalled: Bool {
+        return getUnifiedAddressAccountUUIDCallsCount > 0
     }
-    var getUnifiedAddressAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getUnifiedAddressAccountIndexReturnValue: UnifiedAddress!
-    var getUnifiedAddressAccountIndexClosure: ((Zip32AccountIndex) async throws -> UnifiedAddress)?
+    var getUnifiedAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getUnifiedAddressAccountUUIDReturnValue: UnifiedAddress!
+    var getUnifiedAddressAccountUUIDClosure: ((AccountUUID) async throws -> UnifiedAddress)?
 
-    func getUnifiedAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
-        if let error = getUnifiedAddressAccountIndexThrowableError {
+    func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
+        if let error = getUnifiedAddressAccountUUIDThrowableError {
             throw error
         }
-        getUnifiedAddressAccountIndexCallsCount += 1
-        getUnifiedAddressAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getUnifiedAddressAccountIndexClosure {
-            return try await closure(accountIndex)
+        getUnifiedAddressAccountUUIDCallsCount += 1
+        getUnifiedAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getUnifiedAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getUnifiedAddressAccountIndexReturnValue
+            return getUnifiedAddressAccountUUIDReturnValue
         }
     }
 
     // MARK: - getTransparentAddress
 
-    var getTransparentAddressAccountIndexThrowableError: Error?
-    var getTransparentAddressAccountIndexCallsCount = 0
-    var getTransparentAddressAccountIndexCalled: Bool {
-        return getTransparentAddressAccountIndexCallsCount > 0
+    var getTransparentAddressAccountUUIDThrowableError: Error?
+    var getTransparentAddressAccountUUIDCallsCount = 0
+    var getTransparentAddressAccountUUIDCalled: Bool {
+        return getTransparentAddressAccountUUIDCallsCount > 0
     }
-    var getTransparentAddressAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getTransparentAddressAccountIndexReturnValue: TransparentAddress!
-    var getTransparentAddressAccountIndexClosure: ((Zip32AccountIndex) async throws -> TransparentAddress)?
+    var getTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getTransparentAddressAccountUUIDReturnValue: TransparentAddress!
+    var getTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> TransparentAddress)?
 
-    func getTransparentAddress(accountIndex: Zip32AccountIndex) async throws -> TransparentAddress {
-        if let error = getTransparentAddressAccountIndexThrowableError {
+    func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress {
+        if let error = getTransparentAddressAccountUUIDThrowableError {
             throw error
         }
-        getTransparentAddressAccountIndexCallsCount += 1
-        getTransparentAddressAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getTransparentAddressAccountIndexClosure {
-            return try await closure(accountIndex)
+        getTransparentAddressAccountUUIDCallsCount += 1
+        getTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getTransparentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getTransparentAddressAccountIndexReturnValue
+            return getTransparentAddressAccountUUIDReturnValue
         }
     }
 
     // MARK: - proposeTransfer
 
-    var proposeTransferAccountIndexRecipientAmountMemoThrowableError: Error?
-    var proposeTransferAccountIndexRecipientAmountMemoCallsCount = 0
-    var proposeTransferAccountIndexRecipientAmountMemoCalled: Bool {
-        return proposeTransferAccountIndexRecipientAmountMemoCallsCount > 0
+    var proposeTransferAccountUUIDRecipientAmountMemoThrowableError: Error?
+    var proposeTransferAccountUUIDRecipientAmountMemoCallsCount = 0
+    var proposeTransferAccountUUIDRecipientAmountMemoCalled: Bool {
+        return proposeTransferAccountUUIDRecipientAmountMemoCallsCount > 0
     }
-    var proposeTransferAccountIndexRecipientAmountMemoReceivedArguments: (accountIndex: Zip32AccountIndex, recipient: Recipient, amount: Zatoshi, memo: Memo?)?
-    var proposeTransferAccountIndexRecipientAmountMemoReturnValue: Proposal!
-    var proposeTransferAccountIndexRecipientAmountMemoClosure: ((Zip32AccountIndex, Recipient, Zatoshi, Memo?) async throws -> Proposal)?
+    var proposeTransferAccountUUIDRecipientAmountMemoReceivedArguments: (accountUUID: AccountUUID, recipient: Recipient, amount: Zatoshi, memo: Memo?)?
+    var proposeTransferAccountUUIDRecipientAmountMemoReturnValue: Proposal!
+    var proposeTransferAccountUUIDRecipientAmountMemoClosure: ((AccountUUID, Recipient, Zatoshi, Memo?) async throws -> Proposal)?
 
-    func proposeTransfer(accountIndex: Zip32AccountIndex, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
-        if let error = proposeTransferAccountIndexRecipientAmountMemoThrowableError {
+    func proposeTransfer(accountUUID: AccountUUID, recipient: Recipient, amount: Zatoshi, memo: Memo?) async throws -> Proposal {
+        if let error = proposeTransferAccountUUIDRecipientAmountMemoThrowableError {
             throw error
         }
-        proposeTransferAccountIndexRecipientAmountMemoCallsCount += 1
-        proposeTransferAccountIndexRecipientAmountMemoReceivedArguments = (accountIndex: accountIndex, recipient: recipient, amount: amount, memo: memo)
-        if let closure = proposeTransferAccountIndexRecipientAmountMemoClosure {
-            return try await closure(accountIndex, recipient, amount, memo)
+        proposeTransferAccountUUIDRecipientAmountMemoCallsCount += 1
+        proposeTransferAccountUUIDRecipientAmountMemoReceivedArguments = (accountUUID: accountUUID, recipient: recipient, amount: amount, memo: memo)
+        if let closure = proposeTransferAccountUUIDRecipientAmountMemoClosure {
+            return try await closure(accountUUID, recipient, amount, memo)
         } else {
-            return proposeTransferAccountIndexRecipientAmountMemoReturnValue
+            return proposeTransferAccountUUIDRecipientAmountMemoReturnValue
         }
     }
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError: Error?
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount = 0
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCalled: Bool {
-        return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount > 0
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverThrowableError: Error?
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverCallsCount > 0
     }
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments: (accountIndex: Zip32AccountIndex, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?)?
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue: Proposal?
-    var proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure: ((Zip32AccountIndex, Zatoshi, Memo, TransparentAddress?) async throws -> Proposal?)?
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverReceivedArguments: (accountUUID: AccountUUID, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?)?
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverReturnValue: Proposal?
+    var proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverClosure: ((AccountUUID, Zatoshi, Memo, TransparentAddress?) async throws -> Proposal?)?
 
-    func proposeShielding(accountIndex: Zip32AccountIndex, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?) async throws -> Proposal? {
-        if let error = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverThrowableError {
+    func proposeShielding(accountUUID: AccountUUID, shieldingThreshold: Zatoshi, memo: Memo, transparentReceiver: TransparentAddress?) async throws -> Proposal? {
+        if let error = proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverThrowableError {
             throw error
         }
-        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverCallsCount += 1
-        proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReceivedArguments = (accountIndex: accountIndex, shieldingThreshold: shieldingThreshold, memo: memo, transparentReceiver: transparentReceiver)
-        if let closure = proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverClosure {
-            return try await closure(accountIndex, shieldingThreshold, memo, transparentReceiver)
+        proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverCallsCount += 1
+        proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverReceivedArguments = (accountUUID: accountUUID, shieldingThreshold: shieldingThreshold, memo: memo, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverClosure {
+            return try await closure(accountUUID, shieldingThreshold, memo, transparentReceiver)
         } else {
-            return proposeShieldingAccountIndexShieldingThresholdMemoTransparentReceiverReturnValue
+            return proposeShieldingAccountUUIDShieldingThresholdMemoTransparentReceiverReturnValue
         }
     }
 
@@ -1548,75 +1548,99 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - sendToAddress
-
-    var sendToAddressSpendingKeyZatoshiToAddressMemoThrowableError: Error?
-    var sendToAddressSpendingKeyZatoshiToAddressMemoCallsCount = 0
-    var sendToAddressSpendingKeyZatoshiToAddressMemoCalled: Bool {
-        return sendToAddressSpendingKeyZatoshiToAddressMemoCallsCount > 0
-    }
-    var sendToAddressSpendingKeyZatoshiToAddressMemoReceivedArguments: (spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?)?
-    var sendToAddressSpendingKeyZatoshiToAddressMemoReturnValue: ZcashTransaction.Overview!
-    var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: ((UnifiedSpendingKey, Zatoshi, Recipient, Memo?) async throws -> ZcashTransaction.Overview)?
-
-    func sendToAddress(spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?) async throws -> ZcashTransaction.Overview {
-        if let error = sendToAddressSpendingKeyZatoshiToAddressMemoThrowableError {
-            throw error
-        }
-        sendToAddressSpendingKeyZatoshiToAddressMemoCallsCount += 1
-        sendToAddressSpendingKeyZatoshiToAddressMemoReceivedArguments = (spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
-        if let closure = sendToAddressSpendingKeyZatoshiToAddressMemoClosure {
-            return try await closure(spendingKey, zatoshi, toAddress, memo)
-        } else {
-            return sendToAddressSpendingKeyZatoshiToAddressMemoReturnValue
-        }
-    }
-
     // MARK: - proposefulfillingPaymentURI
 
-    var proposefulfillingPaymentURIAccountIndexThrowableError: Error?
-    var proposefulfillingPaymentURIAccountIndexCallsCount = 0
-    var proposefulfillingPaymentURIAccountIndexCalled: Bool {
-        return proposefulfillingPaymentURIAccountIndexCallsCount > 0
+    var proposefulfillingPaymentURIAccountUUIDThrowableError: Error?
+    var proposefulfillingPaymentURIAccountUUIDCallsCount = 0
+    var proposefulfillingPaymentURIAccountUUIDCalled: Bool {
+        return proposefulfillingPaymentURIAccountUUIDCallsCount > 0
     }
-    var proposefulfillingPaymentURIAccountIndexReceivedArguments: (uri: String, accountIndex: Zip32AccountIndex)?
-    var proposefulfillingPaymentURIAccountIndexReturnValue: Proposal!
-    var proposefulfillingPaymentURIAccountIndexClosure: ((String, Zip32AccountIndex) async throws -> Proposal)?
+    var proposefulfillingPaymentURIAccountUUIDReceivedArguments: (uri: String, accountUUID: AccountUUID)?
+    var proposefulfillingPaymentURIAccountUUIDReturnValue: Proposal!
+    var proposefulfillingPaymentURIAccountUUIDClosure: ((String, AccountUUID) async throws -> Proposal)?
 
-    func proposefulfillingPaymentURI(_ uri: String, accountIndex: Zip32AccountIndex) async throws -> Proposal {
-        if let error = proposefulfillingPaymentURIAccountIndexThrowableError {
+    func proposefulfillingPaymentURI(_ uri: String, accountUUID: AccountUUID) async throws -> Proposal {
+        if let error = proposefulfillingPaymentURIAccountUUIDThrowableError {
             throw error
         }
-        proposefulfillingPaymentURIAccountIndexCallsCount += 1
-        proposefulfillingPaymentURIAccountIndexReceivedArguments = (uri: uri, accountIndex: accountIndex)
-        if let closure = proposefulfillingPaymentURIAccountIndexClosure {
-            return try await closure(uri, accountIndex)
+        proposefulfillingPaymentURIAccountUUIDCallsCount += 1
+        proposefulfillingPaymentURIAccountUUIDReceivedArguments = (uri: uri, accountUUID: accountUUID)
+        if let closure = proposefulfillingPaymentURIAccountUUIDClosure {
+            return try await closure(uri, accountUUID)
         } else {
-            return proposefulfillingPaymentURIAccountIndexReturnValue
+            return proposefulfillingPaymentURIAccountUUIDReturnValue
         }
     }
 
-    // MARK: - shieldFunds
+    // MARK: - createPCZTFromProposal
 
-    var shieldFundsSpendingKeyMemoShieldingThresholdThrowableError: Error?
-    var shieldFundsSpendingKeyMemoShieldingThresholdCallsCount = 0
-    var shieldFundsSpendingKeyMemoShieldingThresholdCalled: Bool {
-        return shieldFundsSpendingKeyMemoShieldingThresholdCallsCount > 0
+    var createPCZTFromProposalAccountUUIDProposalThrowableError: Error?
+    var createPCZTFromProposalAccountUUIDProposalCallsCount = 0
+    var createPCZTFromProposalAccountUUIDProposalCalled: Bool {
+        return createPCZTFromProposalAccountUUIDProposalCallsCount > 0
     }
-    var shieldFundsSpendingKeyMemoShieldingThresholdReceivedArguments: (spendingKey: UnifiedSpendingKey, memo: Memo, shieldingThreshold: Zatoshi)?
-    var shieldFundsSpendingKeyMemoShieldingThresholdReturnValue: ZcashTransaction.Overview!
-    var shieldFundsSpendingKeyMemoShieldingThresholdClosure: ((UnifiedSpendingKey, Memo, Zatoshi) async throws -> ZcashTransaction.Overview)?
+    var createPCZTFromProposalAccountUUIDProposalReceivedArguments: (accountUUID: AccountUUID, proposal: Proposal)?
+    var createPCZTFromProposalAccountUUIDProposalReturnValue: Pczt!
+    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, Proposal) async throws -> Pczt)?
 
-    func shieldFunds(spendingKey: UnifiedSpendingKey, memo: Memo, shieldingThreshold: Zatoshi) async throws -> ZcashTransaction.Overview {
-        if let error = shieldFundsSpendingKeyMemoShieldingThresholdThrowableError {
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt {
+        if let error = createPCZTFromProposalAccountUUIDProposalThrowableError {
             throw error
         }
-        shieldFundsSpendingKeyMemoShieldingThresholdCallsCount += 1
-        shieldFundsSpendingKeyMemoShieldingThresholdReceivedArguments = (spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
-        if let closure = shieldFundsSpendingKeyMemoShieldingThresholdClosure {
-            return try await closure(spendingKey, memo, shieldingThreshold)
+        createPCZTFromProposalAccountUUIDProposalCallsCount += 1
+        createPCZTFromProposalAccountUUIDProposalReceivedArguments = (accountUUID: accountUUID, proposal: proposal)
+        if let closure = createPCZTFromProposalAccountUUIDProposalClosure {
+            return try await closure(accountUUID, proposal)
         } else {
-            return shieldFundsSpendingKeyMemoShieldingThresholdReturnValue
+            return createPCZTFromProposalAccountUUIDProposalReturnValue
+        }
+    }
+
+    // MARK: - addProofsToPCZT
+
+    var addProofsToPCZTPcztThrowableError: Error?
+    var addProofsToPCZTPcztCallsCount = 0
+    var addProofsToPCZTPcztCalled: Bool {
+        return addProofsToPCZTPcztCallsCount > 0
+    }
+    var addProofsToPCZTPcztReceivedPczt: Pczt?
+    var addProofsToPCZTPcztReturnValue: Pczt!
+    var addProofsToPCZTPcztClosure: ((Pczt) async throws -> Pczt)?
+
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
+        if let error = addProofsToPCZTPcztThrowableError {
+            throw error
+        }
+        addProofsToPCZTPcztCallsCount += 1
+        addProofsToPCZTPcztReceivedPczt = pczt
+        if let closure = addProofsToPCZTPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return addProofsToPCZTPcztReturnValue
+        }
+    }
+
+    // MARK: - createTransactionFromPCZT
+
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
+        return createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
+    }
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Pczt, pcztWithSigs: Pczt)?
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsReturnValue: AsyncThrowingStream<TransactionSubmitResult, Error>!
+    var createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure: ((Pczt, Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>)?
+
+    func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error> {
+        if let error = createTransactionFromPCZTPcztWithProofsPcztWithSigsThrowableError {
+            throw error
+        }
+        createTransactionFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
+        createTransactionFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        if let closure = createTransactionFromPCZTPcztWithProofsPcztWithSigsClosure {
+            return try await closure(pcztWithProofs, pcztWithSigs)
+        } else {
+            return createTransactionFromPCZTPcztWithProofsPcztWithSigsReturnValue
         }
     }
 
@@ -1805,10 +1829,10 @@ class SynchronizerMock: Synchronizer {
     var getAccountsBalancesCalled: Bool {
         return getAccountsBalancesCallsCount > 0
     }
-    var getAccountsBalancesReturnValue: [Zip32AccountIndex: AccountBalance]!
-    var getAccountsBalancesClosure: (() async throws -> [Zip32AccountIndex: AccountBalance])?
+    var getAccountsBalancesReturnValue: [AccountUUID: AccountBalance]!
+    var getAccountsBalancesClosure: (() async throws -> [AccountUUID: AccountBalance])?
 
-    func getAccountsBalances() async throws -> [Zip32AccountIndex: AccountBalance] {
+    func getAccountsBalances() async throws -> [AccountUUID: AccountBalance] {
         if let error = getAccountsBalancesThrowableError {
             throw error
         }
@@ -1831,6 +1855,52 @@ class SynchronizerMock: Synchronizer {
     func refreshExchangeRateUSD() {
         refreshExchangeRateUSDCallsCount += 1
         refreshExchangeRateUSDClosure!()
+    }
+
+    // MARK: - listAccounts
+
+    var listAccountsThrowableError: Error?
+    var listAccountsCallsCount = 0
+    var listAccountsCalled: Bool {
+        return listAccountsCallsCount > 0
+    }
+    var listAccountsReturnValue: [Account]!
+    var listAccountsClosure: (() async throws -> [Account])?
+
+    func listAccounts() async throws -> [Account] {
+        if let error = listAccountsThrowableError {
+            throw error
+        }
+        listAccountsCallsCount += 1
+        if let closure = listAccountsClosure {
+            return try await closure()
+        } else {
+            return listAccountsReturnValue
+        }
+    }
+
+    // MARK: - importAccount
+
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceThrowableError: Error?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount = 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCalled: Bool {
+        return importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount > 0
+    }
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReceivedArguments: (ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, purpose: AccountPurpose, name: String, keySource: String?)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReturnValue: AccountUUID!
+    var importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceClosure: ((String, [UInt8]?, Zip32AccountIndex?, AccountPurpose, String, String?) async throws -> AccountUUID)?
+
+    func importAccount(ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
+        if let error = importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceThrowableError {
+            throw error
+        }
+        importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceCallsCount += 1
+        importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, seedFingerprint: seedFingerprint, zip32AccountIndex: zip32AccountIndex, purpose: purpose, name: name, keySource: keySource)
+        if let closure = importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceClosure {
+            return try await closure(ufvk, seedFingerprint, zip32AccountIndex, purpose, name, keySource)
+        } else {
+            return importAccountUfvkSeedFingerprintZip32AccountIndexPurposeNameKeySourceReturnValue
+        }
     }
 
     // MARK: - rewind
@@ -2423,10 +2493,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var listAccountsCalled: Bool {
         return listAccountsCallsCount > 0
     }
-    var listAccountsReturnValue: [Zip32AccountIndex]!
-    var listAccountsClosure: (() async throws -> [Zip32AccountIndex])?
+    var listAccountsReturnValue: [Account]!
+    var listAccountsClosure: (() async throws -> [Account])?
 
-    func listAccounts() async throws -> [Zip32AccountIndex] {
+    func listAccounts() async throws -> [Account] {
         if let error = listAccountsThrowableError {
             throw error
         }
@@ -2438,27 +2508,51 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - createAccount
+    // MARK: - importAccount
 
-    var createAccountSeedTreeStateRecoverUntilThrowableError: Error?
-    var createAccountSeedTreeStateRecoverUntilCallsCount = 0
-    var createAccountSeedTreeStateRecoverUntilCalled: Bool {
-        return createAccountSeedTreeStateRecoverUntilCallsCount > 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceThrowableError: Error?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount = 0
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCalled: Bool {
+        return importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount > 0
     }
-    var createAccountSeedTreeStateRecoverUntilReceivedArguments: (seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?)?
-    var createAccountSeedTreeStateRecoverUntilReturnValue: UnifiedSpendingKey!
-    var createAccountSeedTreeStateRecoverUntilClosure: (([UInt8], TreeState, UInt32?) async throws -> UnifiedSpendingKey)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments: (ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?)?
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReturnValue: AccountUUID!
+    var importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceClosure: ((String, [UInt8]?, Zip32AccountIndex?, TreeState, UInt32?, AccountPurpose, String, String?) async throws -> AccountUUID)?
 
-    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
-        if let error = createAccountSeedTreeStateRecoverUntilThrowableError {
+    func importAccount(ufvk: String, seedFingerprint: [UInt8]?, zip32AccountIndex: Zip32AccountIndex?, treeState: TreeState, recoverUntil: UInt32?, purpose: AccountPurpose, name: String, keySource: String?) async throws -> AccountUUID {
+        if let error = importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceThrowableError {
             throw error
         }
-        createAccountSeedTreeStateRecoverUntilCallsCount += 1
-        createAccountSeedTreeStateRecoverUntilReceivedArguments = (seed: seed, treeState: treeState, recoverUntil: recoverUntil)
-        if let closure = createAccountSeedTreeStateRecoverUntilClosure {
-            return try await closure(seed, treeState, recoverUntil)
+        importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceCallsCount += 1
+        importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReceivedArguments = (ufvk: ufvk, seedFingerprint: seedFingerprint, zip32AccountIndex: zip32AccountIndex, treeState: treeState, recoverUntil: recoverUntil, purpose: purpose, name: name, keySource: keySource)
+        if let closure = importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceClosure {
+            return try await closure(ufvk, seedFingerprint, zip32AccountIndex, treeState, recoverUntil, purpose, name, keySource)
         } else {
-            return createAccountSeedTreeStateRecoverUntilReturnValue
+            return importAccountUfvkSeedFingerprintZip32AccountIndexTreeStateRecoverUntilPurposeNameKeySourceReturnValue
+        }
+    }
+
+    // MARK: - createAccount
+
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceThrowableError: Error?
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceCallsCount = 0
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceCalled: Bool {
+        return createAccountSeedTreeStateRecoverUntilNameKeySourceCallsCount > 0
+    }
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceReceivedArguments: (seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?, name: String, keySource: String?)?
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceReturnValue: UnifiedSpendingKey!
+    var createAccountSeedTreeStateRecoverUntilNameKeySourceClosure: (([UInt8], TreeState, UInt32?, String, String?) async throws -> UnifiedSpendingKey)?
+
+    func createAccount(seed: [UInt8], treeState: TreeState, recoverUntil: UInt32?, name: String, keySource: String?) async throws -> UnifiedSpendingKey {
+        if let error = createAccountSeedTreeStateRecoverUntilNameKeySourceThrowableError {
+            throw error
+        }
+        createAccountSeedTreeStateRecoverUntilNameKeySourceCallsCount += 1
+        createAccountSeedTreeStateRecoverUntilNameKeySourceReceivedArguments = (seed: seed, treeState: treeState, recoverUntil: recoverUntil, name: name, keySource: keySource)
+        if let closure = createAccountSeedTreeStateRecoverUntilNameKeySourceClosure {
+            return try await closure(seed, treeState, recoverUntil, name, keySource)
+        } else {
+            return createAccountSeedTreeStateRecoverUntilNameKeySourceReturnValue
         }
     }
 
@@ -2507,49 +2601,49 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getCurrentAddress
 
-    var getCurrentAddressAccountIndexThrowableError: Error?
-    var getCurrentAddressAccountIndexCallsCount = 0
-    var getCurrentAddressAccountIndexCalled: Bool {
-        return getCurrentAddressAccountIndexCallsCount > 0
+    var getCurrentAddressAccountUUIDThrowableError: Error?
+    var getCurrentAddressAccountUUIDCallsCount = 0
+    var getCurrentAddressAccountUUIDCalled: Bool {
+        return getCurrentAddressAccountUUIDCallsCount > 0
     }
-    var getCurrentAddressAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getCurrentAddressAccountIndexReturnValue: UnifiedAddress!
-    var getCurrentAddressAccountIndexClosure: ((Zip32AccountIndex) async throws -> UnifiedAddress)?
+    var getCurrentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getCurrentAddressAccountUUIDReturnValue: UnifiedAddress!
+    var getCurrentAddressAccountUUIDClosure: ((AccountUUID) async throws -> UnifiedAddress)?
 
-    func getCurrentAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
-        if let error = getCurrentAddressAccountIndexThrowableError {
+    func getCurrentAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
+        if let error = getCurrentAddressAccountUUIDThrowableError {
             throw error
         }
-        getCurrentAddressAccountIndexCallsCount += 1
-        getCurrentAddressAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getCurrentAddressAccountIndexClosure {
-            return try await closure(accountIndex)
+        getCurrentAddressAccountUUIDCallsCount += 1
+        getCurrentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getCurrentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getCurrentAddressAccountIndexReturnValue
+            return getCurrentAddressAccountUUIDReturnValue
         }
     }
 
     // MARK: - getNextAvailableAddress
 
-    var getNextAvailableAddressAccountIndexThrowableError: Error?
-    var getNextAvailableAddressAccountIndexCallsCount = 0
-    var getNextAvailableAddressAccountIndexCalled: Bool {
-        return getNextAvailableAddressAccountIndexCallsCount > 0
+    var getNextAvailableAddressAccountUUIDThrowableError: Error?
+    var getNextAvailableAddressAccountUUIDCallsCount = 0
+    var getNextAvailableAddressAccountUUIDCalled: Bool {
+        return getNextAvailableAddressAccountUUIDCallsCount > 0
     }
-    var getNextAvailableAddressAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getNextAvailableAddressAccountIndexReturnValue: UnifiedAddress!
-    var getNextAvailableAddressAccountIndexClosure: ((Zip32AccountIndex) async throws -> UnifiedAddress)?
+    var getNextAvailableAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getNextAvailableAddressAccountUUIDReturnValue: UnifiedAddress!
+    var getNextAvailableAddressAccountUUIDClosure: ((AccountUUID) async throws -> UnifiedAddress)?
 
-    func getNextAvailableAddress(accountIndex: Zip32AccountIndex) async throws -> UnifiedAddress {
-        if let error = getNextAvailableAddressAccountIndexThrowableError {
+    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
+        if let error = getNextAvailableAddressAccountUUIDThrowableError {
             throw error
         }
-        getNextAvailableAddressAccountIndexCallsCount += 1
-        getNextAvailableAddressAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getNextAvailableAddressAccountIndexClosure {
-            return try await closure(accountIndex)
+        getNextAvailableAddressAccountUUIDCallsCount += 1
+        getNextAvailableAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getNextAvailableAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getNextAvailableAddressAccountIndexReturnValue
+            return getNextAvailableAddressAccountUUIDReturnValue
         }
     }
 
@@ -2579,25 +2673,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getTransparentBalance
 
-    var getTransparentBalanceAccountIndexThrowableError: Error?
-    var getTransparentBalanceAccountIndexCallsCount = 0
-    var getTransparentBalanceAccountIndexCalled: Bool {
-        return getTransparentBalanceAccountIndexCallsCount > 0
+    var getTransparentBalanceAccountUUIDThrowableError: Error?
+    var getTransparentBalanceAccountUUIDCallsCount = 0
+    var getTransparentBalanceAccountUUIDCalled: Bool {
+        return getTransparentBalanceAccountUUIDCallsCount > 0
     }
-    var getTransparentBalanceAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getTransparentBalanceAccountIndexReturnValue: Int64!
-    var getTransparentBalanceAccountIndexClosure: ((Zip32AccountIndex) async throws -> Int64)?
+    var getTransparentBalanceAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getTransparentBalanceAccountUUIDReturnValue: Int64!
+    var getTransparentBalanceAccountUUIDClosure: ((AccountUUID) async throws -> Int64)?
 
-    func getTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
-        if let error = getTransparentBalanceAccountIndexThrowableError {
+    func getTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
+        if let error = getTransparentBalanceAccountUUIDThrowableError {
             throw error
         }
-        getTransparentBalanceAccountIndexCallsCount += 1
-        getTransparentBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getTransparentBalanceAccountIndexClosure {
-            return try await closure(accountIndex)
+        getTransparentBalanceAccountUUIDCallsCount += 1
+        getTransparentBalanceAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getTransparentBalanceAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getTransparentBalanceAccountIndexReturnValue
+            return getTransparentBalanceAccountUUIDReturnValue
         }
     }
 
@@ -2627,49 +2721,49 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - listTransparentReceivers
 
-    var listTransparentReceiversAccountIndexThrowableError: Error?
-    var listTransparentReceiversAccountIndexCallsCount = 0
-    var listTransparentReceiversAccountIndexCalled: Bool {
-        return listTransparentReceiversAccountIndexCallsCount > 0
+    var listTransparentReceiversAccountUUIDThrowableError: Error?
+    var listTransparentReceiversAccountUUIDCallsCount = 0
+    var listTransparentReceiversAccountUUIDCalled: Bool {
+        return listTransparentReceiversAccountUUIDCallsCount > 0
     }
-    var listTransparentReceiversAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var listTransparentReceiversAccountIndexReturnValue: [TransparentAddress]!
-    var listTransparentReceiversAccountIndexClosure: ((Zip32AccountIndex) async throws -> [TransparentAddress])?
+    var listTransparentReceiversAccountUUIDReceivedAccountUUID: AccountUUID?
+    var listTransparentReceiversAccountUUIDReturnValue: [TransparentAddress]!
+    var listTransparentReceiversAccountUUIDClosure: ((AccountUUID) async throws -> [TransparentAddress])?
 
-    func listTransparentReceivers(accountIndex: Zip32AccountIndex) async throws -> [TransparentAddress] {
-        if let error = listTransparentReceiversAccountIndexThrowableError {
+    func listTransparentReceivers(accountUUID: AccountUUID) async throws -> [TransparentAddress] {
+        if let error = listTransparentReceiversAccountUUIDThrowableError {
             throw error
         }
-        listTransparentReceiversAccountIndexCallsCount += 1
-        listTransparentReceiversAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = listTransparentReceiversAccountIndexClosure {
-            return try await closure(accountIndex)
+        listTransparentReceiversAccountUUIDCallsCount += 1
+        listTransparentReceiversAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = listTransparentReceiversAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return listTransparentReceiversAccountIndexReturnValue
+            return listTransparentReceiversAccountUUIDReturnValue
         }
     }
 
     // MARK: - getVerifiedTransparentBalance
 
-    var getVerifiedTransparentBalanceAccountIndexThrowableError: Error?
-    var getVerifiedTransparentBalanceAccountIndexCallsCount = 0
-    var getVerifiedTransparentBalanceAccountIndexCalled: Bool {
-        return getVerifiedTransparentBalanceAccountIndexCallsCount > 0
+    var getVerifiedTransparentBalanceAccountUUIDThrowableError: Error?
+    var getVerifiedTransparentBalanceAccountUUIDCallsCount = 0
+    var getVerifiedTransparentBalanceAccountUUIDCalled: Bool {
+        return getVerifiedTransparentBalanceAccountUUIDCallsCount > 0
     }
-    var getVerifiedTransparentBalanceAccountIndexReceivedAccountIndex: Zip32AccountIndex?
-    var getVerifiedTransparentBalanceAccountIndexReturnValue: Int64!
-    var getVerifiedTransparentBalanceAccountIndexClosure: ((Zip32AccountIndex) async throws -> Int64)?
+    var getVerifiedTransparentBalanceAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getVerifiedTransparentBalanceAccountUUIDReturnValue: Int64!
+    var getVerifiedTransparentBalanceAccountUUIDClosure: ((AccountUUID) async throws -> Int64)?
 
-    func getVerifiedTransparentBalance(accountIndex: Zip32AccountIndex) async throws -> Int64 {
-        if let error = getVerifiedTransparentBalanceAccountIndexThrowableError {
+    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
+        if let error = getVerifiedTransparentBalanceAccountUUIDThrowableError {
             throw error
         }
-        getVerifiedTransparentBalanceAccountIndexCallsCount += 1
-        getVerifiedTransparentBalanceAccountIndexReceivedAccountIndex = accountIndex
-        if let closure = getVerifiedTransparentBalanceAccountIndexClosure {
-            return try await closure(accountIndex)
+        getVerifiedTransparentBalanceAccountUUIDCallsCount += 1
+        getVerifiedTransparentBalanceAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getVerifiedTransparentBalanceAccountUUIDClosure {
+            return try await closure(accountUUID)
         } else {
-            return getVerifiedTransparentBalanceAccountIndexReturnValue
+            return getVerifiedTransparentBalanceAccountUUIDReturnValue
         }
     }
 
@@ -2906,73 +3000,73 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - proposeTransfer
 
-    var proposeTransferAccountIndexToValueMemoThrowableError: Error?
-    var proposeTransferAccountIndexToValueMemoCallsCount = 0
-    var proposeTransferAccountIndexToValueMemoCalled: Bool {
-        return proposeTransferAccountIndexToValueMemoCallsCount > 0
+    var proposeTransferAccountUUIDToValueMemoThrowableError: Error?
+    var proposeTransferAccountUUIDToValueMemoCallsCount = 0
+    var proposeTransferAccountUUIDToValueMemoCalled: Bool {
+        return proposeTransferAccountUUIDToValueMemoCallsCount > 0
     }
-    var proposeTransferAccountIndexToValueMemoReceivedArguments: (accountIndex: Zip32AccountIndex, address: String, value: Int64, memo: MemoBytes?)?
-    var proposeTransferAccountIndexToValueMemoReturnValue: FfiProposal!
-    var proposeTransferAccountIndexToValueMemoClosure: ((Zip32AccountIndex, String, Int64, MemoBytes?) async throws -> FfiProposal)?
+    var proposeTransferAccountUUIDToValueMemoReceivedArguments: (accountUUID: AccountUUID, address: String, value: Int64, memo: MemoBytes?)?
+    var proposeTransferAccountUUIDToValueMemoReturnValue: FfiProposal!
+    var proposeTransferAccountUUIDToValueMemoClosure: ((AccountUUID, String, Int64, MemoBytes?) async throws -> FfiProposal)?
 
-    func proposeTransfer(accountIndex: Zip32AccountIndex, to address: String, value: Int64, memo: MemoBytes?) async throws -> FfiProposal {
-        if let error = proposeTransferAccountIndexToValueMemoThrowableError {
+    func proposeTransfer(accountUUID: AccountUUID, to address: String, value: Int64, memo: MemoBytes?) async throws -> FfiProposal {
+        if let error = proposeTransferAccountUUIDToValueMemoThrowableError {
             throw error
         }
-        proposeTransferAccountIndexToValueMemoCallsCount += 1
-        proposeTransferAccountIndexToValueMemoReceivedArguments = (accountIndex: accountIndex, address: address, value: value, memo: memo)
-        if let closure = proposeTransferAccountIndexToValueMemoClosure {
-            return try await closure(accountIndex, address, value, memo)
+        proposeTransferAccountUUIDToValueMemoCallsCount += 1
+        proposeTransferAccountUUIDToValueMemoReceivedArguments = (accountUUID: accountUUID, address: address, value: value, memo: memo)
+        if let closure = proposeTransferAccountUUIDToValueMemoClosure {
+            return try await closure(accountUUID, address, value, memo)
         } else {
-            return proposeTransferAccountIndexToValueMemoReturnValue
+            return proposeTransferAccountUUIDToValueMemoReturnValue
         }
     }
 
     // MARK: - proposeTransferFromURI
 
-    var proposeTransferFromURIAccountIndexThrowableError: Error?
-    var proposeTransferFromURIAccountIndexCallsCount = 0
-    var proposeTransferFromURIAccountIndexCalled: Bool {
-        return proposeTransferFromURIAccountIndexCallsCount > 0
+    var proposeTransferFromURIAccountUUIDThrowableError: Error?
+    var proposeTransferFromURIAccountUUIDCallsCount = 0
+    var proposeTransferFromURIAccountUUIDCalled: Bool {
+        return proposeTransferFromURIAccountUUIDCallsCount > 0
     }
-    var proposeTransferFromURIAccountIndexReceivedArguments: (uri: String, accountIndex: Zip32AccountIndex)?
-    var proposeTransferFromURIAccountIndexReturnValue: FfiProposal!
-    var proposeTransferFromURIAccountIndexClosure: ((String, Zip32AccountIndex) async throws -> FfiProposal)?
+    var proposeTransferFromURIAccountUUIDReceivedArguments: (uri: String, accountUUID: AccountUUID)?
+    var proposeTransferFromURIAccountUUIDReturnValue: FfiProposal!
+    var proposeTransferFromURIAccountUUIDClosure: ((String, AccountUUID) async throws -> FfiProposal)?
 
-    func proposeTransferFromURI(_ uri: String, accountIndex: Zip32AccountIndex) async throws -> FfiProposal {
-        if let error = proposeTransferFromURIAccountIndexThrowableError {
+    func proposeTransferFromURI(_ uri: String, accountUUID: AccountUUID) async throws -> FfiProposal {
+        if let error = proposeTransferFromURIAccountUUIDThrowableError {
             throw error
         }
-        proposeTransferFromURIAccountIndexCallsCount += 1
-        proposeTransferFromURIAccountIndexReceivedArguments = (uri: uri, accountIndex: accountIndex)
-        if let closure = proposeTransferFromURIAccountIndexClosure {
-            return try await closure(uri, accountIndex)
+        proposeTransferFromURIAccountUUIDCallsCount += 1
+        proposeTransferFromURIAccountUUIDReceivedArguments = (uri: uri, accountUUID: accountUUID)
+        if let closure = proposeTransferFromURIAccountUUIDClosure {
+            return try await closure(uri, accountUUID)
         } else {
-            return proposeTransferFromURIAccountIndexReturnValue
+            return proposeTransferFromURIAccountUUIDReturnValue
         }
     }
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverThrowableError: Error?
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverCallsCount = 0
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverCalled: Bool {
-        return proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverCallsCount > 0
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError: Error?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount = 0
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCalled: Bool {
+        return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount > 0
     }
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverReceivedArguments: (accountIndex: Zip32AccountIndex, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?)?
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverReturnValue: FfiProposal?
-    var proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverClosure: ((Zip32AccountIndex, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReceivedArguments: (accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?)?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReturnValue: FfiProposal?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverClosure: ((AccountUUID, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?
 
-    func proposeShielding(accountIndex: Zip32AccountIndex, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?) async throws -> FfiProposal? {
-        if let error = proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverThrowableError {
+    func proposeShielding(accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?) async throws -> FfiProposal? {
+        if let error = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError {
             throw error
         }
-        proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverCallsCount += 1
-        proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverReceivedArguments = (accountIndex: accountIndex, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver)
-        if let closure = proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverClosure {
-            return try await closure(accountIndex, memo, shieldingThreshold, transparentReceiver)
+        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount += 1
+        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReceivedArguments = (accountUUID: accountUUID, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver)
+        if let closure = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverClosure {
+            return try await closure(accountUUID, memo, shieldingThreshold, transparentReceiver)
         } else {
-            return proposeShieldingAccountIndexMemoShieldingThresholdTransparentReceiverReturnValue
+            return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReturnValue
         }
     }
 
@@ -2997,6 +3091,78 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(proposal, usk)
         } else {
             return createProposedTransactionsProposalUskReturnValue
+        }
+    }
+
+    // MARK: - createPCZTFromProposal
+
+    var createPCZTFromProposalAccountUUIDProposalThrowableError: Error?
+    var createPCZTFromProposalAccountUUIDProposalCallsCount = 0
+    var createPCZTFromProposalAccountUUIDProposalCalled: Bool {
+        return createPCZTFromProposalAccountUUIDProposalCallsCount > 0
+    }
+    var createPCZTFromProposalAccountUUIDProposalReceivedArguments: (accountUUID: AccountUUID, proposal: FfiProposal)?
+    var createPCZTFromProposalAccountUUIDProposalReturnValue: Pczt!
+    var createPCZTFromProposalAccountUUIDProposalClosure: ((AccountUUID, FfiProposal) async throws -> Pczt)?
+
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Pczt {
+        if let error = createPCZTFromProposalAccountUUIDProposalThrowableError {
+            throw error
+        }
+        createPCZTFromProposalAccountUUIDProposalCallsCount += 1
+        createPCZTFromProposalAccountUUIDProposalReceivedArguments = (accountUUID: accountUUID, proposal: proposal)
+        if let closure = createPCZTFromProposalAccountUUIDProposalClosure {
+            return try await closure(accountUUID, proposal)
+        } else {
+            return createPCZTFromProposalAccountUUIDProposalReturnValue
+        }
+    }
+
+    // MARK: - addProofsToPCZT
+
+    var addProofsToPCZTPcztThrowableError: Error?
+    var addProofsToPCZTPcztCallsCount = 0
+    var addProofsToPCZTPcztCalled: Bool {
+        return addProofsToPCZTPcztCallsCount > 0
+    }
+    var addProofsToPCZTPcztReceivedPczt: Pczt?
+    var addProofsToPCZTPcztReturnValue: Pczt!
+    var addProofsToPCZTPcztClosure: ((Pczt) async throws -> Pczt)?
+
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
+        if let error = addProofsToPCZTPcztThrowableError {
+            throw error
+        }
+        addProofsToPCZTPcztCallsCount += 1
+        addProofsToPCZTPcztReceivedPczt = pczt
+        if let closure = addProofsToPCZTPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return addProofsToPCZTPcztReturnValue
+        }
+    }
+
+    // MARK: - extractAndStoreTxFromPCZT
+
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError: Error?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount = 0
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCalled: Bool {
+        return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount > 0
+    }
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments: (pcztWithProofs: Pczt, pcztWithSigs: Pczt)?
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue: Data!
+    var extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure: ((Pczt, Pczt) async throws -> Data)?
+
+    func extractAndStoreTxFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> Data {
+        if let error = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsThrowableError {
+            throw error
+        }
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsCallsCount += 1
+        extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReceivedArguments = (pcztWithProofs: pcztWithProofs, pcztWithSigs: pcztWithSigs)
+        if let closure = extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsClosure {
+            return try await closure(pcztWithProofs, pcztWithSigs)
+        } else {
+            return extractAndStoreTxFromPCZTPcztWithProofsPcztWithSigsReturnValue
         }
     }
 

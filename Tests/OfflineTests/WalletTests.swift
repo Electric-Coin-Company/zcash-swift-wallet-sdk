@@ -55,7 +55,7 @@ class WalletTests: ZcashTestCase {
         
         let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try await synchronizer.prepare(with: seedData.bytes, walletBirthday: 663194, for: .newWallet) else {
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes, walletBirthday: 663194, for: .newWallet, name: "", keySource: nil) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }
