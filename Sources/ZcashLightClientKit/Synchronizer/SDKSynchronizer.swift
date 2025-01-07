@@ -425,12 +425,12 @@ public class SDKSynchronizer: Synchronizer {
             logger: logger
         )
 
-        let txIds = try await initializer.rustBackend.extractAndStoreTxFromPCZT(
+        let txId = try await initializer.rustBackend.extractAndStoreTxFromPCZT(
             pcztWithProofs: pcztWithProofs,
             pcztWithSigs: pcztWithSigs
         )
 
-        let transactions = try await transactionEncoder.createTransactionsFromTxIds([txIds])
+        let transactions = try await transactionEncoder.fetchTransactionsForTxIds([txId])
         
         return submitTransactions(transactions)
     }

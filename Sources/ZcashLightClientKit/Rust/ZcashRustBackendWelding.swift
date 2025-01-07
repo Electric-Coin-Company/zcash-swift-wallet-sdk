@@ -38,6 +38,15 @@ protocol ZcashRustBackendWelding {
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Account]
 
+    /// Adds a new account to the wallet by importing the UFVK that will be used to detect incoming
+    /// payments.
+    ///
+    /// Derivation metadata may optionally be included. To indicate that no derivation metadata is
+    /// available, `seedFingerprint` and `zip32AccountIndex` should be set to `nil`. Derivation
+    /// metadata will not be stored unless both the seed fingerprint and the HD account index are
+    /// provided.
+    ///
+    /// - Returns: the globally unique identifier for the account.
     // swiftlint:disable:next function_parameter_count
     func importAccount(
         ufvk: String,

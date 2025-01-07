@@ -22,8 +22,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SDKSynchronizer.getAccountBalance -> AccountBalance?` into `SDKSynchronizer.getAccountsBalances -> [AccountUUID: AccountBalance]`
 
 ## Removed
-- `SDKSynchronizer.sendToAddress`, deperacted in 2.1
-- `SDKSynchronizer.shieldFunds`, deperacted in 2.1
+- `SDKSynchronizer.sendToAddress`, deprecated in 2.1
+- `SDKSynchronizer.shieldFunds`, deprecated in 2.1
 
 ## Checkpoints
 

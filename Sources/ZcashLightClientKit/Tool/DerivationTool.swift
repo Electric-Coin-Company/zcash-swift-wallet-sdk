@@ -18,8 +18,8 @@ public protocol KeyValidation {
 
 public protocol KeyDeriving {
     /// Derives and returns a UnifiedAddress from a UnifiedFullViewingKey
-    /// - Parameter ufvk: UTF-8 encoded String to validate
-    /// - Returns: true `UnifiedAddress`
+    /// - Parameter ufvk: UTF-8 encoded String containing a valid UFVK
+    /// - Returns: the corresponding default `UnifiedAddress`
     func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress
     
     /// Given the seed bytes and ZIP 32 account index, return the corresponding UnifiedSpendingKey.

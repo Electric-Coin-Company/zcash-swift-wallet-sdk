@@ -111,12 +111,16 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
         
         guard let accountPtr else {
-            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`importAccount` failed with unknown error"))
+            throw ZcashError.rustImportAccountUfvk(lastErrorMessage(fallback: "`getAccount` failed with unknown error"))
         }
         
         defer { zcashlc_free_account(accountPtr) }
 
-        return accountPtr.pointee.unsafeToAccount()
+        guard let validAccount = accountPtr.pointee.unsafeToAccount() else {
+            throw ZcashError.rustUUIDAccountNotFound(lastErrorMessage(fallback: "`getAccount` failed with unknown error"))
+        }
+        
+        return validAccount
     }
     
     // swiftlint:disable:next function_parameter_count
@@ -358,7 +362,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         pcztWithProofs: Pczt,
         pcztWithSigs: Pczt
     ) async throws -> Data {
-        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
+        let txidPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pcztWithProofs.withUnsafeBytes { pcztWithProofsBuffer in
             guard let pcztWithProofsBufferPtr = pcztWithProofsBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return nil
             }
@@ -384,15 +388,19 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             }
         }
 
-        guard let pcztPtr else {
+        guard let txidPtr else {
             throw ZcashError.rustExtractAndStoreTxFromPCZT(lastErrorMessage(fallback: "`extractAndStoreTxFromPCZT` failed with unknown error"))
         }
 
-        defer { zcashlc_free_boxed_slice(pcztPtr) }
+        guard txidPtr.pointee.len == 32 else {
+            throw ZcashError.rustTxidPtrIncorrectLength(lastErrorMessage(fallback: "`extractAndStoreTxFromPCZT` failed with unknown error"))
+        }
+        
+        defer { zcashlc_free_boxed_slice(txidPtr) }
 
         return Data(
-            bytes: pcztPtr.pointee.ptr,
-            count: Int(pcztPtr.pointee.len)
+            bytes: txidPtr.pointee.ptr,
+            count: Int(txidPtr.pointee.len)
         )
     }
 
@@ -1163,8 +1171,25 @@ extension FfiAccount {
 
     /// converts an [`FfiAccount`] into a [`Account`]
     /// - Note: This does not check that the converted value actually holds a valid Account
-    func unsafeToAccount() -> Account {
-        .init(
+    func unsafeToAccount() -> Account? {
+        // Invalid UUID check
+        guard uuidArray != [UInt8](repeating: 0, count: 16) else {
+            return nil
+        }
+        
+        // Invalid ZIP 32 account index
+        if hd_account_index == UInt32.max {
+            return .init(
+                id: AccountUUID(id: uuidArray),
+                name: account_name != nil ? String(cString: account_name) : nil,
+                keySource: key_source != nil ? String(cString: key_source) : nil,
+                seedFingerprint: nil,
+                hdAccountIndex: nil
+            )
+        }
+        
+        // Valid ZIP32 account index
+        return .init(
             id: AccountUUID(id: uuidArray),
             name: account_name != nil ? String(cString: account_name) : nil,
             keySource: key_source != nil ? String(cString: key_source) : nil,

@@ -205,6 +205,10 @@ public enum ZcashErrorCode: String {
     case rustAddProofsToPCZT = "ZRUST0070"
     /// Error from rust layer when calling ZcashRustBackend.extractAndStoreTxFromPCZT
     case rustExtractAndStoreTxFromPCZT = "ZRUST0071"
+    /// Error from rust layer when calling ZcashRustBackend.getAccount
+    case rustUUIDAccountNotFound = "ZRUST0072"
+    /// Error from rust layer when calling ZcashRustBackend.extractAndStoreTxFromPCZT
+    case rustTxidPtrIncorrectLength = "ZRUST0073"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

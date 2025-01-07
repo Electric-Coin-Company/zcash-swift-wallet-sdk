@@ -47,7 +47,7 @@ class SynchronizerTests: ZcashTestCase {
         rustBackend = nil
     }
 
-    // TODO: [#1518] Fix the test, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1518
+    // TODO: [#1521] Fix the test, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1521
     func _testHundredBlocksSync() async throws {
         guard let seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==") else {
             XCTFail("seedData expected to be successfuly instantiated.")

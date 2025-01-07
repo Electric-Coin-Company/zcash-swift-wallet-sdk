@@ -111,14 +111,10 @@ class WalletTransactionEncoder: TransactionEncoder {
             usk: spendingKey
         )
 
-        return try await createTransactionsFromTxIds(txIds)
+        return try await fetchTransactionsForTxIds(txIds)
     }
 
-    func createTransactionsFromTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview] {
-        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
-            throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
-        }
-
+    func fetchTransactionsForTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview] {
         logger.debug("transaction ids: \(txIds)")
 
         var txs: [ZcashTransaction.Overview] = []

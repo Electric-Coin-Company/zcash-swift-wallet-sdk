@@ -125,5 +125,6 @@ class TestsData {
 }
 
 extension TestsData {
-    static let mockedAccountUUID = AccountUUID(id: Array<UInt8>(repeating: 0, count: 16))
+    /// `mockedAccountUUID` is used to mock the rust backend for check only purposes. It's never passed to it.
+    static let mockedAccountUUID = AccountUUID(id: [UInt8](repeating: 0, count: 16))
 }
