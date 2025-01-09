@@ -91,7 +91,7 @@ protocol TransactionEncoder {
     /// - Parameter transaction: a transaction overview
     func submit(transaction: EncodedTransaction) async throws
 
-    /// Tries to fetch the transaction for the given transction ids.
+    /// Tries to fetch the transaction for the given transaction ids.
     /// - Parameter txIds: an array of transaction ids to be fetched from the DB.
     func fetchTransactionsForTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview]
     

@@ -125,6 +125,8 @@ class TestsData {
 }
 
 extension TestsData {
-    /// `mockedAccountUUID` is used to mock the rust backend for check only purposes. It's never passed to it.
+    /// `mockedAccountUUID` is used in tests only and the main purpose is to make tests buildable.
+    /// [#1518][#1521] fixes of Offline and Performance tests  https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1518, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1521
+    /// will eventually address use of this mocked account and ideally remove it completely.
     static let mockedAccountUUID = AccountUUID(id: [UInt8](repeating: 0, count: 16))
 }
