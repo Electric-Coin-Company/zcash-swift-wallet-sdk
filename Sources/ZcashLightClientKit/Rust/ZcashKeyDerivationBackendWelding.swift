@@ -40,6 +40,11 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Returns: true when the encoded string is a valid UFVK. false in any other case
     func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool
 
+    /// Derives and returns a UnifiedAddress from a UnifiedFullViewingKey
+    /// - Parameter ufvk: UTF-8 encoded String containing a valid UFVK
+    /// - Returns: the corresponding default `UnifiedAddress`
+    func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress
+
     /// Derives and returns a unified spending key from the given seed and ZIP 32 account index.
     /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
     /// - Parameter seed: a Byte Array with the seed

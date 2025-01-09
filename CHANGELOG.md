@@ -9,10 +9,21 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 - `DerivationTool.deriveArbitraryWalletKey`
 - `DerivationTool.deriveArbitraryAccountKey`
+- `DerivationTool.deriveUnifiedAddressFrom(ufvk)`
+- `SDKSynchronizer.listAccounts` Returns a list of the accounts in the wallet.
+- `SDKSynchronizer.importAccount` Imports a new account for unified full viewing key.
+- `SDKSynchronizer.createPCZTFromProposal` Creates a partially-created (unsigned without proofs) transaction from the given proposal.
+- `SDKSynchronizer.addProofsToPCZT` Adds proofs to the given PCZT
+- `SDKSynchronizer.createTransactionFromPCZT` Takes a PCZT that has been separately proven and signed, finalizes it, and stores it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
 
 ## Changed
 - `zcashlc_propose_transfer`, `zcashlc_propose_transfer_from_uri` and `zcashlc_propose_shielding` no longer accpt a `use_zip317_fees` parameter; ZIP 317 standard fees are now always used and are not configurable.
 - The SDK no longer assumes a default account. All business logic with instances of Zip32AccountIndex(<index>) has been refactored.
+- `SDKSynchronizer.getAccountBalance -> AccountBalance?` into `SDKSynchronizer.getAccountsBalances -> [AccountUUID: AccountBalance]`
+
+## Removed
+- `SDKSynchronizer.sendToAddress`, deprecated in 2.1
+- `SDKSynchronizer.shieldFunds`, deprecated in 2.1
 
 ## Checkpoints
 

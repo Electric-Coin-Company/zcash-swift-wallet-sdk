@@ -93,11 +93,27 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     // MARK: Address Derivation
 
+    func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress {
+        let ffiAddressPtr = zcashlc_derive_address_from_ufvk(
+            networkType.networkId,
+            [CChar](ufvk.utf8CString),
+            nil
+        )
+        
+        guard let ffiAddressPtr else {
+            throw ZcashError.rustDeriveAddressFromUfvk(ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_ffi_address(ffiAddressPtr) }
+        
+        return ffiAddressPtr.pointee.unsafeToUnifiedAddress(networkType)
+    }
+    
     func deriveUnifiedSpendingKey(
         from seed: [UInt8],
         accountIndex: Zip32AccountIndex
     ) throws -> UnifiedSpendingKey {
-        let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
+        let boxedSlicePtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
                 UInt(seed.count),
@@ -106,14 +122,14 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
             )
         }
 
-        defer { zcashlc_free_binary_key(binaryKeyPtr) }
+        defer { zcashlc_free_boxed_slice(boxedSlicePtr) }
 
-        guard let binaryKey = binaryKeyPtr?.pointee else {
+        guard let boxedSlice = boxedSlicePtr?.pointee else {
             throw ZcashError.rustDeriveUnifiedSpendingKey(
                 ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
         }
 
-        return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
+        return boxedSlice.unsafeToUnifiedSpendingKey(network: networkType)
     }
     
     func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey {
@@ -137,7 +153,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
             throw ZcashError.rustDeriveUnifiedFullViewingKeyInvalidDerivedKey
         }
 
-        return UnifiedFullViewingKey(validatedEncoding: derived, accountIndex: spendingKey.accountIndex)
+        return UnifiedFullViewingKey(validatedEncoding: derived)
     }
 
     func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {

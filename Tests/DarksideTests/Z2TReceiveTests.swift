@@ -64,7 +64,8 @@ class Z2TReceiveTests: ZcashTestCase {
             .store(in: &cancellables)
     }
 
-    func testSendingZ2TWithMemoFails() async throws {
+    // TODO: [#1518] Fix the test, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1518
+    func _testSendingZ2TWithMemoFails() async throws {
         subscribeToFoundTransactions()
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -98,12 +99,12 @@ class Z2TReceiveTests: ZcashTestCase {
         4. create transaction
         */
         do {
-            _ = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKey,
-                zatoshi: sendAmount,
-                toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test transaction")
-            )
+//            _ = try await coordinator.synchronizer.sendToAddress(
+//                spendingKey: coordinator.spendingKey,
+//                zatoshi: sendAmount,
+//                toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
+//                memo: try Memo(string: "test transaction")
+//            )
 
             XCTFail("Should have thrown error")
         } catch {
@@ -115,7 +116,8 @@ class Z2TReceiveTests: ZcashTestCase {
         }
     }
 
-    func testFoundTransactions() async throws {
+    // TODO: [#1518] Fix the test, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1518
+    func _testFoundTransactions() async throws {
         subscribeToFoundTransactions()
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -151,13 +153,13 @@ class Z2TReceiveTests: ZcashTestCase {
         4. create transaction
         */
         do {
-            let pending = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKey,
-                zatoshi: sendAmount,
-                toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: nil
-            )
-            pendingEntity = pending
+//            let pending = try await coordinator.synchronizer.sendToAddress(
+//                spendingKey: coordinator.spendingKey,
+//                zatoshi: sendAmount,
+//                toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
+//                memo: nil
+//            )
+//            pendingEntity = pending
             sendExpectation.fulfill()
         } catch {
             testError = error

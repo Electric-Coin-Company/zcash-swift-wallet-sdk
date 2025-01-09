@@ -17,6 +17,11 @@ public protocol KeyValidation {
 }
 
 public protocol KeyDeriving {
+    /// Derives and returns a UnifiedAddress from a UnifiedFullViewingKey
+    /// - Parameter ufvk: UTF-8 encoded String containing a valid UFVK
+    /// - Returns: the corresponding default `UnifiedAddress`
+    func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress
+    
     /// Given the seed bytes and ZIP 32 account index, return the corresponding UnifiedSpendingKey.
     /// - Parameter seed: `[Uint8]` seed bytes
     /// - Parameter accountIndex: the ZIP 32 index of the account
@@ -92,6 +97,10 @@ public class DerivationTool: KeyDeriving {
         ZcashKeyDerivationBackend.getAddressMetadata(addr)
     }
 
+    public func deriveUnifiedAddressFrom(ufvk: String) throws -> UnifiedAddress {
+        try backend.deriveUnifiedAddressFrom(ufvk: ufvk)
+    }
+    
     /// Given a spending key, return the associated viewing key.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
     /// - Returns: the viewing key that corresponds to the spending key.
@@ -233,9 +242,8 @@ extension UnifiedFullViewingKey {
     /// already validated by another function. only for internal use. Unless you are
     /// constructing an address from a primitive function of the FFI, you probably
     /// shouldn't be using this.
-    init(validatedEncoding: String, accountIndex: Zip32AccountIndex) {
+    init(validatedEncoding: String) {
         self.encoding = validatedEncoding
-        self.accountIndex = accountIndex
     }
 }
 

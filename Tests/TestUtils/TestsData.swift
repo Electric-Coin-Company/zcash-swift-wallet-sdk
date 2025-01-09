@@ -36,7 +36,7 @@ class TestsData {
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: nil,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -56,7 +56,7 @@ class TestsData {
 
     let clearedTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: Date().timeIntervalSince1970,
             expiryHeight: 123000,
             fee: Zatoshi(10),
@@ -76,7 +76,7 @@ class TestsData {
 
     let sentTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: Zatoshi(10000),
@@ -96,7 +96,7 @@ class TestsData {
 
     let receivedTransaction = {
         ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1,
             expiryHeight: nil,
             fee: nil,
@@ -122,4 +122,11 @@ class TestsData {
     init(networkType: NetworkType) {
         self.networkType = networkType
     }
+}
+
+extension TestsData {
+    /// `mockedAccountUUID` is used in tests only and the main purpose is to make tests buildable.
+    /// [#1518][#1521] fixes of Offline and Performance tests  https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1518, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1521
+    /// will eventually address use of this mocked account and ideally remove it completely.
+    static let mockedAccountUUID = AccountUUID(id: [UInt8](repeating: 0, count: 16))
 }
