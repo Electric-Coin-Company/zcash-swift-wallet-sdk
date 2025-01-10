@@ -6,10 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.8 - 2025-01-10
+
 ## Added
-- `DerivationTool.deriveArbitraryWalletKey`
-- `DerivationTool.deriveArbitraryAccountKey`
-- `DerivationTool.deriveUnifiedAddressFrom(ufvk)`
 - `SDKSynchronizer.listAccounts` Returns a list of the accounts in the wallet.
 - `SDKSynchronizer.importAccount` Imports a new account for unified full viewing key.
 - `SDKSynchronizer.createPCZTFromProposal` Creates a partially-created (unsigned without proofs) transaction from the given proposal.
@@ -32,7 +31,7 @@ Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2675000.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2717500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2780000.json
 ````
 
 Testnet
@@ -40,8 +39,15 @@ Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3010000.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3070000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3170000.json
 ````
+
+# 2.2.7 - 2024-11-17
+
+## Added
+- `DerivationTool.deriveArbitraryWalletKey`
+- `DerivationTool.deriveArbitraryAccountKey`
+- `DerivationTool.deriveUnifiedAddressFrom(ufvk)`
 
 # 2.2.6 - 2024-10-22
 
