@@ -86,7 +86,7 @@ class TestCoordinator {
         
         self.spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: Environment.seedBytes,
-            accountIndex: 0
+            accountIndex: Zip32AccountIndex(0)
         )
         
         self.viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
@@ -111,7 +111,7 @@ class TestCoordinator {
     }
 
     func prepare(seed: [UInt8]) async throws -> Initializer.InitializationResult {
-        return try await synchronizer.prepare(with: seed, walletBirthday: self.birthday, for: .newWallet)
+        return try await synchronizer.prepare(with: seed, walletBirthday: self.birthday, for: .newWallet, name: "", keySource: nil)
     }
     
     func stop() async throws {

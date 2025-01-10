@@ -36,7 +36,7 @@ public struct SynchronizerState: Equatable {
     /// SyncSessionIDs are provided to users
     public var syncSessionID: UUID
     /// account balance known to this synchronizer given the data that has processed locally
-    public var accountBalance: AccountBalance?
+    public var accountsBalances: [AccountUUID: AccountBalance]
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
@@ -47,7 +47,7 @@ public struct SynchronizerState: Equatable {
     public static var zero: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalance: .zero,
+            accountsBalances: [:],
             internalSyncStatus: .unprepared,
             latestBlockHeight: .zero
         )
@@ -55,12 +55,12 @@ public struct SynchronizerState: Equatable {
     
     init(
         syncSessionID: UUID,
-        accountBalance: AccountBalance?,
+        accountsBalances: [AccountUUID: AccountBalance],
         internalSyncStatus: InternalSyncStatus,
         latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
-        self.accountBalance = accountBalance
+        self.accountsBalances = accountsBalances
         self.internalSyncStatus = internalSyncStatus
         self.latestBlockHeight = latestBlockHeight
         self.syncStatus = internalSyncStatus.mapToSyncStatus()
@@ -120,6 +120,8 @@ public protocol Synchronizer: AnyObject {
     ///   - for: [walletMode] Set `.newWallet` when preparing synchronizer for a brand new generated wallet,
     ///   `.restoreWallet` when wallet is about to be restored from a seed
     ///   and  `.existingWallet` for all other scenarios.
+    ///   - name: name of the account.
+    ///   - keySource: custom optional string for clients, used for example to help identify the type of the account.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
     ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
@@ -129,7 +131,9 @@ public protocol Synchronizer: AnyObject {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
@@ -144,23 +148,23 @@ public protocol Synchronizer: AnyObject {
     func stop()
 
     /// Gets the sapling shielded address for the given account.
-    /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    /// - Parameter accountUUID: the  account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress
+    func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
-    /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    /// - Parameter accountUUID: the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress
+    func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
-    /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    /// - Parameter accountUUID: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress
+    func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter accountUUID: the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -168,7 +172,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -176,7 +180,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter accountUUID: the account for which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -190,7 +194,7 @@ public protocol Synchronizer: AnyObject {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -212,46 +216,48 @@ public protocol Synchronizer: AnyObject {
         spendingKey: UnifiedSpendingKey
     ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
 
-    /// Sends zatoshi.
-    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
-    /// - Parameter zatoshi: the amount to send in Zatoshi.
-    /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
-    ///
-    /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
-    /// `SynchronizerErrors.notPrepared`.
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) async throws -> ZcashTransaction.Overview
-
-    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI using the given `accountIndex`
+    /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI by spending from the ZIP 32 account with the given index.
     ///  - Parameter uri: a valid ZIP-321 payment URI
-    ///  - Parameter accountIndex: the account index that allows spends to occur.
+    ///  - Parameter accountUUID: the account providing spend authority.
     ///
     /// - NOTE: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Int
+        accountUUID: AccountUUID
     ) async throws -> Proposal
 
-    /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
-    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
-    /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter shieldingThreshold: the minimum transparent balance required before a transaction will be created.
+    /// Creates a partially-created (unsigned without proofs) transaction from the given proposal.
     ///
-    /// - Note: If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
-    /// `SynchronizerErrors.notPrepared`.
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) async throws -> ZcashTransaction.Overview
+    /// Do not call this multiple times in parallel, or you will generate PCZT instances that, if
+    /// finalized, would double-spend the same notes.
+    ///
+    /// - Parameter accountUUID: The account for which the proposal was created.
+    /// - Parameter proposal: The proposal for which to create the transaction.
+    /// - Returns The partially created transaction in [Pczt] format.
+    ///
+    /// - Throws rustCreatePCZTFromProposal as a common indicator of the operation failure
+    func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt
+
+    /// Adds proofs to the given PCZT.
+    ///
+    /// - Parameter pczt: The partially created transaction in its serialized format.
+    ///
+    /// - Returns The updated PCZT in its serialized format.
+    ///
+    /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
+    func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
+    
+    /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
+    /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
+    ///
+    /// - Parameter pcztWithProofs
+    /// - Parameter pcztWithSigs
+    ///
+    /// - Returns The submission result of the completed transaction.
+    ///
+    /// - Throws  PcztException.ExtractAndStoreTxFromPcztException as a common indicator of the operation failure
+    func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
 
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }
@@ -307,14 +313,32 @@ public protocol Synchronizer: AnyObject {
     /// `SynchronizerErrors.notPrepared`.
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
-    /// Account balances from the given account index
-    /// - Parameter accountIndex: the index of the account
-    /// - Returns: `AccountBalance`, struct that holds sapling and unshielded balances or `nil` when no account is associated with `accountIndex`
-    func getAccountBalance(accountIndex: Int) async throws -> AccountBalance?
+    /// Accounts balances
+    /// - Returns: `[AccountUUID: AccountBalance]`, struct that holds Sapling and unshielded balances per account
+    func getAccountsBalances() async throws -> [AccountUUID: AccountBalance]
 
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()
 
+    /// Returns a list of the accounts in the wallet.
+    func listAccounts() async throws -> [Account]
+    
+    /// Imports a new account with UnifiedFullViewingKey.
+    /// - Parameters:
+    ///   - ufvk: unified full viewing key
+    ///   - purpose: of the account, either `spending` or `viewOnly`
+    ///   - name: name of the account.
+    ///   - keySource: custom optional string for clients, used for example to help identify the type of the account.
+    // swiftlint:disable:next function_parameter_count
+    func importAccount(
+        ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> AccountUUID
+    
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant

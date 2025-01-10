@@ -56,13 +56,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeTransfer(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransfer(
-            account: Int32(accountIndex),
+            accountUUID: accountUUID,
             to: recipient,
             value: amount.amount,
             memo: memoBytes
@@ -72,13 +72,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
 
     func proposeShielding(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String? = nil
     ) async throws -> Proposal? {
         guard let proposal = try await rustBackend.proposeShielding(
-            account: Int32(accountIndex),
+            accountUUID: accountUUID,
             memo: memoBytes,
             shieldingThreshold: shieldingThreshold,
             transparentReceiver: transparentReceiver
@@ -89,11 +89,11 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountIndex: Int
+        accountUUID: AccountUUID
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransferFromURI(
             uri,
-            account: Int32(accountIndex)
+            accountUUID: accountUUID
         )
         return Proposal(inner: proposal)
     }
@@ -111,6 +111,10 @@ class WalletTransactionEncoder: TransactionEncoder {
             usk: spendingKey
         )
 
+        return try await fetchTransactionsForTxIds(txIds)
+    }
+
+    func fetchTransactionsForTxIds(_ txIds: [Data]) async throws -> [ZcashTransaction.Overview] {
         logger.debug("transaction ids: \(txIds)")
 
         var txs: [ZcashTransaction.Overview] = []

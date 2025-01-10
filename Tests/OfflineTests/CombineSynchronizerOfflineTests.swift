@@ -101,7 +101,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareSucceed() throws {
-        synchronizerMock.prepareWithWalletBirthdayForClosure = { receivedSeed, receivedWalletBirthday, _ in
+        synchronizerMock.prepareWithWalletBirthdayForNameKeySourceClosure = { receivedSeed, receivedWalletBirthday, _, _, _ in
             XCTAssertEqual(receivedSeed, self.data.seed)
             XCTAssertEqual(receivedWalletBirthday, self.data.birthday)
             return .success
@@ -109,7 +109,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -129,13 +129,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareThrowsError() throws {
-        synchronizerMock.prepareWithWalletBirthdayForClosure = { _, _, _ in
+        synchronizerMock.prepareWithWalletBirthdayForNameKeySourceClosure = { _, _, _, _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet)
+        synchronizer.prepare(with: data.seed, walletBirthday: data.birthday, for: .newWallet, name: "", keySource: nil)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -218,14 +218,16 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetSaplingAddressSucceed() {
-        synchronizerMock.getSaplingAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        let testAccount = TestsData.mockedAccountUUID
+        
+        synchronizerMock.getSaplingAddressAccountUUIDClosure = { account in
+            XCTAssertEqual(account, testAccount)
             return self.data.saplingAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getSaplingAddress(accountIndex: 3)
+        synchronizer.getSaplingAddress(accountUUID: testAccount)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -245,14 +247,16 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetUnifiedAddressSucceed() {
-        synchronizerMock.getUnifiedAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        let testAccount = TestsData.mockedAccountUUID
+
+        synchronizerMock.getUnifiedAddressAccountUUIDClosure = { account in
+            XCTAssertEqual(account, testAccount)
             return self.data.unifiedAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getUnifiedAddress(accountIndex: 3)
+        synchronizer.getUnifiedAddress(accountUUID: testAccount)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -272,14 +276,16 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentAddressSucceed() {
-        synchronizerMock.getTransparentAddressAccountIndexClosure = { accountIndex in
-            XCTAssertEqual(accountIndex, 3)
+        let testAccount = TestsData.mockedAccountUUID
+
+        synchronizerMock.getTransparentAddressAccountUUIDClosure = { account in
+            XCTAssertEqual(account, testAccount)
             return self.data.transparentAddress
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentAddress(accountIndex: 3)
+        synchronizer.getTransparentAddress(accountUUID: testAccount)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -291,136 +297,6 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                 },
                 receiveValue: { value in
                     XCTAssertEqual(value, self.data.transparentAddress)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testSendToAddressSucceed() throws {
-        let amount = Zatoshi(100)
-        let recipient: Recipient = .transparent(data.transparentAddress)
-        let memo: Memo = .text(try MemoText("Some message"))
-        let mockedSpendingKey = data.spendingKey
-
-        synchronizerMock
-            .sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { receivedSpendingKey, receivedZatoshi, receivedToAddress, receivedMemo in
-                XCTAssertEqual(receivedSpendingKey, mockedSpendingKey)
-                XCTAssertEqual(receivedZatoshi, amount)
-                XCTAssertEqual(receivedToAddress, recipient)
-                XCTAssertEqual(receivedMemo, memo)
-                return self.data.pendingTransactionEntity
-            }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.sendToAddress(spendingKey: mockedSpendingKey, zatoshi: amount, toAddress: recipient, memo: memo)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value.value, self.data.pendingTransactionEntity.value)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testSendToAddressThrowsError() throws {
-        let amount = Zatoshi(100)
-        let recipient: Recipient = .transparent(data.transparentAddress)
-        let memo: Memo = .text(try MemoText("Some message"))
-        let mockedSpendingKey = data.spendingKey
-
-        synchronizerMock.sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { _, _, _, _ in
-            throw "Some error"
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.sendToAddress(spendingKey: mockedSpendingKey, zatoshi: amount, toAddress: recipient, memo: memo)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        XCTFail("Error should be thrown.")
-                    case .failure:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in
-                    XCTFail("No value is expected")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testShieldFundsSucceed() throws {
-        let memo: Memo = .text(try MemoText("Some message"))
-        let shieldingThreshold = Zatoshi(1)
-        let mockedSpendingKey = data.spendingKey
-
-        synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { receivedSpendingKey, receivedMemo, receivedShieldingThreshold in
-            XCTAssertEqual(receivedSpendingKey, mockedSpendingKey)
-            XCTAssertEqual(receivedMemo, memo)
-            XCTAssertEqual(receivedShieldingThreshold, shieldingThreshold)
-            return self.data.pendingTransactionEntity
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.shieldFunds(spendingKey: mockedSpendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value.rawID, self.data.pendingTransactionEntity.rawID)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testShieldFundsThrowsError() throws {
-        let memo: Memo = .text(try MemoText("Some message"))
-        let shieldingThreshold = Zatoshi(1)
-        let mockedSpendingKey = data.spendingKey
-
-        synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { _, _, _ in
-            throw "Some error"
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.shieldFunds(spendingKey: mockedSpendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        XCTFail("Error should be thrown.")
-                    case .failure:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in
-                    XCTFail("No value is expected")
                 }
             )
             .store(in: &cancellables)
@@ -748,16 +624,17 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceSucceed() {
-        let expectedBalance = AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(100))
+        let accountUUID = TestsData.mockedAccountUUID
+        
+        let expectedBalance = [accountUUID: AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(100))]
 
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -777,13 +654,15 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        let accountUUID = TestsData.mockedAccountUUID
+
+        synchronizerMock.getAccountsBalancesClosure = {
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -803,7 +682,9 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceSucceed() {
-        let expectedBalance = AccountBalance(
+        let accountUUID = TestsData.mockedAccountUUID
+
+        let expectedBalance = [accountUUID: AccountBalance(
             saplingBalance:
                 PoolBalance(
                     spendableValue: .zero,
@@ -817,16 +698,15 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     valuePendingSpendability: .zero
                 ),
             unshielded: .zero
-        )
+        )]
         
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -846,13 +726,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountsBalancesClosure = {
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -872,7 +752,9 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {
-        let expectedBalance = AccountBalance(
+        let accountUUID = TestsData.mockedAccountUUID
+        
+        let expectedBalance = [accountUUID: AccountBalance(
             saplingBalance:
                 PoolBalance(
                     spendableValue: Zatoshi(333),
@@ -886,16 +768,15 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     valuePendingSpendability: .zero
                 ),
             unshielded: .zero
-        )
+        )]
         
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
+        synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -915,13 +796,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceThrowsError() {
-        synchronizerMock.getAccountBalanceAccountIndexClosure = { _ in
+        synchronizerMock.getAccountsBalancesClosure = {
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountBalance(accountIndex: 3)
+        synchronizer.getAccountsBalances()
             .sink(
                 receiveCompletion: { result in
                     switch result {

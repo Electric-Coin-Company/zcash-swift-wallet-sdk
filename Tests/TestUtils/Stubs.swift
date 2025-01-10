@@ -74,16 +74,16 @@ class RustBackendMockHelper {
         rustBackendMock.latestCachedBlockHeightReturnValue = .empty()
         rustBackendMock.initBlockMetadataDbClosure = { }
         rustBackendMock.writeBlocksMetadataBlocksClosure = { _ in }
-        rustBackendMock.getTransparentBalanceAccountReturnValue = 0
-        rustBackendMock.listTransparentReceiversAccountReturnValue = []
-        rustBackendMock.getCurrentAddressAccountThrowableError = ZcashError.rustGetCurrentAddress("mocked error")
-        rustBackendMock.getNextAvailableAddressAccountThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
-        rustBackendMock.createAccountSeedTreeStateRecoverUntilThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
+        rustBackendMock.getTransparentBalanceAccountUUIDReturnValue = 0
+        rustBackendMock.listTransparentReceiversAccountUUIDReturnValue = []
+        rustBackendMock.getCurrentAddressAccountUUIDThrowableError = ZcashError.rustGetCurrentAddress("mocked error")
+        rustBackendMock.getNextAvailableAddressAccountUUIDThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
+        rustBackendMock.createAccountSeedTreeStateRecoverUntilNameKeySourceThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
         rustBackendMock.getMemoTxIdOutputPoolOutputIndexReturnValue = nil
         rustBackendMock.initDataDbSeedReturnValue = .seedRequired
         rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }
-        rustBackendMock.proposeTransferAccountToValueMemoThrowableError = ZcashError.rustCreateToAddress("mocked error")
-        rustBackendMock.proposeShieldingAccountMemoShieldingThresholdTransparentReceiverThrowableError = ZcashError.rustShieldFunds("mocked error")
+        rustBackendMock.proposeTransferAccountUUIDToValueMemoThrowableError = ZcashError.rustCreateToAddress("mocked error")
+        rustBackendMock.proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError = ZcashError.rustShieldFunds("mocked error")
         rustBackendMock.createProposedTransactionsProposalUskThrowableError = ZcashError.rustCreateToAddress("mocked error")
         rustBackendMock.decryptAndStoreTransactionTxBytesMinedHeightThrowableError = ZcashError.rustDecryptAndStoreTransaction("mock fail")
 
@@ -145,7 +145,7 @@ extension SynchronizerState {
     static var mock: SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,
-            accountBalance: AccountBalance(saplingBalance: .zero, orchardBalance: .zero, unshielded: Zatoshi(200)),
+            accountsBalances: [:],
             internalSyncStatus: .syncing(0),
             latestBlockHeight: 222222
         )

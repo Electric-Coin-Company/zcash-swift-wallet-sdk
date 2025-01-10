@@ -143,7 +143,7 @@ final class EnhanceActionTests: ZcashTestCase {
 
         let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
@@ -201,7 +201,7 @@ final class EnhanceActionTests: ZcashTestCase {
 
         let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
@@ -263,7 +263,7 @@ final class EnhanceActionTests: ZcashTestCase {
 
         let rawID = Data(fromHexEncodedString: "90058596ae18adedfd74681aee3812c2a7d3d361934347fb05550c77b677a615")!
         let transaction = ZcashTransaction.Overview(
-            accountId: 0,
+            accountUUID: TestsData.mockedAccountUUID,
             blockTime: 1.0,
             expiryHeight: 663206,
             fee: Zatoshi(0),
