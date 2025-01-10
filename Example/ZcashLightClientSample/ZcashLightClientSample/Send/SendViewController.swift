@@ -25,7 +25,6 @@ class SendViewController: UIViewController {
     @IBOutlet weak var charactersLeftLabel: UILabel!
     
     let characterLimit: Int = 512
-    
     var wallet = Initializer.shared
 
     // swiftlint:disable:next implicitly_unwrapped_optional
@@ -46,7 +45,9 @@ class SendViewController: UIViewController {
         closureSynchronizer.prepare(
             with: DemoAppConfig.defaultSeed,
             walletBirthday: DemoAppConfig.defaultBirthdayHeight,
-            for: .existingWallet
+            for: .existingWallet,
+            name: "",
+            keySource: nil
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }
@@ -103,12 +104,17 @@ class SendViewController: UIViewController {
     }
     
     func updateBalance() async {
-        balanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.total() ?? .zero
-        )
-        verifiedBalanceLabel.text = format(
-            balance: (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
-        )
+        Task { @MainActor in
+            guard let account = try? await synchronizer.listAccounts().first else {
+                return
+            }
+            balanceLabel.text = format(
+                balance: (try? await synchronizer.getAccountsBalances()[account.id])?.saplingBalance.total() ?? .zero
+            )
+            verifiedBalanceLabel.text = format(
+                balance: (try? await synchronizer.getAccountsBalances()[account.id])?.saplingBalance.spendableValue ?? .zero
+            )
+        }
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {
@@ -121,8 +127,12 @@ class SendViewController: UIViewController {
     
     func maxFundsOn() {
         Task { @MainActor in
+            guard let account = try? await synchronizer.listAccounts().first else {
+                return
+            }
+
             let fee = Zatoshi(10000)
-            let max: Zatoshi = ((try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero) - fee
+            let max: Zatoshi = ((try? await synchronizer.getAccountsBalances()[account.id])?.saplingBalance.spendableValue ?? .zero) - fee
             amountTextField.text = format(balance: max)
             amountTextField.isEnabled = false
         }
@@ -144,12 +154,18 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+        guard let account = try? await synchronizer.listAccounts().first else {
+            return false
+        }
+        let balance = (try? await synchronizer.getAccountsBalances()[account.id])?.saplingBalance.spendableValue ?? .zero
         return balance > .zero
     }
     
     func isAmountValid() async -> Bool {
-        let balance = (try? await synchronizer.getAccountBalance(accountIndex: 0))?.saplingBalance.spendableValue ?? .zero
+        guard let account = try? await synchronizer.listAccounts().first else {
+            return false
+        }
+        let balance = (try? await synchronizer.getAccountsBalances()[account.id])?.saplingBalance.spendableValue ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),
@@ -228,7 +244,7 @@ class SendViewController: UIViewController {
             }
 
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0) else {
+            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: Zip32AccountIndex(0)) else {
                 loggerProxy.error("NO SPENDING KEY")
                 return
             }
@@ -236,15 +252,6 @@ class SendViewController: UIViewController {
             KRProgressHUD.show()
 
             do {
-                let pendingTransaction = try await synchronizer.sendToAddress(
-                    spendingKey: spendingKey,
-                    zatoshi: zec,
-                    // swiftlint:disable:next force_try
-                    toAddress: try! Recipient(recipient, network: kZcashNetwork.networkType),
-                    // swiftlint:disable:next force_try
-                    memo: try! self.memoField.text.asMemo()
-                )
-                loggerProxy.info("transaction created: \(pendingTransaction)")
                 KRProgressHUD.dismiss()
             } catch {
                 loggerProxy.error("SEND FAILED: \(error)")

@@ -10,10 +10,17 @@ public protocol StringEncoded {
     var stringEncoded: String { get }
 }
 
+public struct Account: Equatable, Hashable, Codable, Identifiable {
+    public let id: AccountUUID
+    public let name: String?
+    public let keySource: String?
+    public let seedFingerprint: [UInt8]?
+    public let hdAccountIndex: Zip32AccountIndex?
+}
+
 public struct UnifiedSpendingKey: Equatable, Undescribable {
     let network: NetworkType
     let bytes: [UInt8]
-    public let account: UInt32
 }
 
 /// Sapling Extended Spending Key
@@ -45,23 +52,20 @@ public struct TransparentAccountPrivKey: Equatable, Undescribable {
 /// A ZIP 316 Unified Full Viewing Key.
 public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     let encoding: String
-    public let account: UInt32
 
     public var stringEncoded: String { encoding }
 
     /// Initializes a new UnifiedFullViewingKey (UFVK) from the provided string encoding
     /// - Parameters:
     ///  - parameter encoding: String encoding of unified full viewing key
-    ///  - parameter account: account number of the given UFVK
     ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
     /// - Throws: `unifiedFullViewingKeyInvalidInput`when the provided encoding is found to be invalid
-    public init(encoding: String, account: UInt32, network: NetworkType) throws {
+    public init(encoding: String, network: NetworkType) throws {
         guard DerivationTool(networkType: network).isValidUnifiedFullViewingKey(encoding) else {
             throw ZcashError.unifiedFullViewingKeyInvalidInput
         }
 
         self.encoding = encoding
-        self.account = account
     }
 }
 
@@ -166,7 +170,7 @@ public struct SaplingAddress: Equatable, StringEncoded {
     }
 }
 
-public struct UnifiedAddress: Equatable, StringEncoded {
+public struct UnifiedAddress: Equatable, StringEncoded, Codable, Hashable {
     let networkType: NetworkType
 
     public enum ReceiverTypecodes: Hashable {
@@ -247,7 +251,7 @@ public struct TexAddress: Equatable, StringEncoded, Comparable {
 
 public enum TransactionRecipient: Equatable {
     case address(Recipient)
-    case internalAccount(UInt32)
+    case internalAccount(AccountUUID)
 }
 
 /// Represents a valid recipient of Zcash

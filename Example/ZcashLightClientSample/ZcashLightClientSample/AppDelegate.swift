@@ -21,6 +21,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var wallet: Initializer?
     private var synchronizer: SDKSynchronizer?
     
+    let accountIndex = Zip32AccountIndex(0)
+    
     var sharedSynchronizer: SDKSynchronizer {
         if let sync = synchronizer {
             return sync
@@ -34,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var sharedViewingKey: UnifiedFullViewingKey {
         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         let spendingKey = try! derivationTool
-            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: accountIndex)
 
         return try! derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
     }

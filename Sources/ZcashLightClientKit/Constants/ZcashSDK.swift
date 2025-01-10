@@ -11,7 +11,7 @@ public protocol ZcashNetwork {
     var constants: NetworkConstants.Type { get }
 }
 
-public enum NetworkType {
+public enum NetworkType: Equatable, Codable, Hashable {
     case mainnet
     case testnet
     
@@ -218,4 +218,10 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
     public static let defaultFsBlockDbRootName = "fs_cache"
     
     public static let defaultDbNamePrefix = "ZcashSdk_testnet_"
+}
+
+/// Used when importing an account `importAccount(..., purpose: AccountPurpose)`
+public enum AccountPurpose: UInt32, Equatable {
+    case spending = 0
+    case viewOnly
 }

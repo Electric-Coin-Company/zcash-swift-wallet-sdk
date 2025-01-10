@@ -25,19 +25,21 @@ public protocol CombineSynchronizer {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
-        for walletMode: WalletInitMode
+        for walletMode: WalletInitMode,
+        name: String,
+        keySource: String?
     ) -> SinglePublisher<Initializer.InitializationResult, Error>
 
     func start(retry: Bool) -> CompletablePublisher<Error>
     func stop()
 
-    func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error>
-    func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error>
-    func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error>
+    func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error>
+    func getUnifiedAddress(accountUUID: AccountUUID) -> SinglePublisher<UnifiedAddress, Error>
+    func getTransparentAddress(accountUUID: AccountUUID) -> SinglePublisher<TransparentAddress, Error>
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///
-    /// - Parameter accountIndex: the account from which to transfer funds.
+    /// - Parameter accountUUID: the account from which to transfer funds.
     /// - Parameter recipient: the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
@@ -45,7 +47,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeTransfer(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         recipient: Recipient,
         amount: Zatoshi,
         memo: Memo?
@@ -53,7 +55,7 @@ public protocol CombineSynchronizer {
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
-    /// - Parameter accountIndex: the account for which to shield funds.
+    /// - Parameter accountUUID: the account from which to shield funds.
     /// - Parameter shieldingThreshold: the minimum transparent balance required before a proposal will be created.
     /// - Parameter memo: an optional memo to include as part of the proposal's transactions.
     /// - Parameter transparentReceiver: a specific transparent receiver within the account
@@ -67,7 +69,7 @@ public protocol CombineSynchronizer {
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func proposeShielding(
-        accountIndex: Int,
+        accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memo: Memo,
         transparentReceiver: TransparentAddress?
@@ -89,29 +91,36 @@ public protocol CombineSynchronizer {
         spendingKey: UnifiedSpendingKey
     ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
 
-    @available(*, deprecated, message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients.")
-    func sendToAddress(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        toAddress: Recipient,
-        memo: Memo?
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
-    
-    @available(
-        *,
-        deprecated,
-        message: "Upcoming SDK 2.1 will create multiple transactions at once for some recipients. use `proposeShielding:` instead"
-    )
-    func shieldFunds(
-        spendingKey: UnifiedSpendingKey,
-        memo: Memo,
-        shieldingThreshold: Zatoshi
-    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
+    func createPCZTFromProposal(
+        accountUUID: AccountUUID,
+        proposal: Proposal
+    ) -> SinglePublisher<Pczt, Error>
 
+    func addProofsToPCZT(
+        pczt: Pczt
+    ) -> SinglePublisher<Pczt, Error>
+
+    func createTransactionFromPCZT(
+        pcztWithProofs: Pczt,
+        pcztWithSigs: Pczt
+    ) -> SinglePublisher<AsyncThrowingStream<TransactionSubmitResult, Error>, Error>
+    
     func proposefulfillingPaymentURI(
         _ uri: String,
-        accountIndex: Int
+        accountUUID: AccountUUID
     ) -> SinglePublisher<Proposal, Error>
+
+    func listAccounts() -> SinglePublisher<[Account], Error>
+
+    // swiftlint:disable:next function_parameter_count
+    func importAccount(
+        ufvk: String,
+        seedFingerprint: [UInt8]?,
+        zip32AccountIndex: Zip32AccountIndex?,
+        purpose: AccountPurpose,
+        name: String,
+        keySource: String?
+    ) async throws -> SinglePublisher<AccountUUID, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }

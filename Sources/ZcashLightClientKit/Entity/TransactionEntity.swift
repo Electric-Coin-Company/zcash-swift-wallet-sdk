@@ -44,7 +44,7 @@ public enum ZcashTransaction {
             }
         }
 
-        public let accountId: Int
+        public let accountUUID: AccountUUID
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
@@ -85,7 +85,7 @@ public enum ZcashTransaction {
         public let rawID: Data
         public let pool: Pool
         public let index: Int
-        public let fromAccount: Int?
+        public let fromAccount: AccountUUID?
         public let recipient: TransactionRecipient
         public let value: Zatoshi
         public let isChange: Bool
@@ -105,8 +105,8 @@ extension ZcashTransaction.Output {
         static let rawID = SQLite.Expression<Blob>("txid")
         static let pool = SQLite.Expression<Int>("output_pool")
         static let index = SQLite.Expression<Int>("output_index")
-        static let toAccount = SQLite.Expression<Int?>("to_account_id")
-        static let fromAccount = SQLite.Expression<Int?>("from_account_id")
+        static let toAccount = SQLite.Expression<Blob?>("to_account_uuid")
+        static let fromAccount = SQLite.Expression<Blob?>("from_account_uuid")
         static let toAddress = SQLite.Expression<String?>("to_address")
         static let value = SQLite.Expression<Int64>("value")
         static let isChange = SQLite.Expression<Bool>("is_change")
@@ -118,7 +118,11 @@ extension ZcashTransaction.Output {
             rawID = Data(blob: try row.get(Column.rawID))
             pool = .init(rawValue: try row.get(Column.pool))
             index = try row.get(Column.index)
-            fromAccount = try row.get(Column.fromAccount)
+            if let accountId = try row.get(Column.fromAccount) {
+                fromAccount = AccountUUID(id: [UInt8](Data(blob: accountId)))
+            } else {
+                fromAccount = nil
+            }
             value = Zatoshi(try row.get(Column.value))
             isChange = try row.get(Column.isChange)
             
@@ -128,7 +132,7 @@ extension ZcashTransaction.Output {
             {
                 recipient = TransactionRecipient.address(try Recipient(outputRecipient, network: metadata.networkType))
             } else if let toAccount = try row.get(Column.toAccount) {
-                recipient = .internalAccount(UInt32(toAccount))
+                recipient = .internalAccount(AccountUUID(id: [UInt8](Data(blob: toAccount))))
             } else {
                 throw ZcashError.zcashTransactionOutputInconsistentRecipient
             }
@@ -146,7 +150,7 @@ extension ZcashTransaction.Output {
 
 extension ZcashTransaction.Overview {
     enum Column {
-        static let accountId = SQLite.Expression<Int>("account_id")
+        static let accountUUID = SQLite.Expression<Blob>("account_uuid")
         static let minedHeight = SQLite.Expression<BlockHeight?>("mined_height")
         static let index = SQLite.Expression<Int?>("tx_index")
         static let rawID = SQLite.Expression<Blob>("txid")
@@ -165,7 +169,7 @@ extension ZcashTransaction.Overview {
 
     init(row: Row) throws {
         do {
-            self.accountId = try row.get(Column.accountId)
+            self.accountUUID = AccountUUID(id: [UInt8](Data(blob: try row.get(Column.accountUUID))))
             self.expiryHeight = try row.get(Column.expiryHeight)
             self.index = try row.get(Column.index)
             self.hasChange = try row.get(Column.hasChange)
