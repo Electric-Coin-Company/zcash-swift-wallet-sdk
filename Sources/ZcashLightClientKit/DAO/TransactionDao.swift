@@ -16,12 +16,14 @@ class TransactionSQLDAO: TransactionRepository {
 
     let dbProvider: ConnectionProvider
     
+    private let blockDao: BlockSQLDAO
     private let transactionsView = View("v_transactions")
     private let txOutputsView = View("v_tx_outputs")
     private let traceClosure: ((String) -> Void)?
     
     init(dbProvider: ConnectionProvider, traceClosure: ((String) -> Void)? = nil) {
         self.dbProvider = dbProvider
+        self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
         self.traceClosure = traceClosure
     }
 
@@ -39,6 +41,11 @@ class TransactionSQLDAO: TransactionRepository {
         true
     }
     
+    @DBActor
+    func blockForHeight(_ height: BlockHeight) async throws -> Block? {
+        try blockDao.block(at: height)
+    }
+
     @DBActor
     func countAll() async throws -> Int {
         do {
@@ -71,7 +78,22 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
-        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+        var transactions: [ZcashTransaction.Overview] = try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+        
+        // Enhance the timestamp for unmined & expired transactions
+        for i in 0..<transactions.count {
+            let transaction = transactions[i]
+            
+            if transaction.minedHeight == nil {
+                if let expiryHeight = transaction.expiryHeight {
+                    if let block = try await blockForHeight(expiryHeight) {
+                        transactions[i].blockTime = TimeInterval(block.time)
+                    }
+                }
+            }
+        }
+        
+        return transactions
     }
 
     func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {

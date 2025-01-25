@@ -45,7 +45,7 @@ public enum ZcashTransaction {
         }
 
         public let accountUUID: AccountUUID
-        public let blockTime: TimeInterval?
+        public var blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
         public let index: Int?
