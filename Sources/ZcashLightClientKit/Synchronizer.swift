@@ -339,6 +339,8 @@ public protocol Synchronizer: AnyObject {
         keySource: String?
     ) async throws -> AccountUUID
     
+    func queryMemosFor(searchTerm: String) async throws -> [(String, String)]
+
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant

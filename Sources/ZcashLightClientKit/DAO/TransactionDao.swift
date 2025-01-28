@@ -14,6 +14,12 @@ class TransactionSQLDAO: TransactionRepository {
         static let memo = SQLite.Expression<Blob>("memo")
     }
 
+    enum UserMetadata {
+        static let txid = SQLite.Expression<Blob>("txid")
+        static let memoCount = SQLite.Expression<Int>("memo_count")
+        static let memo = SQLite.Expression<String>("memo")
+    }
+
     let dbProvider: ConnectionProvider
     
     private let blockDao: BlockSQLDAO
@@ -39,6 +45,34 @@ class TransactionSQLDAO: TransactionRepository {
 
     func isInitialized() async throws -> Bool {
         true
+    }
+    
+//    SELECT t2.txid, t2.memo
+//    FROM v_transactions t1
+//    JOIN v_tx_outputs t2 ON t1.txid = t2.txid
+//    WHERE t1.memo_count > 0
+//      AND t2.memo LIKE '%on ffi%';
+
+    @DBActor
+    func fetchFilteredMemos(searchTerm: String) async throws -> [(String, String)] {
+        // Compose the query
+        let query = transactionsView
+            .join(txOutputsView, on: transactionsView[UserMetadata.txid] == txOutputsView[UserMetadata.txid]) // Join on txid
+            .filter(transactionsView[UserMetadata.memoCount] > 0) // Filter memo_count > 0
+            .filter(txOutputsView[UserMetadata.memo].like("%\(searchTerm)%")) // Filter memo containing search term
+        
+        // Execute the query and collect results
+        var results: [(String, String)] = []
+        for row in try connection().prepare(query) {
+            let txidBlob = row[transactionsView[UserMetadata.txid]]
+            let txid = Data(blob: txidBlob).hexEncodedString()
+            let memo = row[txOutputsView[UserMetadata.memo]]
+            
+            print("__LD \(txid) \(memo)")
+            results.append((txid, memo))
+        }
+
+        return results
     }
     
     @DBActor
