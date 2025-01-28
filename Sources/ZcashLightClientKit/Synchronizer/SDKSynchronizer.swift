@@ -435,8 +435,8 @@ public class SDKSynchronizer: Synchronizer {
         return submitTransactions(transactions)
     }
 
-    public func queryMemosFor(searchTerm: String) async throws -> [(String, String)] {
-        try await transactionRepository.fetchFilteredMemos(searchTerm: searchTerm)
+    public func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
+        try await transactionRepository.fetchTxidsWithMemoContaining(searchTerm: searchTerm)
     }
     
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {

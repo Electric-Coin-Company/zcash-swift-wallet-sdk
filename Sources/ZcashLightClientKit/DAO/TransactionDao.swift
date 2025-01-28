@@ -46,33 +46,22 @@ class TransactionSQLDAO: TransactionRepository {
     func isInitialized() async throws -> Bool {
         true
     }
-    
-//    SELECT t2.txid, t2.memo
-//    FROM v_transactions t1
-//    JOIN v_tx_outputs t2 ON t1.txid = t2.txid
-//    WHERE t1.memo_count > 0
-//      AND t2.memo LIKE '%on ffi%';
 
     @DBActor
-    func fetchFilteredMemos(searchTerm: String) async throws -> [(String, String)] {
-        // Compose the query
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
         let query = transactionsView
-            .join(txOutputsView, on: transactionsView[UserMetadata.txid] == txOutputsView[UserMetadata.txid]) // Join on txid
-            .filter(transactionsView[UserMetadata.memoCount] > 0) // Filter memo_count > 0
-            .filter(txOutputsView[UserMetadata.memo].like("%\(searchTerm)%")) // Filter memo containing search term
-        
-        // Execute the query and collect results
-        var results: [(String, String)] = []
-        for row in try connection().prepare(query) {
-            let txidBlob = row[transactionsView[UserMetadata.txid]]
-            let txid = Data(blob: txidBlob).hexEncodedString()
-            let memo = row[txOutputsView[UserMetadata.memo]]
-            
-            print("__LD \(txid) \(memo)")
-            results.append((txid, memo))
-        }
+            .join(txOutputsView, on: transactionsView[UserMetadata.txid] == txOutputsView[UserMetadata.txid])
+            .filter(transactionsView[UserMetadata.memoCount] > 0)
+            .filter(txOutputsView[UserMetadata.memo].like("%\(searchTerm)%"))
 
-        return results
+        var txids: [Data] = []
+        for row in try connection().prepare(query) {
+            let txidBlob = try row.get(txOutputsView[UserMetadata.txid])
+            let txid = Data(blob: txidBlob)
+            txids.append(txid)
+        }
+        
+        return txids
     }
     
     @DBActor
