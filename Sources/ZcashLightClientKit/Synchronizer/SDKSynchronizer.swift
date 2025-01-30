@@ -379,6 +379,9 @@ public class SDKSynchronizer: Synchronizer {
         var iterator = transactions.makeIterator()
         var submitFailed = false
 
+        // let clients know the transaction repository changed
+        eventSubject.send(.foundTransactions(transactions, nil))
+        
         return AsyncThrowingStream() {
             guard let transaction = iterator.next() else { return nil }
 
