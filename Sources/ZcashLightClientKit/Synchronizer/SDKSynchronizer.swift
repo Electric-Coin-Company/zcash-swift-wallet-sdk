@@ -250,6 +250,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
+        guard !transactions.isEmpty else { return }
+        
         streamsUpdateQueue.async { [weak self] in
             self?.eventSubject.send(.foundTransactions(transactions, range))
         }
@@ -380,7 +382,9 @@ public class SDKSynchronizer: Synchronizer {
         var submitFailed = false
 
         // let clients know the transaction repository changed
-        eventSubject.send(.foundTransactions(transactions, nil))
+        if !transactions.isEmpty {
+            eventSubject.send(.foundTransactions(transactions, nil))
+        }
         
         return AsyncThrowingStream() {
             guard let transaction = iterator.next() else { return nil }
