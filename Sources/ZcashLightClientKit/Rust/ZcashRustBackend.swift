@@ -325,7 +325,48 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             count: Int(pcztPtr.pointee.len)
         )
     }
-    
+
+    @DBActor
+    func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+
+            return zcashlc_redact_pczt_for_signer(
+                bufferPtr,
+                UInt(pczt.count)
+            )
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustRedactPCZTForSigner(lastErrorMessage(fallback: "`redactPCZTForSigner` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return Pczt(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        )
+    }
+
+    @DBActor
+    func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
+        return pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                // Return `false` here so the caller proceeds to `addProofsToPCZT` and
+                // gets the same error.
+                return false
+            }
+
+            return zcashlc_pczt_requires_sapling_proofs(
+                bufferPtr,
+                UInt(pczt.count)
+            )
+        }
+    }
+
     @DBActor
     func addProofsToPCZT(
         pczt: Pczt

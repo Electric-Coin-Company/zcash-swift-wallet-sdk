@@ -209,6 +209,8 @@ public enum ZcashErrorCode: String {
     case rustUUIDAccountNotFound = "ZRUST0072"
     /// Error from rust layer when calling ZcashRustBackend.extractAndStoreTxFromPCZT
     case rustTxidPtrIncorrectLength = "ZRUST0073"
+    /// Error from rust layer when calling ZcashRustBackend.redactPCZTForSigner
+    case rustRedactPCZTForSigner = "ZRUST0074"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

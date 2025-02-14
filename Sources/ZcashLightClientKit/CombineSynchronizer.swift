@@ -96,6 +96,14 @@ public protocol CombineSynchronizer {
         proposal: Proposal
     ) -> SinglePublisher<Pczt, Error>
 
+    func redactPCZTForSigner(
+        pczt: Pczt
+    ) -> SinglePublisher<Pczt, Error>
+
+    func PCZTRequiresSaplingProofs(
+        pczt: Pczt
+    ) -> SinglePublisher<Bool, Never>
+
     func addProofsToPCZT(
         pczt: Pczt
     ) -> SinglePublisher<Pczt, Error>

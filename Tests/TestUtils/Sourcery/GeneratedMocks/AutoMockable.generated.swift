@@ -1596,6 +1596,50 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - redactPCZTForSigner
+
+    var redactPCZTForSignerPcztThrowableError: Error?
+    var redactPCZTForSignerPcztCallsCount = 0
+    var redactPCZTForSignerPcztCalled: Bool {
+        return redactPCZTForSignerPcztCallsCount > 0
+    }
+    var redactPCZTForSignerPcztReceivedPczt: Pczt?
+    var redactPCZTForSignerPcztReturnValue: Pczt!
+    var redactPCZTForSignerPcztClosure: ((Pczt) async throws -> Pczt)?
+
+    func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
+        if let error = redactPCZTForSignerPcztThrowableError {
+            throw error
+        }
+        redactPCZTForSignerPcztCallsCount += 1
+        redactPCZTForSignerPcztReceivedPczt = pczt
+        if let closure = redactPCZTForSignerPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return redactPCZTForSignerPcztReturnValue
+        }
+    }
+
+    // MARK: - PCZTRequiresSaplingProofs
+
+    var pcztRequiresSaplingProofsPcztCallsCount = 0
+    var pcztRequiresSaplingProofsPcztCalled: Bool {
+        return pcztRequiresSaplingProofsPcztCallsCount > 0
+    }
+    var pcztRequiresSaplingProofsPcztReceivedPczt: Pczt?
+    var pcztRequiresSaplingProofsPcztReturnValue: Bool!
+    var pcztRequiresSaplingProofsPcztClosure: ((Pczt) async -> Bool)?
+
+    func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
+        pcztRequiresSaplingProofsPcztCallsCount += 1
+        pcztRequiresSaplingProofsPcztReceivedPczt = pczt
+        if let closure = pcztRequiresSaplingProofsPcztClosure {
+            return await closure(pczt)
+        } else {
+            return pcztRequiresSaplingProofsPcztReturnValue
+        }
+    }
+
     // MARK: - addProofsToPCZT
 
     var addProofsToPCZTPcztThrowableError: Error?
@@ -3115,6 +3159,50 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(accountUUID, proposal)
         } else {
             return createPCZTFromProposalAccountUUIDProposalReturnValue
+        }
+    }
+
+    // MARK: - redactPCZTForSigner
+
+    var redactPCZTForSignerPcztThrowableError: Error?
+    var redactPCZTForSignerPcztCallsCount = 0
+    var redactPCZTForSignerPcztCalled: Bool {
+        return redactPCZTForSignerPcztCallsCount > 0
+    }
+    var redactPCZTForSignerPcztReceivedPczt: Pczt?
+    var redactPCZTForSignerPcztReturnValue: Pczt!
+    var redactPCZTForSignerPcztClosure: ((Pczt) async throws -> Pczt)?
+
+    func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
+        if let error = redactPCZTForSignerPcztThrowableError {
+            throw error
+        }
+        redactPCZTForSignerPcztCallsCount += 1
+        redactPCZTForSignerPcztReceivedPczt = pczt
+        if let closure = redactPCZTForSignerPcztClosure {
+            return try await closure(pczt)
+        } else {
+            return redactPCZTForSignerPcztReturnValue
+        }
+    }
+
+    // MARK: - PCZTRequiresSaplingProofs
+
+    var pcztRequiresSaplingProofsPcztCallsCount = 0
+    var pcztRequiresSaplingProofsPcztCalled: Bool {
+        return pcztRequiresSaplingProofsPcztCallsCount > 0
+    }
+    var pcztRequiresSaplingProofsPcztReceivedPczt: Pczt?
+    var pcztRequiresSaplingProofsPcztReturnValue: Bool!
+    var pcztRequiresSaplingProofsPcztClosure: ((Pczt) async -> Bool)?
+
+    func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
+        pcztRequiresSaplingProofsPcztCallsCount += 1
+        pcztRequiresSaplingProofsPcztReceivedPczt = pczt
+        if let closure = pcztRequiresSaplingProofsPcztClosure {
+            return await closure(pczt)
+        } else {
+            return pcztRequiresSaplingProofsPcztReturnValue
         }
     }
 
