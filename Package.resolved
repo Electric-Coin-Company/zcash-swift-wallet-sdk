@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/grpc/grpc-swift.git",
       "state" : {
-        "revision" : "07123ed731671e800ab8d641006613612e954746",
-        "version" : "1.23.1"
+        "revision" : "8c5e99d0255c373e0330730d191a3423c57373fb",
+        "version" : "1.24.2"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-extras.git",
       "state" : {
-        "revision" : "363da63c1966405764f380c627409b2f9d9e710b",
-        "version" : "1.21.0"
+        "revision" : "2e9746cfc57554f70b650b021b6ae4738abef3e6",
+        "version" : "1.24.1"
       }
     },
     {
@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Electric-Coin-Company/zcash-light-client-ffi",
       "state" : {
-        "revision" : "31a97a1478bc0354abdf208722b670f7fd3d9f8c",
-        "version" : "0.11.0"
+        "revision" : "11b0db058288b12ada9c5a95ed56f17f82d2868f",
+        "version" : "0.12.0"
       }
     }
   ],
