@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Updated
+- Methods returning an array of `ZcashTransaction.Overview` try to evaluate transaction's missing blockTime. This typically applies to an expired transaction.  
+
 # 2.2.8 - 2025-01-10
 
 ## Added

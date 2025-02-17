@@ -47,6 +47,26 @@ class TransactionSQLDAO: TransactionRepository {
         true
     }
 
+    func resolveMissingBlockTimes(for transactions: [ZcashTransaction.Overview]) async throws -> [ZcashTransaction.Overview] {
+        var transactionsCopy = transactions
+        
+        for i in 0..<transactions.count {
+            let transaction = transactions[i]
+            
+            guard transaction.blockTime == nil else {
+                continue
+            }
+            
+            if let expiryHeight = transaction.expiryHeight {
+                if let block = try await blockForHeight(expiryHeight) {
+                    transactionsCopy[i].blockTime = TimeInterval(block.time)
+                }
+            }
+        }
+        
+        return transactionsCopy
+    }
+    
     @DBActor
     func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
         let query = transactionsView
@@ -101,22 +121,9 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
-        var transactions: [ZcashTransaction.Overview] = try await execute(query) { try ZcashTransaction.Overview(row: $0) }
-        
-        // Enhance the timestamp for unmined & expired transactions
-        for i in 0..<transactions.count {
-            let transaction = transactions[i]
-            
-            if transaction.minedHeight == nil {
-                if let expiryHeight = transaction.expiryHeight {
-                    if let block = try await blockForHeight(expiryHeight) {
-                        transactions[i].blockTime = TimeInterval(block.time)
-                    }
-                }
-            }
-        }
-        
-        return transactions
+        let transactions: [ZcashTransaction.Overview] = try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+
+        return try await resolveMissingBlockTimes(for: transactions)
     }
 
     func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
