@@ -14,14 +14,22 @@ class TransactionSQLDAO: TransactionRepository {
         static let memo = SQLite.Expression<Blob>("memo")
     }
 
+    enum UserMetadata {
+        static let txid = SQLite.Expression<Blob>("txid")
+        static let memoCount = SQLite.Expression<Int>("memo_count")
+        static let memo = SQLite.Expression<String>("memo")
+    }
+
     let dbProvider: ConnectionProvider
     
+    private let blockDao: BlockSQLDAO
     private let transactionsView = View("v_transactions")
     private let txOutputsView = View("v_tx_outputs")
     private let traceClosure: ((String) -> Void)?
     
     init(dbProvider: ConnectionProvider, traceClosure: ((String) -> Void)? = nil) {
         self.dbProvider = dbProvider
+        self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
         self.traceClosure = traceClosure
     }
 
@@ -38,7 +46,49 @@ class TransactionSQLDAO: TransactionRepository {
     func isInitialized() async throws -> Bool {
         true
     }
+
+    func resolveMissingBlockTimes(for transactions: [ZcashTransaction.Overview]) async throws -> [ZcashTransaction.Overview] {
+        var transactionsCopy = transactions
+        
+        for i in 0..<transactions.count {
+            let transaction = transactions[i]
+            
+            guard transaction.blockTime == nil else {
+                continue
+            }
+            
+            if let expiryHeight = transaction.expiryHeight {
+                if let block = try await blockForHeight(expiryHeight) {
+                    transactionsCopy[i].blockTime = TimeInterval(block.time)
+                }
+            }
+        }
+        
+        return transactionsCopy
+    }
     
+    @DBActor
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
+        let query = transactionsView
+            .join(txOutputsView, on: transactionsView[UserMetadata.txid] == txOutputsView[UserMetadata.txid])
+            .filter(transactionsView[UserMetadata.memoCount] > 0)
+            .filter(txOutputsView[UserMetadata.memo].like("%\(searchTerm)%"))
+
+        var txids: [Data] = []
+        for row in try connection().prepare(query) {
+            let txidBlob = try row.get(txOutputsView[UserMetadata.txid])
+            let txid = Data(blob: txidBlob)
+            txids.append(txid)
+        }
+        
+        return txids
+    }
+    
+    @DBActor
+    func blockForHeight(_ height: BlockHeight) async throws -> Block? {
+        try blockDao.block(at: height)
+    }
+
     @DBActor
     func countAll() async throws -> Int {
         do {
@@ -71,7 +121,9 @@ class TransactionSQLDAO: TransactionRepository {
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
-        return try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+        let transactions: [ZcashTransaction.Overview] = try await execute(query) { try ZcashTransaction.Overview(row: $0) }
+
+        return try await resolveMissingBlockTimes(for: transactions)
     }
 
     func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
