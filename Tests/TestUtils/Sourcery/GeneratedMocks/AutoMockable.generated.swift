@@ -1903,6 +1903,30 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - fetchTxidsWithMemoContaining
+
+    var fetchTxidsWithMemoContainingSearchTermThrowableError: Error?
+    var fetchTxidsWithMemoContainingSearchTermCallsCount = 0
+    var fetchTxidsWithMemoContainingSearchTermCalled: Bool {
+        return fetchTxidsWithMemoContainingSearchTermCallsCount > 0
+    }
+    var fetchTxidsWithMemoContainingSearchTermReceivedSearchTerm: String?
+    var fetchTxidsWithMemoContainingSearchTermReturnValue: [Data]!
+    var fetchTxidsWithMemoContainingSearchTermClosure: ((String) async throws -> [Data])?
+
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
+        if let error = fetchTxidsWithMemoContainingSearchTermThrowableError {
+            throw error
+        }
+        fetchTxidsWithMemoContainingSearchTermCallsCount += 1
+        fetchTxidsWithMemoContainingSearchTermReceivedSearchTerm = searchTerm
+        if let closure = fetchTxidsWithMemoContainingSearchTermClosure {
+            return try await closure(searchTerm)
+        } else {
+            return fetchTxidsWithMemoContainingSearchTermReturnValue
+        }
+    }
+
     // MARK: - rewind
 
     var rewindCallsCount = 0
@@ -2088,6 +2112,30 @@ class TransactionRepositoryMock: TransactionRepository {
             return try await closure()
         } else {
             return isInitializedReturnValue
+        }
+    }
+
+    // MARK: - fetchTxidsWithMemoContaining
+
+    var fetchTxidsWithMemoContainingSearchTermThrowableError: Error?
+    var fetchTxidsWithMemoContainingSearchTermCallsCount = 0
+    var fetchTxidsWithMemoContainingSearchTermCalled: Bool {
+        return fetchTxidsWithMemoContainingSearchTermCallsCount > 0
+    }
+    var fetchTxidsWithMemoContainingSearchTermReceivedSearchTerm: String?
+    var fetchTxidsWithMemoContainingSearchTermReturnValue: [Data]!
+    var fetchTxidsWithMemoContainingSearchTermClosure: ((String) async throws -> [Data])?
+
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
+        if let error = fetchTxidsWithMemoContainingSearchTermThrowableError {
+            throw error
+        }
+        fetchTxidsWithMemoContainingSearchTermCallsCount += 1
+        fetchTxidsWithMemoContainingSearchTermReceivedSearchTerm = searchTerm
+        if let closure = fetchTxidsWithMemoContainingSearchTermClosure {
+            return try await closure(searchTerm)
+        } else {
+            return fetchTxidsWithMemoContainingSearchTermReturnValue
         }
     }
 
