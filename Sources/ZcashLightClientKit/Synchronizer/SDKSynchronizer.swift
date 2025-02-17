@@ -429,8 +429,13 @@ public class SDKSynchronizer: Synchronizer {
 
     public func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
         if await initializer.rustBackend.PCZTRequiresSaplingProofs(pczt: pczt) {
-            let saplingParametersHandler = initializer.container.resolve(SaplingParametersHandler.self)
-            try await saplingParametersHandler.handleIfNeeded()
+            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+                spendURL: initializer.spendParamsURL,
+                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+                outputURL: initializer.outputParamsURL,
+                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+                logger: logger
+            )
         }
 
         return try await initializer.rustBackend.addProofsToPCZT(
