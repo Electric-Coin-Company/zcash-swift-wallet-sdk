@@ -74,7 +74,7 @@ class ShieldFundsTests: ZcashTestCase {
     /// the transparent funds should be 10000 zatoshis both total and verified
     /// 9. shield the funds
     /// when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
-    /// now balance should be zero shielded, zero transaparent.
+    /// now balance should be zero shielded, zero transparent.
     /// 10. clear the UTXO from darksidewalletd's cache
     /// 11. stage the pending shielding transaction in darksidewalletd ad `utxoHeight + 12`
     /// 12. advance the chain tip to sync the now mined shielding transaction
@@ -240,7 +240,7 @@ class ShieldFundsTests: ZcashTestCase {
 
         let postShieldingBalance = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.unshielded ?? .zero
         // when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
-        // now balance should be zero shielded, zero transaparent.
+        // now balance should be zero shielded, zero transparent.
         // verify that the balance has been marked as spent regardless of confirmation
         // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
         XCTAssertEqual(postShieldingBalance, Zatoshi(10000))
