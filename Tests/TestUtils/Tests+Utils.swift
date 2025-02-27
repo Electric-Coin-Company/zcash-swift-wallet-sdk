@@ -50,7 +50,7 @@ enum LightWalletEndpointBuilder {
     }
     
     static var publicTestnet: LightWalletEndpoint {
-        LightWalletEndpoint(address: "testnet.lightwalletd.com", port: 9067, secure: true)
+        LightWalletEndpoint(address: "testnet.zec.rocks", port: 443, secure: true)
     }
     
     static var eccTestnet: LightWalletEndpoint {
