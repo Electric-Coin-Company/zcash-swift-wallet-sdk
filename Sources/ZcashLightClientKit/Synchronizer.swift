@@ -72,7 +72,7 @@ public enum SynchronizerEvent {
     case minedTransaction(ZcashTransaction.Overview)
 
     // Sent when the synchronizer finds a mined transaction
-    case foundTransactions(_ transactions: [ZcashTransaction.Overview], _ inRange: CompactBlockRange)
+    case foundTransactions(_ transactions: [ZcashTransaction.Overview], _ inRange: CompactBlockRange?)
     // Sent when the synchronizer fetched utxos from lightwalletd attempted to store them.
     case storedUTXOs(_ inserted: [UnspentTransactionOutputEntity], _ skipped: [UnspentTransactionOutputEntity])
     // Connection state to LightwalletEndpoint changed.
@@ -355,6 +355,8 @@ public protocol Synchronizer: AnyObject {
         keySource: String?
     ) async throws -> AccountUUID
     
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data]
+
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant

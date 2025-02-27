@@ -9,7 +9,7 @@ import Foundation
 import SQLite
 
 public enum ZcashTransaction {
-    public struct Overview {
+    public struct Overview: Equatable, Identifiable {
         /// Represents the transaction state based on current height of the chain,
         /// mined height and expiry height of a transaction.
         public enum State {
@@ -43,9 +43,11 @@ public enum ZcashTransaction {
                 }
             }
         }
+        
+        public var id: Data { rawID }
 
         public let accountUUID: AccountUUID
-        public let blockTime: TimeInterval?
+        public var blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
         public let index: Int?
@@ -62,8 +64,8 @@ public enum ZcashTransaction {
         public let isExpiredUmined: Bool?
     }
 
-    public struct Output {
-        public enum Pool {
+    public struct Output: Equatable, Identifiable {
+        public enum Pool: Equatable {
             case transaparent
             case sapling
             case orchard
@@ -82,6 +84,8 @@ public enum ZcashTransaction {
             }
         }
 
+        public var id: Data { rawID }
+
         public let rawID: Data
         public let pool: Pool
         public let index: Int
@@ -93,7 +97,7 @@ public enum ZcashTransaction {
     }
 
     /// Used when fetching blocks from the lightwalletd
-    struct Fetched {
+    struct Fetched: Equatable {
         public let rawID: Data
         public let minedHeight: UInt32?
         public let raw: Data

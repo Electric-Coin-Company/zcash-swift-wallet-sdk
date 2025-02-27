@@ -12,6 +12,7 @@ protocol TransactionRepository {
     func countAll() async throws -> Int
     func countUnmined() async throws -> Int
     func isInitialized() async throws -> Bool
+    func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data]
     func find(rawID: Data) async throws -> ZcashTransaction.Overview
     func find(offset: Int, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview]
     func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview]

@@ -10,6 +10,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SDKSynchronizer.redactPCZTForSigner`: Decrease the size of a PCZT for sending to a signer.
 - `SDKSynchronizer.PCZTRequiresSaplingProofs`: Check whether the Sapling parameters are required for a given PCZT.
 
+## Updated
+- Methods returning an array of `ZcashTransaction.Overview` try to evaluate transaction's missing blockTime. This typically applies to an expired transaction.  
+
 # 2.2.8 - 2025-01-10
 
 ## Added

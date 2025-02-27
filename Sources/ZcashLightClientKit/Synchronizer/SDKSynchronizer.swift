@@ -250,6 +250,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
+        guard !transactions.isEmpty else { return }
+        
         streamsUpdateQueue.async { [weak self] in
             self?.eventSubject.send(.foundTransactions(transactions, range))
         }
@@ -379,6 +381,11 @@ public class SDKSynchronizer: Synchronizer {
         var iterator = transactions.makeIterator()
         var submitFailed = false
 
+        // let clients know the transaction repository changed
+        if !transactions.isEmpty {
+            eventSubject.send(.foundTransactions(transactions, nil))
+        }
+        
         return AsyncThrowingStream() {
             guard let transaction = iterator.next() else { return nil }
 
@@ -447,6 +454,10 @@ public class SDKSynchronizer: Synchronizer {
         return submitTransactions(transactions)
     }
 
+    public func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data] {
+        try await transactionRepository.fetchTxidsWithMemoContaining(searchTerm: searchTerm)
+    }
+    
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
