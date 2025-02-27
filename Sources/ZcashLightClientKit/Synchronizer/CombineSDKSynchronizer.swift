@@ -134,6 +134,22 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func redactPCZTForSigner(
+        pczt: Pczt
+    ) -> SinglePublisher<Pczt, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.redactPCZTForSigner(pczt: pczt)
+        }
+    }
+
+    public func PCZTRequiresSaplingProofs(
+        pczt: Pczt
+    ) -> SinglePublisher<Bool, Never> {
+        AsyncToCombineGateway.executeAction() {
+            await self.synchronizer.PCZTRequiresSaplingProofs(pczt: pczt)
+        }
+    }
+
     public func addProofsToPCZT(
         pczt: Pczt
     ) -> SinglePublisher<Pczt, Error> {

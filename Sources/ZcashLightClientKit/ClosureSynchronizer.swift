@@ -100,7 +100,17 @@ public protocol ClosureSynchronizer {
         proposal: Proposal,
         completion: @escaping (Result<Pczt, Error>) -> Void
     )
-    
+
+    func redactPCZTForSigner(
+        pczt: Pczt,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    )
+
+    func PCZTRequiresSaplingProofs(
+        pczt: Pczt,
+        completion: @escaping (Bool) -> Void
+    )
+
     func addProofsToPCZT(
         pczt: Pczt,
         completion: @escaping (Result<Pczt, Error>) -> Void

@@ -3,7 +3,7 @@
 scriptDir=${0:a:h}
 cd "${scriptDir}"
 
-sourcery_version=2.2.5
+sourcery_version=2.2.6
 
 if which sourcery >/dev/null; then
     if [[ $(sourcery --version) != $sourcery_version ]]; then

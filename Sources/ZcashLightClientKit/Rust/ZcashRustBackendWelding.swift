@@ -303,7 +303,23 @@ protocol ZcashRustBackendWelding {
     ///
     /// - Throws rustCreatePCZTFromProposal as a common indicator of the operation failure
     func createPCZTFromProposal(accountUUID: AccountUUID, proposal: FfiProposal) async throws -> Pczt
-    
+
+    /// Redacts information from the given PCZT that is unnecessary for the Signer role.
+    ///
+    /// - Parameter pczt: The partially created transaction in its serialized format.
+    ///
+    /// - Returns The updated PCZT in its serialized format.
+    ///
+    /// - Throws  rustRedactPCZTForSigner as a common indicator of the operation failure
+    func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt
+
+    /// Checks whether the caller needs to have downloaded the Sapling parameters.
+    ///
+    /// - Parameter pczt: The partially created transaction in its serialized format.
+    ///
+    /// - Returns `true` if this PCZT requires Sapling proofs.
+    func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool
+
     /// Adds proofs to the given PCZT.
     ///
     /// - Parameter pczt: The partially created transaction in its serialized format.

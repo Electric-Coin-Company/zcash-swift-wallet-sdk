@@ -155,6 +155,24 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func redactPCZTForSigner(
+        pczt: Pczt,
+        completion: @escaping (Result<Pczt, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.redactPCZTForSigner(pczt: pczt)
+        }
+    }
+
+    public func PCZTRequiresSaplingProofs(
+        pczt: Pczt,
+        completion: @escaping (Bool) -> Void
+    ) {
+        AsyncToClosureGateway.executeAction(completion) {
+            await self.synchronizer.PCZTRequiresSaplingProofs(pczt: pczt)
+        }
+    }
+
     public func addProofsToPCZT(
         pczt: Pczt,
         completion: @escaping (Result<Pczt, Error>) -> Void

@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -209,6 +209,20 @@ public enum ZcashErrorCode: String {
     case rustUUIDAccountNotFound = "ZRUST0072"
     /// Error from rust layer when calling ZcashRustBackend.extractAndStoreTxFromPCZT
     case rustTxidPtrIncorrectLength = "ZRUST0073"
+    /// Error from rust layer when calling ZcashRustBackend.redactPCZTForSigner
+    case rustRedactPCZTForSigner = "ZRUST0074"
+    /// Error from rust layer when calling AccountMetadatKey.init with a seed.
+    case rustDeriveAccountMetadataKey = "ZRUST0075"
+    /// Error from rust layer when calling AccountMetadatKey.derivePrivateUseMetadataKey
+    case rustDerivePrivateUseMetadataKey = "ZRUST0076"
+    /// Error from rust layer when calling TorClient.isolatedClient
+    case rustTorIsolatedClient = "ZRUST0077"
+    /// Error from rust layer when calling TorClient.connectToLightwalletd
+    case rustTorConnectToLightwalletd = "ZRUST0078"
+    /// Error from rust layer when calling TorLwdConn.fetchTransaction
+    case rustTorLwdFetchTransaction = "ZRUST0079"
+    /// Error from rust layer when calling TorLwdConn.submit
+    case rustTorLwdSubmit = "ZRUST0080"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
