@@ -157,14 +157,14 @@ public class TorLwdConn {
 
         var height: UInt64 = 0
 
-        let txPtr = zcashlc_tor_lwd_conn_fetch_transaction(
-            conn, txId.bytes)
+        let txPtr = zcashlc_tor_lwd_conn_fetch_transaction(conn, txId.bytes, &height)
 
         guard let txPtr else {
             throw ZcashError.rustTorLwdFetchTransaction(
                 lastErrorMessage(
                     fallback:
-                        "`TorLwdConn.fetchTransaction` failed with unknown error")
+                        "`TorLwdConn.fetchTransaction` failed with unknown error"
+                )
             )
         }
 
