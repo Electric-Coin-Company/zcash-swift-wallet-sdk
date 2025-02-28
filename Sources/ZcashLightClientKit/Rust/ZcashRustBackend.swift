@@ -1225,7 +1225,8 @@ extension FfiAccount {
                 name: account_name != nil ? String(cString: account_name) : nil,
                 keySource: key_source != nil ? String(cString: key_source) : nil,
                 seedFingerprint: nil,
-                hdAccountIndex: nil
+                hdAccountIndex: nil,
+                ufvk: nil
             )
         }
         
@@ -1235,7 +1236,8 @@ extension FfiAccount {
             name: account_name != nil ? String(cString: account_name) : nil,
             keySource: key_source != nil ? String(cString: key_source) : nil,
             seedFingerprint: seedFingerprintArray,
-            hdAccountIndex: Zip32AccountIndex(hd_account_index)
+            hdAccountIndex: Zip32AccountIndex(hd_account_index),
+            ufvk: ufvk != nil ? String(cString: ufvk) : nil
         )
     }
 }
