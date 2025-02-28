@@ -158,7 +158,7 @@ public class TorLwdConn {
         var height: UInt64 = 0
 
         let txPtr = zcashlc_tor_lwd_conn_fetch_transaction(
-            conn, txId.bytes, &height)
+            conn, txId.bytes)
 
         guard let txPtr else {
             throw ZcashError.rustTorLwdFetchTransaction(
