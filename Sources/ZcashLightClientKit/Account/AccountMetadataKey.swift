@@ -14,7 +14,7 @@ public class AccountMetadataKey {
     private let networkType: NetworkType
 
     /// Derives a ZIP 325 Account Metadata Key from the given seed.
-    init(
+    public init(
         from seed: [UInt8],
         accountIndex: Zip32AccountIndex,
         networkType: NetworkType
