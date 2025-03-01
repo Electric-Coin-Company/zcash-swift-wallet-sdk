@@ -22,7 +22,7 @@ class Zip325Tests: XCTestCase {
         """
     )
 
-    func testInherentKeyDerivation() async throws {
+    func testInherentKeyDerivation() throws {
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0325.py
         let tvs = [
             "d88239020bcc64d08282cd3d242cc12be207eb7154b1065fbeaf262dc4cbc94f",
@@ -32,8 +32,8 @@ class Zip325Tests: XCTestCase {
         ]
 
         for account in 0..<4 {
-            let accountMetadataKey = try await AccountMetadataKey(from: seedBytes, accountIndex: Zip32AccountIndex(UInt32(account)), networkType: .mainnet)
-            let keys = try await accountMetadataKey.derivePrivateUseMetadataKey(ufvk: nil, privateUseSubject: privateUseSubject)
+            let accountMetadataKey = try AccountMetadataKey(from: seedBytes, accountIndex: Zip32AccountIndex(UInt32(account)), networkType: .mainnet)
+            let keys = try accountMetadataKey.derivePrivateUseMetadataKey(ufvk: nil, privateUseSubject: privateUseSubject)
 
             // Inherent metadata keys are unique per account.
             XCTAssertEqual(keys.count, 1)
@@ -41,7 +41,7 @@ class Zip325Tests: XCTestCase {
         }
     }
 
-    func testImportedUFVKKeyDerivation() async throws {
+    func testImportedUFVKKeyDerivation() throws {
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0325.py
         let tvs = [
             [
@@ -67,8 +67,8 @@ class Zip325Tests: XCTestCase {
         ]
 
         for account in 0..<1 {
-            let accountMetadataKey = try await AccountMetadataKey(from: seedBytes, accountIndex: Zip32AccountIndex(UInt32(account)), networkType: .mainnet)
-            let keys = try await accountMetadataKey.derivePrivateUseMetadataKey(ufvk: ufvk.stringEncoded, privateUseSubject: privateUseSubject)
+            let accountMetadataKey = try AccountMetadataKey(from: seedBytes, accountIndex: Zip32AccountIndex(UInt32(account)), networkType: .mainnet)
+            let keys = try accountMetadataKey.derivePrivateUseMetadataKey(ufvk: ufvk.stringEncoded, privateUseSubject: privateUseSubject)
 
             // UFVK has Orchard, transparent, and unknown FVK items.
             XCTAssertEqual(keys.count, 3)

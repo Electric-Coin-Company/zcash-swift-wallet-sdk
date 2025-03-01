@@ -50,7 +50,9 @@ class TestsData {
             receivedNoteCount: 0,
             sentNoteCount: 0,
             value: Zatoshi(10),
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }()
 
@@ -70,7 +72,9 @@ class TestsData {
             receivedNoteCount: 0,
             sentNoteCount: 0,
             value: Zatoshi(100),
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }()
 
@@ -90,7 +94,9 @@ class TestsData {
             receivedNoteCount: 0,
             sentNoteCount: 2,
             value: .zero,
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }()
 
@@ -110,7 +116,9 @@ class TestsData {
             receivedNoteCount: 0,
             sentNoteCount: 2,
             value: .zero,
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }()
 

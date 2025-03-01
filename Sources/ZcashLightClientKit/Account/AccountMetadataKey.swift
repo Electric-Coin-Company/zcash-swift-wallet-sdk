@@ -18,7 +18,7 @@ public class AccountMetadataKey {
         from seed: [UInt8],
         accountIndex: Zip32AccountIndex,
         networkType: NetworkType
-    ) async throws {
+    ) throws {
         let accountMetadataKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_account_metadata_key(
                 seedBufferPtr.baseAddress,
@@ -62,7 +62,7 @@ public class AccountMetadataKey {
     public func derivePrivateUseMetadataKey(
         ufvk: String?,
         privateUseSubject: [UInt8]
-    ) async throws -> [Data] {
+    ) throws -> [Data] {
         var kSource: [CChar]?
         if let ufvk {
             kSource = [CChar](ufvk.utf8CString)
