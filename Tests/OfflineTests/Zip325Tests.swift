@@ -68,7 +68,7 @@ class Zip325Tests: XCTestCase {
 
         for account in 0..<1 {
             let accountMetadataKey = try AccountMetadataKey(from: seedBytes, accountIndex: Zip32AccountIndex(UInt32(account)), networkType: .mainnet)
-            let keys = try accountMetadataKey.derivePrivateUseMetadataKey(ufvk: ufvk.stringEncoded, privateUseSubject: privateUseSubject)
+            let keys = try accountMetadataKey.derivePrivateUseMetadataKey(ufvk: ufvk, privateUseSubject: privateUseSubject)
 
             // UFVK has Orchard, transparent, and unknown FVK items.
             XCTAssertEqual(keys.count, 3)
