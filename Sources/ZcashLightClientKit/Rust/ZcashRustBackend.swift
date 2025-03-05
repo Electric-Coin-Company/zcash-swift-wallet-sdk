@@ -1230,13 +1230,8 @@ extension FfiAccount {
             )
         }
         
-        let ufvkTyped: UnifiedFullViewingKey?
-        if let ufvk {
-            ufvkTyped = UnifiedFullViewingKey(validatedEncoding: String(cString: ufvk))
-        } else {
-            ufvkTyped = nil
-        }
-        
+        let ufvkTyped = ufvk.map { UnifiedFullViewingKey(validatedEncoding: String(cString: $0)) }
+
         // Valid ZIP32 account index
         return .init(
             id: AccountUUID(id: uuidArray),
