@@ -325,7 +325,48 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             count: Int(pcztPtr.pointee.len)
         )
     }
-    
+
+    @DBActor
+    func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
+        let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return nil
+            }
+
+            return zcashlc_redact_pczt_for_signer(
+                bufferPtr,
+                UInt(pczt.count)
+            )
+        }
+
+        guard let pcztPtr else {
+            throw ZcashError.rustRedactPCZTForSigner(lastErrorMessage(fallback: "`redactPCZTForSigner` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(pcztPtr) }
+
+        return Pczt(
+            bytes: pcztPtr.pointee.ptr,
+            count: Int(pcztPtr.pointee.len)
+        )
+    }
+
+    @DBActor
+    func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
+        return pczt.withUnsafeBytes { buffer in
+            guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                // Return `false` here so the caller proceeds to `addProofsToPCZT` and
+                // gets the same error.
+                return false
+            }
+
+            return zcashlc_pczt_requires_sapling_proofs(
+                bufferPtr,
+                UInt(pczt.count)
+            )
+        }
+    }
+
     @DBActor
     func addProofsToPCZT(
         pczt: Pczt
@@ -1184,17 +1225,21 @@ extension FfiAccount {
                 name: account_name != nil ? String(cString: account_name) : nil,
                 keySource: key_source != nil ? String(cString: key_source) : nil,
                 seedFingerprint: nil,
-                hdAccountIndex: nil
+                hdAccountIndex: nil,
+                ufvk: nil
             )
         }
         
+        let ufvkTyped = ufvk.map { UnifiedFullViewingKey(validatedEncoding: String(cString: $0)) }
+
         // Valid ZIP32 account index
         return .init(
             id: AccountUUID(id: uuidArray),
             name: account_name != nil ? String(cString: account_name) : nil,
             keySource: key_source != nil ? String(cString: key_source) : nil,
             seedFingerprint: seedFingerprintArray,
-            hdAccountIndex: Zip32AccountIndex(hd_account_index)
+            hdAccountIndex: Zip32AccountIndex(hd_account_index),
+            ufvk: ufvkTyped
         )
     }
 }

@@ -40,6 +40,11 @@ public struct LightWalletEndpoint {
         self.singleCallTimeoutInMillis = singleCallTimeoutInMillis
         self.streamingCallTimeoutInMillis = streamingCallTimeoutInMillis
     }
+
+    var urlString: String {
+        return String(
+            format: "%@://%@:%d", secure ? "https" : "http", host, port)
+    }
 }
 
 /// This contains URLs from which can the SDK fetch files that contain sapling parameters.

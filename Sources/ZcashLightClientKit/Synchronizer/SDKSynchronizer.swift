@@ -414,7 +414,19 @@ public class SDKSynchronizer: Synchronizer {
             proposal: proposal.inner
         )
     }
-    
+
+    public func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
+        try await initializer.rustBackend.redactPCZTForSigner(
+            pczt: pczt
+        )
+    }
+
+    public func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
+        await initializer.rustBackend.PCZTRequiresSaplingProofs(
+            pczt: pczt
+        )
+    }
+
     public func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
         try await initializer.rustBackend.addProofsToPCZT(
             pczt: pczt

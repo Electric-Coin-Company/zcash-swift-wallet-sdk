@@ -16,6 +16,7 @@ public struct Account: Equatable, Hashable, Codable, Identifiable {
     public let keySource: String?
     public let seedFingerprint: [UInt8]?
     public let hdAccountIndex: Zip32AccountIndex?
+    public let ufvk: UnifiedFullViewingKey?
 }
 
 public struct UnifiedSpendingKey: Equatable, Undescribable {
@@ -50,7 +51,7 @@ public struct TransparentAccountPrivKey: Equatable, Undescribable {
 }
 
 /// A ZIP 316 Unified Full Viewing Key.
-public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
+public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable, Hashable, Codable {
     let encoding: String
 
     public var stringEncoded: String { encoding }
