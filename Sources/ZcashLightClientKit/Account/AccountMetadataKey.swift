@@ -14,11 +14,11 @@ public class AccountMetadataKey {
     private let networkType: NetworkType
 
     /// Derives a ZIP 325 Account Metadata Key from the given seed.
-    init(
+    public init(
         from seed: [UInt8],
         accountIndex: Zip32AccountIndex,
         networkType: NetworkType
-    ) async throws {
+    ) throws {
         let accountMetadataKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_account_metadata_key(
                 seedBufferPtr.baseAddress,
@@ -60,12 +60,12 @@ public class AccountMetadataKey {
     ///   until metadata can be recovered, and then the metadata should be re-encrypted
     ///   under the first key.
     public func derivePrivateUseMetadataKey(
-        ufvk: String?,
+        ufvk: UnifiedFullViewingKey?,
         privateUseSubject: [UInt8]
-    ) async throws -> [Data] {
+    ) throws -> [Data] {
         var kSource: [CChar]?
         if let ufvk {
-            kSource = [CChar](ufvk.utf8CString)
+            kSource = [CChar](ufvk.stringEncoded.utf8CString)
         }
 
         let keysPtr = privateUseSubject.withUnsafeBufferPointer { privateUseSubjectBufferPtr in

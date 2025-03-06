@@ -428,7 +428,19 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func addProofsToPCZT(pczt: Pczt) async throws -> Pczt {
-        try await initializer.rustBackend.addProofsToPCZT(
+        // TODO [#1724]: zcash_client_backend: Make Sapling parameters optional for extract_and_store_transaction
+        // TODO [#1724]: https://github.com/zcash/librustzcash/issues/1724
+//        if await initializer.rustBackend.PCZTRequiresSaplingProofs(pczt: pczt) {
+            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+                spendURL: initializer.spendParamsURL,
+                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+                outputURL: initializer.outputParamsURL,
+                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+                logger: logger
+            )
+//        }
+
+        return try await initializer.rustBackend.addProofsToPCZT(
             pczt: pczt
         )
     }

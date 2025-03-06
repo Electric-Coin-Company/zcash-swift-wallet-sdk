@@ -62,6 +62,8 @@ public enum ZcashTransaction {
         public let sentNoteCount: Int
         public let value: Zatoshi
         public let isExpiredUmined: Bool?
+        public let totalSpent: Zatoshi?
+        public let totalReceived: Zatoshi?
     }
 
     public struct Output: Equatable, Identifiable {
@@ -169,6 +171,8 @@ extension ZcashTransaction.Overview {
         static let memoCount = SQLite.Expression<Int>("memo_count")
         static let blockTime = SQLite.Expression<Int64?>("block_time")
         static let expiredUnmined = SQLite.Expression<Bool?>("expired_unmined")
+        static let totalSpent = SQLite.Expression<Int64?>("total_spent")
+        static let totalReceived = SQLite.Expression<Int64?>("total_received")
     }
 
     init(row: Row) throws {
@@ -196,6 +200,18 @@ extension ZcashTransaction.Overview {
                 self.fee = Zatoshi(fee)
             } else {
                 self.fee = nil
+            }
+
+            if let totalSpent = try row.get(Column.totalSpent) {
+                self.totalSpent = Zatoshi(totalSpent)
+            } else {
+                self.totalSpent = nil
+            }
+
+            if let totalReceived = try row.get(Column.totalReceived) {
+                self.totalReceived = Zatoshi(totalReceived)
+            } else {
+                self.totalReceived = nil
             }
 
             if let raw = try row.get(Column.raw) {

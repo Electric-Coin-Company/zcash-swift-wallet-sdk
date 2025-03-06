@@ -153,7 +153,9 @@ extension MockTransactionRepository: TransactionRepository {
             receivedNoteCount: 0,
             sentNoteCount: 1,
             value: Zatoshi(-Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }
 
@@ -173,7 +175,9 @@ extension MockTransactionRepository: TransactionRepository {
             receivedNoteCount: 1,
             sentNoteCount: 0,
             value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
-            isExpiredUmined: false
+            isExpiredUmined: false,
+            totalSpent: nil,
+            totalReceived: nil
         )
     }
 

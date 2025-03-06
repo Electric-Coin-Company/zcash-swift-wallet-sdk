@@ -124,8 +124,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     // swiftlint:disable:next function_parameter_count
-    @DBActor
-    func importAccount(
+    @DBActor func importAccount(
         ufvk: String,
         seedFingerprint: [UInt8]?,
         zip32AccountIndex: Zip32AccountIndex?,
@@ -326,7 +325,6 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
 
-    @DBActor
     func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt {
         let pcztPtr: UnsafeMutablePointer<FfiBoxedSlice>? = pczt.withUnsafeBytes { buffer in
             guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
@@ -351,7 +349,6 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
 
-    @DBActor
     func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool {
         return pczt.withUnsafeBytes { buffer in
             guard let bufferPtr = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
@@ -367,7 +364,6 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    @DBActor
     func addProofsToPCZT(
         pczt: Pczt
     ) async throws -> Pczt {
