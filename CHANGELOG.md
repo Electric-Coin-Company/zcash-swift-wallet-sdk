@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.9 - 2025-03-06
+
 ## Added
 - `SDKSynchronizer.redactPCZTForSigner`: Decrease the size of a PCZT for sending to a signer.
 - `SDKSynchronizer.PCZTRequiresSaplingProofs`: Check whether the Sapling parameters are required for a given PCZT.
