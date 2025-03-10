@@ -176,8 +176,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Electric-Coin-Company/zcash-light-client-ffi",
       "state" : {
-        "revision" : "a2e08b26000cba7c65c69f078b32db327e13bec7",
-        "version" : "0.13.0"
+        "branch" : "feature/transparent_gap_limit_handling",
+        "revision" : "04655237d272585dad9c2121ff9451e11204c545"
       }
     }
   ],
