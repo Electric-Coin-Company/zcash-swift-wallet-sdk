@@ -1001,7 +1001,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         defer { zcashlc_free_boxed_slice(proposal) }
         
         guard proposal.pointee.ptr != nil else {
-            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "Failed with nil pointer."))
+            return nil
         }
         
         return try FfiProposal(serializedBytes: Data(
