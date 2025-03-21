@@ -6,6 +6,10 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+- Adopted `zcashlc_fix_witnesses` for the note commitment tree fix.
+- Transparent gap limit handling. SDK can find all transparent funds and shield them. This has been tested to successfully recover Ledger funds.
+
 # 2.2.9 - 2025-03-06
 
 ## Added

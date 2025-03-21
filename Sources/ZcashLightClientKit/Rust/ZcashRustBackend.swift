@@ -1130,6 +1130,11 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             transactionStatus
         )
     }
+    
+    @DBActor
+    func fixWitnesses() async {
+        zcashlc_fix_witnesses(dbData.0, dbData.1, networkType.networkId)
+    }
 }
 
 private extension ZcashRustBackend {
