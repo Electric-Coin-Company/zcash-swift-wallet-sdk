@@ -3425,4 +3425,17 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         try await setTransactionStatusTxIdStatusClosure!(txId, status)
     }
 
+    // MARK: - fixWitnesses
+
+    var fixWitnessesCallsCount = 0
+    var fixWitnessesCalled: Bool {
+        return fixWitnessesCallsCount > 0
+    }
+    var fixWitnessesClosure: (() async -> Void)?
+
+    func fixWitnesses() async {
+        fixWitnessesCallsCount += 1
+        await fixWitnessesClosure!()
+    }
+
 }
