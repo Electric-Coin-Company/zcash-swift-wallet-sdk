@@ -379,4 +379,8 @@ protocol ZcashRustBackendWelding {
     /// scanning; as a consequence, the wallet must actively query to determine whether such
     /// transactions have been mined.
     func setTransactionStatus(txId: Data, status: TransactionStatus) async throws
+    
+    /// Fix witnesses - addressing note commitment tree bug.
+    /// This function is supposed to be called occasionaly. It's handled by the SDK Synchronizer and called only once per version.
+    func fixWitnesses() async
 }

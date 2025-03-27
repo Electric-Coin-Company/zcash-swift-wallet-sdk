@@ -12,6 +12,10 @@ import Combine
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+    private enum Constants {
+        static let fixWitnessesLastVersionCall = "ud_fixWitnessesLastVersionCall"
+    }
+    
     public var alias: ZcashSynchronizerAlias { initializer.alias }
 
     private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
@@ -150,6 +154,8 @@ public class SDKSynchronizer: Synchronizer {
         
         await updateStatus(.disconnected, updateExternalStatus: false)
 
+        await resolveWitnessesFix()
+        
         return .success
     }
 
@@ -187,6 +193,24 @@ public class SDKSynchronizer: Synchronizer {
 
             await blockProcessor.stop()
         }
+    }
+
+    // MARK: Witnesses Fix
+    
+    private func resolveWitnessesFix() async {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        
+        guard let lastVersionCall = UserDefaults.standard.object(forKey: Constants.fixWitnessesLastVersionCall) as? String else {
+            UserDefaults.standard.set(appVersion, forKey: Constants.fixWitnessesLastVersionCall)
+            await initializer.rustBackend.fixWitnesses()
+            return
+        }
+        
+        guard lastVersionCall < appVersion else {
+            return
+        }
+
+        await initializer.rustBackend.fixWitnesses()
     }
 
     // MARK: Connectivity State

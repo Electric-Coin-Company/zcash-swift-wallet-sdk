@@ -46,7 +46,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
         var utxos: [UnspentTransactionOutputEntity] = []
         let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddresses: tAddresses.map { $0.stringEncoded },
-            startHeight: await config.walletBirthdayProvider()
+            startHeight: BlockHeight(0)
         )
 
         do {
