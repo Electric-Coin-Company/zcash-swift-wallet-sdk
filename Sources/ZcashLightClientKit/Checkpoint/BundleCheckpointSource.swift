@@ -67,7 +67,7 @@ struct BundleCheckpointSource: CheckpointSource {
         ) else {
             return saplingActivationHeight
         }
-        
+
         // loaded checkpoint is exactly the one
         var hoursApart = (TimeInterval(loadedCheckpoint.time) - date.timeIntervalSince1970) / 3600
         if hoursApart < 0 && abs(hoursApart) < avgIntervalTime {
@@ -76,6 +76,7 @@ struct BundleCheckpointSource: CheckpointSource {
         
         if hoursApart < 0 {
             // loaded checkpoint is lower, increase until reached the one
+            var closestHeight = loadedCheckpoint.height
             while abs(hoursApart) > avgIntervalTime {
                 heightToLookAround += blockInterval
                 
@@ -86,14 +87,18 @@ struct BundleCheckpointSource: CheckpointSource {
                     hoursApart = (TimeInterval(loadedCheckpoint.time) - date.timeIntervalSince1970) / 3600
                     if hoursApart < 0 && abs(hoursApart) < avgIntervalTime {
                         return loadedCheckpoint.height
+                    } else if hoursApart >= 0 {
+                        return closestHeight
                     }
+
+                    closestHeight = loadedCheckpoint.height
                 } else {
                     return saplingActivationHeight
                 }
             }
         } else {
             // loaded checkpoint is higher, descrease until reached the one
-            while hoursApart > 0 || abs(hoursApart) > avgIntervalTime {
+            while hoursApart > 0 {
                 heightToLookAround -= blockInterval
                 
                 if let loadedCheckpoint = Checkpoint.birthday(
@@ -101,7 +106,7 @@ struct BundleCheckpointSource: CheckpointSource {
                     checkpointDirectory: BundleCheckpointURLProvider.default.url(self.network)
                 ) {
                     hoursApart = (TimeInterval(loadedCheckpoint.time) - date.timeIntervalSince1970) / 3600
-                    if hoursApart < 0 && abs(hoursApart) < avgIntervalTime {
+                    if hoursApart < 0 {
                         return loadedCheckpoint.height
                     }
                 } else {
