@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.estimateBirthdayHeight(for date: Date)`: Get an estimated height for a given date, typically used for estimating birthday.
+
 ## Fixed
 - `transparent_gap_limit_handling` migration, whereby wallets having received transparent outputs at child indices below the index of the default address could cause the migration to fail.
 
