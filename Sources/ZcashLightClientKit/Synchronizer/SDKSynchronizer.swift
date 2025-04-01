@@ -866,6 +866,10 @@ public class SDKSynchronizer: Synchronizer {
         return finalResult
     }
     
+    public func estimateBirthdayHeight(for date: Date) -> BlockHeight {
+        initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {

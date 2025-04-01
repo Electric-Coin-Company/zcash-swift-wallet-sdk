@@ -31,4 +31,8 @@ protocol CheckpointSource {
     /// - Note: When the user knows the exact height of the first received funds for a wallet,
     /// the effective birthday of that wallet is `transaction.height - 1`.
     func birthday(for height: BlockHeight) -> Checkpoint
+    
+    /// Takes a given date and finds out the closes checkpoint's height for it.
+    /// Each checkpoint has a timestamp stored so it can be used for the calculations.
+    func estimateBirthdayHeight(for date: Date) -> BlockHeight
 }
