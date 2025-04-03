@@ -256,6 +256,11 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         synchronizer.refreshExchangeRateUSD()
     }
 
+    public func estimateBirthdayHeight(for date: Date, completion: @escaping (BlockHeight) -> Void) {
+        let height = synchronizer.estimateBirthdayHeight(for: date)
+        completion(height)
+    }
+
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.

@@ -156,6 +156,8 @@ public protocol ClosureSynchronizer {
 
     func refreshExchangeRateUSD()
 
+    func estimateBirthdayHeight(for date: Date, completion: @escaping (BlockHeight) -> Void)
+
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.

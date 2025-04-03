@@ -148,6 +148,8 @@ public protocol CombineSynchronizer {
 
     func refreshExchangeRateUSD()
 
+    func estimateBirthdayHeight(for date: Date) -> SinglePublisher<BlockHeight, Error>
+
     func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error>
     func wipe() -> CompletablePublisher<Error>
 }

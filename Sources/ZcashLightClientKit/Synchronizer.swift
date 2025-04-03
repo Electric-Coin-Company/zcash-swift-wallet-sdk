@@ -426,6 +426,10 @@ public protocol Synchronizer: AnyObject {
         kServers: Int,
         network: NetworkType
     ) async -> [LightWalletEndpoint]
+    
+    /// Takes a given date and finds out the closes checkpoint's height for it.
+    /// Each checkpoint has a timestamp stored so it can be used for the calculations.
+    func estimateBirthdayHeight(for date: Date) -> BlockHeight
 }
 
 public enum SyncStatus: Equatable {

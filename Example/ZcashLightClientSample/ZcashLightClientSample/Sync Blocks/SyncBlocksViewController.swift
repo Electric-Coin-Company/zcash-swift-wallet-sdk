@@ -87,9 +87,19 @@ class SyncBlocksViewController: UIViewController {
     }
     
     @IBAction func startStop() {
-        Task { @MainActor in
-            await doStartStop()
+        var components = DateComponents()
+        components.year = 2019
+        components.month = 11
+        components.day = 1
+
+        let calendar = Calendar.current
+        if let date = calendar.date(from: components) {
+            synchronizer.estimateBirthdayHeight(for: date)
         }
+        
+//        Task { @MainActor in
+//            await doStartStop()
+//        }
     }
 
     func doStartStop() async {

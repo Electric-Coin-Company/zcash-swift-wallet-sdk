@@ -254,6 +254,14 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         synchronizer.refreshExchangeRateUSD()
     }
 
+    public func estimateBirthdayHeight(for date: Date) -> SinglePublisher<BlockHeight, Error> {
+        let height = synchronizer.estimateBirthdayHeight(for: date)
+        let subject = PassthroughSubject<BlockHeight, Error>()
+        subject.send(height)
+        subject.send(completion: .finished)
+        return subject.eraseToAnyPublisher()
+    }
+
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }

@@ -2072,6 +2072,26 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - estimateBirthdayHeight
+
+    var estimateBirthdayHeightForCallsCount = 0
+    var estimateBirthdayHeightForCalled: Bool {
+        return estimateBirthdayHeightForCallsCount > 0
+    }
+    var estimateBirthdayHeightForReceivedDate: Date?
+    var estimateBirthdayHeightForReturnValue: BlockHeight!
+    var estimateBirthdayHeightForClosure: ((Date) -> BlockHeight)?
+
+    func estimateBirthdayHeight(for date: Date) -> BlockHeight {
+        estimateBirthdayHeightForCallsCount += 1
+        estimateBirthdayHeightForReceivedDate = date
+        if let closure = estimateBirthdayHeightForClosure {
+            return closure(date)
+        } else {
+            return estimateBirthdayHeightForReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
