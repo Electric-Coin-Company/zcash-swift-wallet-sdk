@@ -6,6 +6,25 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+- `transparent_gap_limit_handling` migration, whereby wallets having received transparent outputs at child indices below the index of the default address could cause the migration to fail.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2870000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2875000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3320000.json
+````
+
 # 2.2.10 - 2025-03-27
 
 ## Fixed
