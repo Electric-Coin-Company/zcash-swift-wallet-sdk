@@ -73,13 +73,17 @@ extension ScanAction: Action {
             // Proper solution is handled in
             // TODO: [#1353] Advanced progress reporting, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1353
             if progressReportReducer == 0 {
+                let walletSummary = try? await rustBackend.getWalletSummary()
+                let recoveryProgress = try? walletSummary?.recoveryProgress?.progress()
+
                 // report scan progress only if it's available
-                if let scanProgress = try? await rustBackend.getWalletSummary()?.scanProgress {
+                if let scanProgress = walletSummary?.scanProgress {
                     logger.debug("progress ratio: \(scanProgress.numerator)/\(scanProgress.denominator)")
                     let progress = try scanProgress.progress()
-                    logger.debug("progress float: \(progress)")
-                    await didUpdate(.syncProgress(progress))
+                    logger.debug("progress float: \(progress) \(String(describing: recoveryProgress))")
+                    await didUpdate(.syncProgress(progress, recoveryProgress))
                 }
+
                 progressReportReducer = Constants.reportDelay
             } else {
                 progressReportReducer -= 1

@@ -483,10 +483,10 @@ extension CompactBlockProcessor {
         case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
 
         /// Event sent when progress of some specific action happened.
-        case syncProgress(Float)
+        case syncProgress(Float, Float?)
 
         /// Event sent when progress of the sync process changes.
-        case progressUpdated(Float)
+        case progressUpdated(Float, Float?)
 
         /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
         case storedUTXOs((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
@@ -568,8 +568,10 @@ extension CompactBlockProcessor {
                 context = try await action.run(with: context) { [weak self] event in
                     await self?.send(event: event)
                     if let progressChanged = await self?.compactBlockProgress.hasProgressUpdated(event), progressChanged {
-                        if let progress = await self?.compactBlockProgress.progress {
-                            await self?.send(event: .progressUpdated(progress))
+                        if let progress = await self?.compactBlockProgress.syncProgress {
+                            await self?.send(
+                                event: .progressUpdated(progress, self?.compactBlockProgress.recoveryProgress)
+                            )
                         }
                     }
                 }
@@ -713,7 +715,7 @@ extension CompactBlockProcessor {
         let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
         // Some actions may not run. For example there are no transactions to enhance and therefore there is no enhance progress. And in
         // cases like this computation of final progress won't work properly. So let's fake 100% progress at the end of the sync process.
-        await send(event: .progressUpdated(1))
+        await send(event: .progressUpdated(1, 1))
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 

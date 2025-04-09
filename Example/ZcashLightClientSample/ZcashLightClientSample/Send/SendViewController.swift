@@ -319,8 +319,8 @@ extension SendViewController: UITextViewDelegate {
 extension SDKSynchronizer {
     static func textFor(state: SyncStatus) -> String {
         switch state {
-        case .syncing(let progress):
-            return "Syncing \(progress * 100.0)%"
+        case let .syncing(syncProgress, recoveryProgress):
+            return "Syncing \(syncProgress * 100.0)% \((recoveryProgress ?? 0) * 100.0)%"
 
         case .upToDate:
             return "Up to Date 😎"

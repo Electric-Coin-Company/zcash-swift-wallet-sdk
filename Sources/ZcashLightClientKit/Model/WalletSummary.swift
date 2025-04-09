@@ -33,8 +33,7 @@ struct ScanProgress: Equatable {
     
     func progress() throws -> Float {
         guard denominator != 0 else {
-            // this shouldn't happen but if it does, we need to get notified by clients and work on a fix
-            throw ZcashError.rustScanProgressOutOfRange("\(numerator)/\(denominator)")
+            return 1.0
         }
 
         let value = Float(numerator) / Float(denominator)
@@ -52,6 +51,7 @@ struct WalletSummary: Equatable {
     let accountBalances: [AccountUUID: AccountBalance]
     let chainTipHeight: BlockHeight
     let fullyScannedHeight: BlockHeight
+    let recoveryProgress: ScanProgress?
     let scanProgress: ScanProgress?
     let nextSaplingSubtreeIndex: UInt32
     let nextOrchardSubtreeIndex: UInt32

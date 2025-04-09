@@ -135,9 +135,6 @@ class ZcashRustBackendTests: XCTestCase {
     }
 
     func testScanProgressThrowsOnWrongValues() {
-        // Assert that throws on Zero denominator
-        XCTAssertThrowsError(try ScanProgress(numerator: 0, denominator: 0).progress())
-
         // Assert that throws on numerator > denominator
         XCTAssertThrowsError(try ScanProgress(numerator: 23, denominator: 2).progress())
 

@@ -173,8 +173,10 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            let syncProgress = (try? await initializer.rustBackend.getWalletSummary()?.scanProgress?.progress()) ?? 0
-            await updateStatus(.syncing(syncProgress))
+            let walletSummary = try? await initializer.rustBackend.getWalletSummary()
+            let recoveryProgress: Float? = try? walletSummary?.recoveryProgress?.progress()
+            let syncProgress = (try? walletSummary?.scanProgress?.progress()) ?? 0
+            await updateStatus(.syncing(syncProgress, recoveryProgress))
             await blockProcessor.start(retry: retry)
         }
     }
@@ -240,8 +242,8 @@ public class SDKSynchronizer: Synchronizer {
                 // log reorg information
                 self?.logger.info("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
-            case let .progressUpdated(progress):
-                await self?.progressUpdated(progress: progress)
+            case let .progressUpdated(syncProgress, recoveryProgress):
+                await self?.progressUpdated(syncProgress, recoveryProgress)
 
             case .syncProgress:
                 break
@@ -281,8 +283,8 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    private func progressUpdated(progress: Float) async {
-        let newStatus = InternalSyncStatus(progress)
+    private func progressUpdated(_ syncProgress: Float, _ recoveryProgress: Float?) async {
+        let newStatus = InternalSyncStatus(syncProgress, recoveryProgress)
         await updateStatus(newStatus)
     }
 

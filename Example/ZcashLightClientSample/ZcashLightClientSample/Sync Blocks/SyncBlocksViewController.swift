@@ -68,11 +68,11 @@ class SyncBlocksViewController: UIViewController {
         case .unprepared:
             break
 
-        case let .syncing(progress):
+        case let .syncing(syncProgress, recoveryProgress):
             enhancingStarted = false
 
-            progressBar.progress = progress
-            progressLabel.text = "\(floor(progress * 1000) / 10)%"
+            progressBar.progress = syncProgress
+            progressLabel.text = "\(floor(syncProgress * 1000) / 10)% \(floor((recoveryProgress ?? 0) * 1000) / 10)%"
             let progressText = """
             latest block height \(state.latestBlockHeight)
             """
@@ -87,19 +87,9 @@ class SyncBlocksViewController: UIViewController {
     }
     
     @IBAction func startStop() {
-        var components = DateComponents()
-        components.year = 2019
-        components.month = 11
-        components.day = 1
-
-        let calendar = Calendar.current
-        if let date = calendar.date(from: components) {
-            synchronizer.estimateBirthdayHeight(for: date)
+        Task { @MainActor in
+            await doStartStop()
         }
-        
-//        Task { @MainActor in
-//            await doStartStop()
-//        }
     }
 
     func doStartStop() async {

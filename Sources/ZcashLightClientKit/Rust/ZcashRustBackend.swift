@@ -909,6 +909,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             accountBalances: accountBalances,
             chainTipHeight: BlockHeight(summaryPtr.pointee.chain_tip_height),
             fullyScannedHeight: BlockHeight(summaryPtr.pointee.fully_scanned_height),
+            recoveryProgress: summaryPtr.pointee.recovery_progress?.pointee.toScanProgress(),
             scanProgress: summaryPtr.pointee.scan_progress?.pointee.toScanProgress(),
             nextSaplingSubtreeIndex: UInt32(summaryPtr.pointee.next_sapling_subtree_index),
             nextOrchardSubtreeIndex: UInt32(summaryPtr.pointee.next_orchard_subtree_index)
