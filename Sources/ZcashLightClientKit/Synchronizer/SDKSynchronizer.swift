@@ -174,9 +174,33 @@ public class SDKSynchronizer: Synchronizer {
 
         case .stopped, .synced, .disconnected, .error:
             let walletSummary = try? await initializer.rustBackend.getWalletSummary()
-            let recoveryProgress: Float? = try? walletSummary?.recoveryProgress?.progress()
-            let syncProgress = (try? walletSummary?.scanProgress?.progress()) ?? 0
-            await updateStatus(.syncing(syncProgress, recoveryProgress))
+            let recoveryProgress = walletSummary?.recoveryProgress
+            
+            var syncProgress: Float = 0.0
+            var areFundsSpendable = false
+            
+            if let scanProgress = walletSummary?.scanProgress {
+                let composedNumerator: Float = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
+                let composedDenominator: Float = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
+                
+                let progress: Float
+                if composedDenominator == 0 {
+                    progress = 1.0
+                } else {
+                    progress = composedNumerator / composedDenominator
+                }
+                
+                // this shouldn't happen but if it does, we need to get notified by clients and work on a fix
+                if progress > 1.0 {
+                    throw ZcashError.rustScanProgressOutOfRange("\(progress)")
+                }
+
+                let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
+                areFundsSpendable = scanProgress == 1.0
+
+                syncProgress = progress
+            }
+            await updateStatus(.syncing(syncProgress, areFundsSpendable))
             await blockProcessor.start(retry: retry)
         }
     }
@@ -242,8 +266,8 @@ public class SDKSynchronizer: Synchronizer {
                 // log reorg information
                 self?.logger.info("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
-            case let .progressUpdated(syncProgress, recoveryProgress):
-                await self?.progressUpdated(syncProgress, recoveryProgress)
+            case let .progressUpdated(syncProgress, areFundsSpendable):
+                await self?.progressUpdated(syncProgress, areFundsSpendable)
 
             case .syncProgress:
                 break
@@ -283,8 +307,8 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    private func progressUpdated(_ syncProgress: Float, _ recoveryProgress: Float?) async {
-        let newStatus = InternalSyncStatus(syncProgress, recoveryProgress)
+    private func progressUpdated(_ syncProgress: Float, _ areFundsSpendable: Bool) async {
+        let newStatus = InternalSyncStatus(syncProgress, areFundsSpendable)
         await updateStatus(newStatus)
     }
 

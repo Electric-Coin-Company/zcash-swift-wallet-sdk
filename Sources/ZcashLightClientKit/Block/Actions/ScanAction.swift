@@ -74,14 +74,32 @@ extension ScanAction: Action {
             // TODO: [#1353] Advanced progress reporting, https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1353
             if progressReportReducer == 0 {
                 let walletSummary = try? await rustBackend.getWalletSummary()
-                let recoveryProgress = try? walletSummary?.recoveryProgress?.progress()
+                let recoveryProgress = walletSummary?.recoveryProgress
 
                 // report scan progress only if it's available
                 if let scanProgress = walletSummary?.scanProgress {
-                    logger.debug("progress ratio: \(scanProgress.numerator)/\(scanProgress.denominator)")
-                    let progress = try scanProgress.progress()
-                    logger.debug("progress float: \(progress) \(String(describing: recoveryProgress))")
-                    await didUpdate(.syncProgress(progress, recoveryProgress))
+                    let composedNumerator: Float = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
+                    let composedDenominator: Float = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
+
+                    logger.debug("progress ratio: \(composedNumerator)/\(composedDenominator)")
+                    
+                    let progress: Float
+                    if composedDenominator == 0 {
+                        progress = 1.0
+                    } else {
+                        progress = composedNumerator / composedDenominator
+                    }
+
+                    // this shouldn't happen but if it does, we need to get notified by clients and work on a fix
+                    if progress > 1.0 {
+                        throw ZcashError.rustScanProgressOutOfRange("\(progress)")
+                    }
+                    
+                    let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
+                    let areFundsSpendable = scanProgress == 1.0
+
+                    logger.debug("progress float: \(progress)")
+                    await didUpdate(.syncProgress(progress, areFundsSpendable))
                 }
 
                 progressReportReducer = Constants.reportDelay

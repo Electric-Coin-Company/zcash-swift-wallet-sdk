@@ -449,7 +449,7 @@ public enum SyncStatus: Equatable {
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    case syncing(_ syncProgress: Float, _ recoveryProgress: Float?)
+    case syncing(_ syncProgress: Float, _ areFundsSpendable: Bool)
 
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -502,7 +502,7 @@ enum InternalSyncStatus: Equatable {
     case unprepared
 
     /// Indicates that this Synchronizer is actively processing new blocks (consists of fetch, scan and enhance operations)
-    case syncing(Float, Float?)
+    case syncing(Float, Bool)
     
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -610,8 +610,8 @@ extension InternalSyncStatus {
 }
 
 extension InternalSyncStatus {
-    init(_ syncProgress: Float, _ recoveryProgress: Float?) {
-        self = .syncing(syncProgress, recoveryProgress)
+    init(_ syncProgress: Float, _ areFundsSpendable: Bool) {
+        self = .syncing(syncProgress, areFundsSpendable)
     }
 }
 
@@ -620,8 +620,8 @@ extension InternalSyncStatus {
         switch self {
         case .unprepared:
             return .unprepared
-        case let .syncing(syncProgress, recoveryProgress):
-            return .syncing(syncProgress, recoveryProgress)
+        case let .syncing(syncProgress, areFundsSpendable):
+            return .syncing(syncProgress, areFundsSpendable)
         case .synced:
             return .upToDate
         case .stopped:
