@@ -101,7 +101,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         )
         
         guard let ffiAddressPtr else {
-            throw ZcashError.rustDeriveAddressFromUfvk(ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error"))
+            throw ZcashError.rustDeriveAddressFromUfvk(ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error")
+            )
         }
 
         defer { zcashlc_free_ffi_address(ffiAddressPtr) }
@@ -126,7 +127,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
         guard let boxedSlice = boxedSlicePtr?.pointee else {
             throw ZcashError.rustDeriveUnifiedSpendingKey(
-                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error")
+            )
         }
 
         return boxedSlice.unsafeToUnifiedSpendingKey(network: networkType)
@@ -207,7 +209,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
         guard let key = boxedSlicePtr?.pointee else {
             throw ZcashError.rustDeriveArbitraryWalletKey(
-                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryWalletKey` failed with unknown error"))
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryWalletKey` failed with unknown error")
+            )
         }
 
         return key.ptr.toByteArray(
@@ -237,7 +240,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
         guard let key = boxedSlicePtr?.pointee else {
             throw ZcashError.rustDeriveArbitraryAccountKey(
-                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryAccountKey` failed with unknown error"))
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveArbitraryAccountKey` failed with unknown error")
+            )
         }
 
         return key.ptr.toByteArray(

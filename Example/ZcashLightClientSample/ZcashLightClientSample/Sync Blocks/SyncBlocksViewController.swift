@@ -71,8 +71,6 @@ class SyncBlocksViewController: UIViewController {
         case let .syncing(syncProgress, areFundsSpendable):
             enhancingStarted = false
 
-            print("__LD syncProgress \(syncProgress) areFundsSpendable \(areFundsSpendable)")
-            
             progressBar.progress = syncProgress
             progressLabel.text = "\(floor(syncProgress * 1000) / 10)% spendable: \(areFundsSpendable)"
             let progressText = """

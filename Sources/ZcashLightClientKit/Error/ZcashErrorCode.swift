@@ -223,6 +223,12 @@ public enum ZcashErrorCode: String {
     case rustTorLwdFetchTransaction = "ZRUST0079"
     /// Error from rust layer when calling TorLwdConn.submit
     case rustTorLwdSubmit = "ZRUST0080"
+    /// Error from rust layer when calling TorLwdConn.getInfo
+    case rustTorLwdGetInfo = "ZRUST0081"
+    /// Error from rust layer when calling TorLwdConn.latestBlockHeight
+    case rustTorLwdLatestBlockHeight = "ZRUST0082"
+    /// Error from rust layer when calling TorLwdConn.getTreeState
+    case rustTorLwdGetTreeState = "ZRUST0083"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
