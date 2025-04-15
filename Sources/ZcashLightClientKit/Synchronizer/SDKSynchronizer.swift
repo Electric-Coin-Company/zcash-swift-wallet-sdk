@@ -180,8 +180,8 @@ public class SDKSynchronizer: Synchronizer {
             var areFundsSpendable = false
             
             if let scanProgress = walletSummary?.scanProgress {
-                let composedNumerator: Float = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
-                let composedDenominator: Float = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
+                let composedNumerator = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
+                let composedDenominator = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
                 
                 let progress: Float
                 if composedDenominator == 0 {
@@ -753,7 +753,8 @@ public class SDKSynchronizer: Synchronizer {
                     port: $0.port,
                     secure: $0.secure,
                     singleCallTimeout: 5000,
-                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000
+                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000,
+                    torURL: initializer.torDirURL
                 ),
                 url: "\($0.host):\($0.port)"
             )
@@ -911,13 +912,14 @@ public class SDKSynchronizer: Synchronizer {
 
         // Validation of the server is first because any custom endpoint can be passed here
         // Extra instance of the service is created with lower timeout ofr a single call
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
             LightWalletGRPCService(
                 host: endpoint.host,
                 port: endpoint.port,
                 secure: endpoint.secure,
                 singleCallTimeout: 5000,
-                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
+                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
+                torURL: torURL
             )
         }
 
@@ -938,8 +940,8 @@ public class SDKSynchronizer: Synchronizer {
         // SWITCH TO NEW ENDPOINT
         
         // LightWalletService dependency update
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCService(endpoint: endpoint)
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
+            LightWalletGRPCService(endpoint: endpoint, torURL: torURL)
         }
 
         // DEPENDENCIES
