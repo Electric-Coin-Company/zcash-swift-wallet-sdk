@@ -172,8 +172,8 @@ extension SyncBlocksListViewController: UITableViewDataSource {
 extension SyncStatus {
     var text: String {
         switch self {
-        case let .syncing(progress):
-            return "Syncing 🤖 \(floor(progress * 1000) / 10)%"
+        case let .syncing(syncProgress, areFundsSpendable):
+            return "Syncing 🤖 \(floor(syncProgress * 1000) / 10)% spendable: \(areFundsSpendable)"
         case .upToDate:
             return "Up to Date 😎"
         case .unprepared:

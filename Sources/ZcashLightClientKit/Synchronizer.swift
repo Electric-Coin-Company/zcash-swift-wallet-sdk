@@ -426,13 +426,18 @@ public protocol Synchronizer: AnyObject {
         kServers: Int,
         network: NetworkType
     ) async -> [LightWalletEndpoint]
+    
+    /// Takes a given date and finds out the closes checkpoint's height for it.
+    /// Each checkpoint has a timestamp stored so it can be used for the calculations.
+    func estimateBirthdayHeight(for date: Date) -> BlockHeight
 }
 
 public enum SyncStatus: Equatable {
     public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {
         switch (lhs, rhs) {
         case (.unprepared, .unprepared): return true
-        case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
+        case let (.syncing(lhsSyncProgress, lhsRecoveryPrgoress), .syncing(rhsSyncProgress, rhsRecoveryPrgoress)):
+            return lhsSyncProgress == rhsSyncProgress && lhsRecoveryPrgoress == rhsRecoveryPrgoress
         case (.upToDate, .upToDate): return true
         case (.error, .error): return true
         default: return false
@@ -444,7 +449,7 @@ public enum SyncStatus: Equatable {
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    case syncing(_ progress: Float)
+    case syncing(_ syncProgress: Float, _ areFundsSpendable: Bool)
 
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -497,7 +502,7 @@ enum InternalSyncStatus: Equatable {
     case unprepared
 
     /// Indicates that this Synchronizer is actively processing new blocks (consists of fetch, scan and enhance operations)
-    case syncing(Float)
+    case syncing(Float, Bool)
     
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -593,7 +598,8 @@ extension InternalSyncStatus {
     public static func == (lhs: InternalSyncStatus, rhs: InternalSyncStatus) -> Bool {
         switch (lhs, rhs) {
         case (.unprepared, .unprepared): return true
-        case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
+        case let (.syncing(lhsSyncProgress, lhsRecoveryPrgoress), .syncing(rhsSyncProgress, rhsRecoveryPrgoress)):
+            return lhsSyncProgress == rhsSyncProgress && lhsRecoveryPrgoress == rhsRecoveryPrgoress
         case (.synced, .synced): return true
         case (.stopped, .stopped): return true
         case (.disconnected, .disconnected): return true
@@ -604,8 +610,8 @@ extension InternalSyncStatus {
 }
 
 extension InternalSyncStatus {
-    init(_ blockProcessorProgress: Float) {
-        self = .syncing(blockProcessorProgress)
+    init(_ syncProgress: Float, _ areFundsSpendable: Bool) {
+        self = .syncing(syncProgress, areFundsSpendable)
     }
 }
 
@@ -614,8 +620,8 @@ extension InternalSyncStatus {
         switch self {
         case .unprepared:
             return .unprepared
-        case .syncing(let progress):
-            return .syncing(progress)
+        case let .syncing(syncProgress, areFundsSpendable):
+            return .syncing(syncProgress, areFundsSpendable)
         case .synced:
             return .upToDate
         case .stopped:

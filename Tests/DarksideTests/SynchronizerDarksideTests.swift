@@ -197,19 +197,19 @@ class SynchronizerDarksideTests: ZcashTestCase {
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0),
+                internalSyncStatus: .syncing(0, false),
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0.9),
+                internalSyncStatus: .syncing(0.9, false),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(1.0),
+                internalSyncStatus: .syncing(1.0, false),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
@@ -269,19 +269,19 @@ class SynchronizerDarksideTests: ZcashTestCase {
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0),
+                internalSyncStatus: .syncing(0, false),
                 latestBlockHeight: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0.9),
+                internalSyncStatus: .syncing(0.9, false),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(1.0),
+                internalSyncStatus: .syncing(1.0, false),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
@@ -320,19 +320,19 @@ class SynchronizerDarksideTests: ZcashTestCase {
             SynchronizerState(
                 syncSessionID: uuids[1],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0),
+                internalSyncStatus: .syncing(0, false),
                 latestBlockHeight: 663189
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(0.9),
+                internalSyncStatus: .syncing(0.9, false),
                 latestBlockHeight: 663200
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 accountsBalances: [:],
-                internalSyncStatus: .syncing(1.0),
+                internalSyncStatus: .syncing(1.0, false),
                 latestBlockHeight: 663200
             ),
             SynchronizerState(
