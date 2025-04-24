@@ -6,8 +6,28 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.12 - 2025-04-24
+
 ## Added
 - `SDKSynchronizer.estimateBirthdayHeight(for date: Date)`: Get an estimated height for a given date, typically used for estimating birthday.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2877500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2900000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3330000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3360000.json
+````
 
 # 2.2.11 - 2025-04-03
 
