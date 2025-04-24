@@ -88,7 +88,7 @@ class DarksideWalletService: LightWalletService {
     func latestBlockHeight() async throws -> BlockHeight {
         try await service.latestBlockHeight()
     }
-    
+
     func useDataset(_ datasetUrl: String) throws {
         try useDataset(from: datasetUrl)
     }
@@ -177,7 +177,7 @@ class DarksideWalletService: LightWalletService {
     func getInfo() async throws -> LightWalletdInfo {
         try await service.getInfo()
     }
-    
+
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         service.blockRange(range)
     }
@@ -186,7 +186,7 @@ class DarksideWalletService: LightWalletService {
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         try await service.submit(spendTransaction: spendTransaction)
     }
-    
+
     func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         try await service.fetchTransaction(txId: txId)
     }
@@ -198,7 +198,7 @@ class DarksideWalletService: LightWalletService {
     func addTreeState(_ treeState: TreeState) throws {
         _ = try darksideService.addTreeState(treeState).response.wait()
     }
-    
+
     func getTreeState(_ id: BlockID) async throws -> TreeState {
         try await service.getTreeState(id)
     }

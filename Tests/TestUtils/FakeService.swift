@@ -50,7 +50,7 @@ class MockLightWalletService: LightWalletService {
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
         service.fetchUTXOs(for: tAddresses, height: height)
     }
-    
+
     private var service: LightWalletService
     
     var latestHeight: BlockHeight
@@ -61,9 +61,9 @@ class MockLightWalletService: LightWalletService {
     }
     
     func latestBlockHeight() async throws -> BlockHeight {
-        return self.latestHeight
+        latestHeight
     }
-    
+
     func getInfo() async throws -> LightWalletdInfo {
         guard let info = mockLightDInfo else {
             throw ZcashError.serviceGetInfoFailed(.generalError(message: "Not Implemented"))
@@ -78,11 +78,11 @@ class MockLightWalletService: LightWalletService {
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
-    
+
     func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         return (nil, .txidNotRecognized)
     }
-    
+
     func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
         service.getSubtreeRoots(request)
     }

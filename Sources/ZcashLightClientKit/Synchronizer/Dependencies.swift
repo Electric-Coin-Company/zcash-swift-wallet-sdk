@@ -76,7 +76,7 @@ enum Dependencies {
         }
 
         container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCService(endpoint: endpoint, torURL: urls.torDirURL)
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, torURL: urls.torDirURL)
         }
 
         container.register(type: TransactionRepository.self, isSingleton: true) { _ in

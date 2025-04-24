@@ -585,23 +585,21 @@ public class SDKSynchronizer: Synchronizer {
             exchangeRateUSDSubject.send(fetchingState)
         }
 
-        Task {
-            do {
-                if tor == nil {
-                    logger.info("Bootstrapping Tor client for fetching exchange rates")
-                    tor = try await TorClient(torDir: initializer.torDirURL)
-                }
-                // broadcast new value in case of success
-                exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
-            } catch {
-                // broadcast cached value but update the state
-                var errorState = tor?.cachedFiatCurrencyResult
-                errorState?.state = .error
-                tor?.cachedFiatCurrencyResult = errorState
-
-                exchangeRateUSDSubject.send(errorState)
+        do {
+            if tor == nil {
+                logger.info("Bootstrapping Tor client for fetching exchange rates")
+                tor = try TorClient(torDir: initializer.torDirURL)
             }
-        }
+            // broadcast new value in case of success
+            exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())
+        } catch {
+            // broadcast cached value but update the state
+            var errorState = tor?.cachedFiatCurrencyResult
+            errorState?.state = .error
+            tor?.cachedFiatCurrencyResult = errorState
+            
+            exchangeRateUSDSubject.send(errorState)
+        }        
     }
 
     public func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
@@ -753,8 +751,7 @@ public class SDKSynchronizer: Synchronizer {
                     port: $0.port,
                     secure: $0.secure,
                     singleCallTimeout: 5000,
-                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000,
-                    torURL: initializer.torDirURL
+                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000
                 ),
                 url: "\($0.host):\($0.port)"
             )
@@ -912,14 +909,13 @@ public class SDKSynchronizer: Synchronizer {
 
         // Validation of the server is first because any custom endpoint can be passed here
         // Extra instance of the service is created with lower timeout ofr a single call
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
             LightWalletGRPCService(
                 host: endpoint.host,
                 port: endpoint.port,
                 secure: endpoint.secure,
                 singleCallTimeout: 5000,
-                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-                torURL: torURL
+                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
             )
         }
 

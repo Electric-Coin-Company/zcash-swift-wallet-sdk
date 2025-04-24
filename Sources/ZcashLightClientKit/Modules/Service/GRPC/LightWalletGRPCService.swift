@@ -54,18 +54,24 @@ class LiveLatestBlockHeightProvider: LatestBlockHeightProvider {
     }
 }
 
-class LightWalletGRPCService {
-    let channel: Channel
-    let connectionManager: ConnectionStatusManager
-    let compactTxStreamer: CompactTxStreamerAsyncClient
+class LightWalletGRPCService: LightWalletService {
+    var channel: Channel?
+    var connectionManager: ConnectionStatusManager?
+    var compactTxStreamerInternal: CompactTxStreamerAsyncClient?
+    var compactTxStreamer: CompactTxStreamerAsyncClient {
+        resolveLazyConnect()
+    }
     let singleCallTimeout: TimeLimit
     let streamingCallTimeout: TimeLimit
     var latestBlockHeightProvider: LatestBlockHeightProvider = LiveLatestBlockHeightProvider()
-    let torConn: TorLwdConn?
+
+    let host: String
+    let port: Int
+    let secure: Bool
 
     var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? {
-        get { connectionManager.connectionStateChange }
-        set { connectionManager.connectionStateChange = newValue }
+        get { connectionManager?.connectionStateChange }
+        set { connectionManager?.connectionStateChange = newValue }
     }
 
     let queue: DispatchQueue
@@ -76,8 +82,7 @@ class LightWalletGRPCService {
             port: endpoint.port,
             secure: endpoint.secure,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
-            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-            torURL: nil
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
         )
     }
 
@@ -87,8 +92,7 @@ class LightWalletGRPCService {
             port: endpoint.port,
             secure: endpoint.secure,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
-            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-            torURL: torURL
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
         )
     }
 
@@ -104,46 +108,56 @@ class LightWalletGRPCService {
         port: Int = 9067,
         secure: Bool = true,
         singleCallTimeout: Int64,
-        streamingCallTimeout: Int64,
-        torURL: URL?
+        streamingCallTimeout: Int64
     ) {
         self.connectionManager = ConnectionStatusManager()
         self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
 
+        self.host = host
+        self.port = port
+        self.secure = secure
+    }
+
+    deinit {
+        _ = channel?.close()
+        _ = compactTxStreamer.channel.close()
+    }
+
+    func resolveLazyConnect() -> CompactTxStreamerAsyncClient {
+        guard self.channel == nil else {
+            if let compactTxStreamerInternal {
+                return compactTxStreamerInternal
+            } else {
+                fatalError("Initialization of CompactTxStreamerAsyncClient failed")
+            }
+        }
+
         let connectionBuilder = secure ?
         ClientConnection.usingPlatformAppropriateTLS(for: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default)) :
         ClientConnection.insecure(group: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default))
-
+        
         let channel = connectionBuilder
             .withConnectivityStateDelegate(connectionManager, executingOn: queue)
             .connect(host: host, port: port)
 
         self.channel = channel
-        
-        compactTxStreamer = CompactTxStreamerAsyncClient(
-            channel: self.channel,
+
+        let compactTxStreamerInstance = CompactTxStreamerAsyncClient(
+            channel: channel,
             defaultCallOptions: Self.callOptions(
                 timeLimit: self.singleCallTimeout
             )
         )
         
-        var tor: TorClient? = nil
-        if let torURL {
-            tor = try? TorClient(torDir: torURL)
-        }
-        let endpointString = String(format: "%@://%@:%d", secure ? "https" : "http", host, port)
-        self.torConn = try? tor?.connectToLightwalletd(endpoint: endpointString)
-    }
-
-    deinit {
-        _ = channel.close()
-        _ = compactTxStreamer.channel.close()
+        self.compactTxStreamerInternal = compactTxStreamerInstance
+        
+        return compactTxStreamerInstance
     }
 
     func stop() {
-        _ = channel.close()
+        _ = channel?.close()
     }
 
     func latestBlock() async throws -> BlockID {
@@ -165,18 +179,10 @@ class LightWalletGRPCService {
             cacheable: false
         )
     }
-}
 
-// MARK: - LightWalletService
-
-extension LightWalletGRPCService: LightWalletService {
     func getInfo() async throws -> LightWalletdInfo {
         do {
-            if let torConn {
-                return try torConn.getInfo()
-            } else {
-                return try await compactTxStreamer.getLightdInfo(Empty())
-            }
+            return try await compactTxStreamer.getLightdInfo(Empty())
         } catch {
             let serviceError = error.mapToServiceError()
             throw ZcashError.serviceGetInfoFailed(serviceError)
@@ -184,13 +190,9 @@ extension LightWalletGRPCService: LightWalletService {
     }
 
     func latestBlockHeight() async throws -> BlockHeight {
-        if let torConn {
-            return try torConn.latestBlockHeight()
-        } else {
-            return try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
-        }
+        try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
     }
-    
+
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         let stream = compactTxStreamer.getBlockRange(range.blockRange())
         var iterator = stream.makeAsyncIterator()
@@ -208,54 +210,46 @@ extension LightWalletGRPCService: LightWalletService {
 
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         do {
-            if let torConn {
-                return try torConn.submit(spendTransaction: spendTransaction)
-            } else {
-                let transaction = RawTransaction.with { $0.data = spendTransaction }
-                return try await compactTxStreamer.sendTransaction(transaction)
-            }
+            let transaction = RawTransaction.with { $0.data = spendTransaction }
+            return try await compactTxStreamer.sendTransaction(transaction)
         } catch {
             let serviceError = error.mapToServiceError()
             throw ZcashError.serviceSubmitFailed(serviceError)
         }
     }
-    
+
     func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
-        if let torConn {
-            return try torConn.fetchTransaction(txId: txId)
-        } else {
-            var txFilter = TxFilter()
-            txFilter.hash = txId
+        var txFilter = TxFilter()
+        txFilter.hash = txId
+        
+        do {
+            let rawTx = try await compactTxStreamer.getTransaction(txFilter)
             
-            do {
-                let rawTx = try await compactTxStreamer.getTransaction(txFilter)
-                
-                let isNotMined = rawTx.height == 0 || rawTx.height > UInt32.max
-                
-                return (
-                    tx:
-                        ZcashTransaction.Fetched(
-                            rawID: txId,
-                            minedHeight: isNotMined ? nil : UInt32(rawTx.height),
-                            raw: rawTx.data
-                        ),
-                    status: isNotMined ? .notInMainChain : .mined(Int(rawTx.height))
-                )
-            } catch let error as GRPCStatus {
-                if error.makeGRPCStatus().code == .notFound {
-                    return (tx: nil, .txidNotRecognized)
-                } else if let notFound = error.message?.contains("Transaction not found"), notFound {
-                    return (tx: nil, .txidNotRecognized)
-                } else if let notFound = error.message?.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions."), notFound {
-                    return (tx: nil, .txidNotRecognized)
-                } else {
-                    let serviceError = error.mapToServiceError()
-                    throw ZcashError.serviceFetchTransactionFailed(serviceError)
-                }
-            } catch {
+            let isNotMined = rawTx.height == 0 || rawTx.height > UInt32.max
+            
+            return (
+                tx:
+                    ZcashTransaction.Fetched(
+                        rawID: txId,
+                        minedHeight: isNotMined ? nil : UInt32(rawTx.height),
+                        raw: rawTx.data
+                    ),
+                status: isNotMined ? .notInMainChain : .mined(Int(rawTx.height))
+            )
+        } catch let error as GRPCStatus {
+            if error.makeGRPCStatus().code == .notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("Transaction not found"), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions."), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else {
                 let serviceError = error.mapToServiceError()
                 throw ZcashError.serviceFetchTransactionFailed(serviceError)
             }
+        } catch {
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceFetchTransactionFailed(serviceError)
         }
     }
 
@@ -336,11 +330,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
 
     func getTreeState(_ id: BlockID) async throws -> TreeState {
-        if let torConn {
-            return try torConn.getTreeState(height: BlockHeight(id.height))
-        } else {
-            return try await compactTxStreamer.getTreeState(id)
-        }
+        try await compactTxStreamer.getTreeState(id)
     }
 
     func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
@@ -359,7 +349,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     func closeConnection() {
-        _ = channel.close()
+        _ = channel?.close()
     }
 }
 
