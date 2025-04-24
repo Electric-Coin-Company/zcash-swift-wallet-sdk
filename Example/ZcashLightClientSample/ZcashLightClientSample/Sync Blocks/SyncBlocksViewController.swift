@@ -95,7 +95,7 @@ class SyncBlocksViewController: UIViewController {
     func doStartStop() async {
         let syncStatus = synchronizer.latestState.syncStatus
         switch syncStatus {
-        case .unprepared, .error:
+        case .unprepared, .error, .stopped:
             do {
                 if syncStatus == .unprepared {
                     do {
