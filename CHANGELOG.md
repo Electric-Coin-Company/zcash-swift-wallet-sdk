@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.13 - 2025-04-25
+
+## Changed
+- The base sapling params download URL has been changed to `https://download.z.cash/downloads/`
+
 # 2.2.12 - 2025-04-24
 
 ## Added
