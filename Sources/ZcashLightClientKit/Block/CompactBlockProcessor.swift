@@ -374,6 +374,8 @@ extension CompactBlockProcessor {
         logger.debug("Starting wipe")
         if await isIdle() {
             logger.debug("Sync doesn't run. Executing wipe.")
+            self.backoffTimer?.invalidate()
+            self.backoffTimer = nil
             try await doWipe(context: context)
         } else {
             logger.debug("Stopping sync because of wipe")

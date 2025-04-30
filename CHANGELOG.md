@@ -6,6 +6,27 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+
+### [#1482] Fix the wipe function
+- An occasional error occurred after the wipe function was called due to a missing termination of the timer. The next trigger caused the compact block processor to run again, but without any database in place, resulting in a “no such table: accounts” error.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2902500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2905000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3370000.json
+````
+
 # 2.2.13 - 2025-04-25
 
 ## Changed
