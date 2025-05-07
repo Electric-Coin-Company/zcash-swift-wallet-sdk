@@ -54,6 +54,22 @@ public class TorClient {
         return TorClient(runtimePtr: isolatedPtr)
     }
 
+    /// Changes the client's current dormant mode, putting background tasks to sleep or waking
+    /// them up as appropriate.
+    ///
+    /// This can be used to conserve CPU usage if you aren’t planning on using the client for
+    /// a while, especially on mobile platforms.
+    ///
+    /// - Parameter mode: what level of sleep to put a Tor client into.
+    public func setDormant(mode: TorDormantMode) throws {
+        if !zcashlc_tor_set_dormant(runtime, mode) {
+            throw ZcashError.rustTorIsolatedClient(
+                lastErrorMessage(
+                    fallback:
+                        "`TorClient.setDormant` failed with unknown error"))
+        }
+    }
+
     public func getExchangeRateUSD() async throws -> FiatCurrencyResult {
         let rate = zcashlc_get_exchange_rate_usd(runtime)
 
