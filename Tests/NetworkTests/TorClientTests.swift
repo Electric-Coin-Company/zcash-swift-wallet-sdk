@@ -10,6 +10,7 @@ import XCTest
 
 @testable import TestUtils
 @testable import ZcashLightClientKit
+import libzcashlc
 
 class TorClientTests: ZcashTestCase {
     let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
@@ -36,5 +37,8 @@ class TorClientTests: ZcashTestCase {
             result.errorMessage,
             "failed to validate tx: transaction::Hash(\"private\"), error: transaction is already in state"
         )
+
+        // We can background the Tor client.
+        try client.setDormant(mode: Soft)
     }
 }
