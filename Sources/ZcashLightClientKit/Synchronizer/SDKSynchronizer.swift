@@ -180,8 +180,8 @@ public class SDKSynchronizer: Synchronizer {
             var areFundsSpendable = false
             
             if let scanProgress = walletSummary?.scanProgress {
-                let composedNumerator: Float = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
-                let composedDenominator: Float = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
+                let composedNumerator = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
+                let composedDenominator = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
                 
                 let progress: Float
                 if composedDenominator == 0 {
@@ -585,22 +585,20 @@ public class SDKSynchronizer: Synchronizer {
             exchangeRateUSDSubject.send(fetchingState)
         }
 
-        Task {
-            do {
-                if tor == nil {
-                    logger.info("Bootstrapping Tor client for fetching exchange rates")
-                    tor = try await TorClient(torDir: initializer.torDirURL)
-                }
-                // broadcast new value in case of success
-                exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
-            } catch {
-                // broadcast cached value but update the state
-                var errorState = tor?.cachedFiatCurrencyResult
-                errorState?.state = .error
-                tor?.cachedFiatCurrencyResult = errorState
-
-                exchangeRateUSDSubject.send(errorState)
+        do {
+            if tor == nil {
+                logger.info("Bootstrapping Tor client for fetching exchange rates")
+                tor = try TorClient(torDir: initializer.torDirURL)
             }
+            // broadcast new value in case of success
+            exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())
+        } catch {
+            // broadcast cached value but update the state
+            var errorState = tor?.cachedFiatCurrencyResult
+            errorState?.state = .error
+            tor?.cachedFiatCurrencyResult = errorState
+            
+            exchangeRateUSDSubject.send(errorState)
         }
     }
 
@@ -793,7 +791,7 @@ public class SDKSynchronizer: Synchronizer {
                 }
                 
                 // rule out if mismatch of networks
-                guard (info.chainName == "main" && network == .mainnet) 
+                guard (info.chainName == "main" && network == .mainnet)
                     || (info.chainName == "test" && network == .testnet) else {
                     continue
                 }
@@ -934,8 +932,8 @@ public class SDKSynchronizer: Synchronizer {
         // SWITCH TO NEW ENDPOINT
         
         // LightWalletService dependency update
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCService(endpoint: endpoint)
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
+            LightWalletGRPCService(endpoint: endpoint, torURL: torURL)
         }
 
         // DEPENDENCIES
