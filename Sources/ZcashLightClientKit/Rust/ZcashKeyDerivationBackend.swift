@@ -101,7 +101,8 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         )
         
         guard let ffiAddressPtr else {
-            throw ZcashError.rustDeriveAddressFromUfvk(ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error")
+            throw ZcashError.rustDeriveAddressFromUfvk(
+                ZcashKeyDerivationBackend.lastErrorMessage(fallback: "`deriveAddressFromUfvk` failed with unknown error")
             )
         }
 
