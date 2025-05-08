@@ -97,7 +97,8 @@ public class TorClient {
 public class TorLwdConn {
     private let conn: OpaquePointer
 
-    init(connPtr: OpaquePointer) {
+    // swiftlint:disable:next strict_fileprivate
+    fileprivate init(connPtr: OpaquePointer) {
         conn = connPtr
     }
 
@@ -208,7 +209,7 @@ public class TorLwdConn {
             throw ZcashError.rustTorLwdGetInfo("`TorLwdConn.getInfo` Failed to decode protobuf LightdInfo: \(error)")
         }
     }
-    
+
     /// Gets a chain tip of the blockchain (latest block height)
     /// - Returns: BlockHeight
     func latestBlockHeight() throws -> BlockHeight {
