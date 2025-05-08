@@ -599,7 +599,7 @@ public class SDKSynchronizer: Synchronizer {
             tor?.cachedFiatCurrencyResult = errorState
             
             exchangeRateUSDSubject.send(errorState)
-        }        
+        }
     }
 
     public func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
@@ -791,7 +791,7 @@ public class SDKSynchronizer: Synchronizer {
                 }
                 
                 // rule out if mismatch of networks
-                guard (info.chainName == "main" && network == .mainnet) 
+                guard (info.chainName == "main" && network == .mainnet)
                     || (info.chainName == "test" && network == .testnet) else {
                     continue
                 }

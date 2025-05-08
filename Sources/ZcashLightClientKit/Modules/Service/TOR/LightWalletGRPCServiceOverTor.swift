@@ -1,5 +1,5 @@
 //
-//  LightWalletTORService.swift
+//  LightWalletTORServiceOverTor.swift
 //  ZcashLightClientKit
 //
 //  Created by Lukáš Korba on 2025-04-08.
@@ -11,14 +11,14 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
     var tor: TorClient?
     var endpointString: String?
     
-    convenience init(endpoint: LightWalletEndpoint, torURL: URL) {
+    convenience init(endpoint: LightWalletEndpoint, tor: TorClient?) {
         self.init(
             host: endpoint.host,
             port: endpoint.port,
             secure: endpoint.secure,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
             streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-            torURL: torURL
+            tor: tor
         )
     }
     
@@ -28,9 +28,9 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         secure: Bool,
         singleCallTimeout: Int64,
         streamingCallTimeout: Int64,
-        torURL: URL
+        tor: TorClient?
     ) {
-        tor = try? TorClient(torDir: torURL)
+        self.tor = tor
         endpointString = String(format: "%@://%@:%d", secure ? "https" : "http", host, port)
         
         super.init(
@@ -56,16 +56,10 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
     
     override func getInfo() async throws -> LightWalletdInfo {
         guard let torConn = connectToLightwalletd() else {
-            await randomDelay()
-            return try await super.getInfo()
+            throw
         }
-        
-        do {
-            return try torConn.getInfo()
-        } catch {
-            await randomDelay()
-            return try await super.getInfo()
-        }
+
+        return try torConn.getInfo()
     }
     
     override func latestBlockHeight() async throws -> BlockHeight {
