@@ -42,79 +42,39 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         )
     }
     
-    func connectToLightwalletd() -> TorLwdConn? {
+    func connectToLightwalletd() throws -> TorLwdConn {
         guard let endpointString else {
-            return nil
+            throw ZcashError.torServiceMissingEndpoint
         }
         
-        return try? tor?.connectToLightwalletd(endpoint: endpointString)
-    }
-    
-    func randomDelay() async {
-        try? await Task.sleep(nanoseconds: 1_000_000_000 * UInt64.random(in: 1...3))
-    }
-    
-    override func getInfo() async throws -> LightWalletdInfo {
-        guard let torConn = connectToLightwalletd() else {
-            throw
+        guard let tor else {
+            throw ZcashError.torServiceMissingTorClient
         }
+        
+        return try tor.connectToLightwalletd(endpoint: endpointString)
+    }
 
-        return try torConn.getInfo()
+    override func getInfo() async throws -> LightWalletdInfo {
+        try connectToLightwalletd().getInfo()
     }
-    
+
     override func latestBlockHeight() async throws -> BlockHeight {
-        guard let torConn = connectToLightwalletd() else {
-            await randomDelay()
-            return try await super.latestBlockHeight()
-        }
-        
-        do {
-            return try torConn.latestBlockHeight()
-        } catch {
-            await randomDelay()
-            return try await super.latestBlockHeight()
-        }
+        BlockHeight(try connectToLightwalletd().latestBlock().height)
+    }
+
+    override func latestBlock() async throws -> BlockID {
+        try connectToLightwalletd().latestBlock()
     }
     
     override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
-        guard let torConn = connectToLightwalletd() else {
-            await randomDelay()
-            return try await super.submit(spendTransaction: spendTransaction)
-        }
-        
-        do {
-            return try torConn.submit(spendTransaction: spendTransaction)
-        } catch {
-            await randomDelay()
-            return try await super.submit(spendTransaction: spendTransaction)
-        }
+        try connectToLightwalletd().submit(spendTransaction: spendTransaction)
     }
     
     override func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
-        guard let torConn = connectToLightwalletd() else {
-            await randomDelay()
-            return try await super.fetchTransaction(txId: txId)
-        }
-        
-        do {
-            return try torConn.fetchTransaction(txId: txId)
-        } catch {
-            await randomDelay()
-            return try await super.fetchTransaction(txId: txId)
-        }
+        try connectToLightwalletd().fetchTransaction(txId: txId)
     }
     
     override func getTreeState(_ id: BlockID) async throws -> TreeState {
-        guard let torConn = connectToLightwalletd() else {
-            await randomDelay()
-            return try await super.getTreeState(id)
-        }
-        
-        do {
-            return try torConn.getTreeState(height: BlockHeight(id.height))
-        } catch {
-            await randomDelay()
-            return try await super.getTreeState(id)
-        }
+        try connectToLightwalletd().getTreeState(height: BlockHeight(id.height))
     }
 }

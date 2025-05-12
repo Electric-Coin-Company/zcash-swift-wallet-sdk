@@ -43,6 +43,10 @@ public enum ZcashErrorCode: String {
     case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
     /// LightWalletService.getTaddressTxids failed.
     case serviceGetTaddressTxidsFailed = "ZSRVC0010"
+    /// Endpoint is not provided
+    case torServiceMissingEndpoint = "ZTSRV0001"
+    /// Tor client is not available
+    case torServiceMissingTorClient = "ZTSRV0002"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.

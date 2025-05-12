@@ -14,7 +14,6 @@ enum Dependencies {
         alias: ZcashSynchronizerAlias,
         networkType: NetworkType,
         endpoint: LightWalletEndpoint,
-        tor: TorClient? = nil,
         loggingPolicy: Initializer.LoggingPolicy = .default(.debug)
     ) {
         container.register(type: CheckpointSource.self, isSingleton: true) { _ in
@@ -77,7 +76,7 @@ enum Dependencies {
         }
 
         container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: tor)
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: try? TorClient(torDir: urls.torDirURL))
         }
 
         container.register(type: TransactionRepository.self, isSingleton: true) { _ in
