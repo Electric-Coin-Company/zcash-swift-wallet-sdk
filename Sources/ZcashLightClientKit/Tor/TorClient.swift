@@ -210,9 +210,9 @@ public class TorLwdConn {
         }
     }
 
-    /// Gets a chain tip of the blockchain (latest block height)
-    /// - Returns: BlockHeight
-    func latestBlockHeight() throws -> BlockHeight {
+    /// Gets a block at the chain tip of the blockchain
+    /// - Returns: Block
+    func latestBlock() throws -> BlockID {
         var height: UInt32 = 0
         
         let blockIDPtr = zcashlc_tor_lwd_conn_latest_block(conn, &height)
@@ -225,7 +225,7 @@ public class TorLwdConn {
         
         defer { zcashlc_free_boxed_slice(blockIDPtr) }
         
-        return BlockHeight(height)
+        return BlockID(height: BlockHeight(height))
     }
     
     /// Gets a tree state for a given height

@@ -588,7 +588,9 @@ public class SDKSynchronizer: Synchronizer {
         do {
             if tor == nil {
                 logger.info("Bootstrapping Tor client for fetching exchange rates")
-                tor = try TorClient(torDir: initializer.torDirURL)
+                if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
+                    tor = try torService.tor?.isolatedClient()
+                }
             }
             // broadcast new value in case of success
             exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())

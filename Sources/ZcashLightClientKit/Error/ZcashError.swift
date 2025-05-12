@@ -64,6 +64,12 @@ public enum ZcashError: Equatable, Error {
     /// LightWalletService.getTaddressTxids failed.
     /// ZSRVC0010
     case serviceGetTaddressTxidsFailed(_ error: LightWalletServiceError)
+    /// Endpoint is not provided
+    /// ZTSRV0001
+    case torServiceMissingEndpoint
+    /// Tor client is not available
+    /// ZTSRV0002
+    case torServiceMissingTorClient
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
     case simpleConnectionProvider(_ error: Error)
@@ -724,6 +730,8 @@ public enum ZcashError: Equatable, Error {
         case .serviceBlockStreamFailed: return "LightWalletService.blockStream failed."
         case .serviceSubtreeRootsStreamFailed: return "LightWalletService.getSubtreeRoots failed."
         case .serviceGetTaddressTxidsFailed: return "LightWalletService.getTaddressTxids failed."
+        case .torServiceMissingEndpoint: return "Endpoint is not provided"
+        case .torServiceMissingTorClient: return "Tor client is not available"
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         case .saplingParamsInvalidSpendParams: return "Downloaded file with sapling spending parameters isn't valid."
         case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
@@ -926,6 +934,8 @@ public enum ZcashError: Equatable, Error {
         case .serviceBlockStreamFailed: return .serviceBlockStreamFailed
         case .serviceSubtreeRootsStreamFailed: return .serviceSubtreeRootsStreamFailed
         case .serviceGetTaddressTxidsFailed: return .serviceGetTaddressTxidsFailed
+        case .torServiceMissingEndpoint: return .torServiceMissingEndpoint
+        case .torServiceMissingTorClient: return .torServiceMissingTorClient
         case .simpleConnectionProvider: return .simpleConnectionProvider
         case .saplingParamsInvalidSpendParams: return .saplingParamsInvalidSpendParams
         case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams
