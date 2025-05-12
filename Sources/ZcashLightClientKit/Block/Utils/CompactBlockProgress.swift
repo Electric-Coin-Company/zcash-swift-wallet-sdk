@@ -11,7 +11,7 @@ final actor CompactBlockProgress {
     static let zero = CompactBlockProgress()
 
     var progress: Float = 0.0
-    var areFundsSpendable: Bool = false
+    var areFundsSpendable = false
 
     func hasProgressUpdated(_ event: CompactBlockProcessor.Event) -> Bool {
         guard case let .syncProgress(progress, areFundsSpendable) = event else {

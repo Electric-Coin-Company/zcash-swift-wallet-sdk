@@ -78,8 +78,8 @@ extension ScanAction: Action {
 
                 // report scan progress only if it's available
                 if let scanProgress = walletSummary?.scanProgress {
-                    let composedNumerator: Float = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
-                    let composedDenominator: Float = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
+                    let composedNumerator = Float(scanProgress.numerator) + Float(recoveryProgress?.numerator ?? 0)
+                    let composedDenominator = Float(scanProgress.denominator) + Float(recoveryProgress?.denominator ?? 0)
 
                     logger.debug("progress ratio: \(composedNumerator)/\(composedDenominator)")
                     
