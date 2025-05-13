@@ -108,7 +108,7 @@ class ZcashRustBackendTests: XCTestCase {
             )
 
             if i < 2 {
-                _ = try await rustBackend.getNextAvailableAddress(accountUUID: TestsData.mockedAccountUUID)
+                _ = try await rustBackend.getNextAvailableAddress(accountUUID: TestsData.mockedAccountUUID, receiverFlags: Set<ReceiverType>.all.toFlags())
             }
         }
 

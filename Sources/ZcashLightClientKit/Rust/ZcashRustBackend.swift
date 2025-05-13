@@ -480,12 +480,13 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(accountUUID: AccountUUID, receiverFlags: UInt32) async throws -> UnifiedAddress {
         let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
             accountUUID.id,
-            networkType.networkId
+            networkType.networkId,
+            receiverFlags
         )
 
         guard let addressCStr else {
@@ -1087,15 +1088,47 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
                 tDataRequest = TransactionDataRequest.getStatus(FfiTxId(tuple: tDataRequestPtr.get_status).array)
             } else if tDataRequestPtr.tag == 1 {
                 tDataRequest = TransactionDataRequest.enhancement(FfiTxId(tuple: tDataRequestPtr.enhancement).array)
-            } else if tDataRequestPtr.tag == 2, let address = String(validatingUTF8: tDataRequestPtr.spends_from_address.address) {
-                let end = tDataRequestPtr.spends_from_address.block_range_end
+            } else if tDataRequestPtr.tag == 2, let address = String(validatingUTF8: tDataRequestPtr.transactions_involving_address.address) {
+                let end = tDataRequestPtr.transactions_involving_address.block_range_end
                 let blockRangeEnd: UInt32? = end > UInt32.max || end == -1 ? nil : UInt32(end)
-                
-                tDataRequest = TransactionDataRequest.spendsFromAddress(
-                    SpendsFromAddress(
+
+                let ffiRequestAt = tDataRequestPtr.transactions_involving_address.request_at
+                let requestAt: Date? = if ffiRequestAt == -1 {
+                    nil
+                } else if ffiRequestAt >= 0 {
+                    Date(timeIntervalSince1970: TimeInterval(ffiRequestAt))
+                } else {
+                    throw ZcashError.rustTransactionDataRequests("Invalid request_at")
+                }
+
+                let ffiTxStatusFilter = tDataRequestPtr.transactions_involving_address.tx_status_filter
+                let txStatusFilter = if ffiTxStatusFilter == TransactionStatusFilter_Mined {
+                    TransactionStatusFilter.mined
+                } else if ffiTxStatusFilter == TransactionStatusFilter_Mempool {
+                    TransactionStatusFilter.mempool
+                } else if ffiTxStatusFilter == TransactionStatusFilter_All {
+                    TransactionStatusFilter.all
+                } else {
+                    throw ZcashError.rustTransactionDataRequests("Invalid tx_status_filter")
+                }
+
+                let ffiOutputStatusFilter = tDataRequestPtr.transactions_involving_address.output_status_filter
+                let outputStatusFilter = if ffiOutputStatusFilter == OutputStatusFilter_Unspent {
+                    OutputStatusFilter.unspent
+                } else if ffiOutputStatusFilter == OutputStatusFilter_All {
+                    OutputStatusFilter.all
+                } else {
+                    throw ZcashError.rustTransactionDataRequests("Invalid output_status_filter")
+                }
+
+                tDataRequest = TransactionDataRequest.transactionsInvolvingAddress(
+                    TransactionsInvolvingAddress(
                         address: address,
-                        blockRangeStart: tDataRequestPtr.spends_from_address.block_range_start,
-                        blockRangeEnd: blockRangeEnd
+                        blockRangeStart: tDataRequestPtr.transactions_involving_address.block_range_start,
+                        blockRangeEnd: blockRangeEnd,
+                        requestAt: requestAt,
+                        txStatusFilter: txStatusFilter,
+                        outputStatusFilter: outputStatusFilter
                     )
                 )
             }

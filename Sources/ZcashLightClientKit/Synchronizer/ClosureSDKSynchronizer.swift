@@ -77,7 +77,13 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
             try await self.synchronizer.getTransparentAddress(accountUUID: accountUUID)
         }
     }
-    
+
+    public func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.getCustomUnifiedAddress(accountUUID: accountUUID, receivers: receivers)
+        }
+    }
+
     public func listAccounts(completion: @escaping (Result<[Account], Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.listAccounts()

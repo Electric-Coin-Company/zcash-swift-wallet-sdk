@@ -112,21 +112,36 @@ extension BlockEnhancerImpl: BlockEnhancer {
                                 )
                             }
 
-                        case .spendsFromAddress(let sfa):
-                            guard let blockRangeEnd = sfa.blockRangeEnd else {
-                                logger.error("spendsFromAddress \(sfa) is missing blockRangeEnd, ignoring the request.")
+                        case .transactionsInvolvingAddress(let tia):
+                            // TODO: [#1551] Support this.
+                            if tia.requestAt != nil {
+                                logger.error("transactionsInvolvingAddress \(tia) has requestAt set, ignoring the unsupported request.")
                                 continue
                             }
-                            
+
+                            // TODO: [#1552] Support the OutputStatusFilter
+                            if (tia.outputStatusFilter == .unspent) {
+                                continue
+                            }
+
                             var filter = TransparentAddressBlockFilter()
-                            filter.address = sfa.address
-                            filter.range = BlockRange(startHeight: Int(sfa.blockRangeStart), endHeight: Int(blockRangeEnd - 1))
+                            filter.address = tia.address
+                            filter.range = if let blockRangeEnd = tia.blockRangeEnd {
+                                BlockRange(startHeight: Int(tia.blockRangeStart), endHeight: Int(blockRangeEnd - 1))
+                            } else {
+                                BlockRange(startHeight: Int(tia.blockRangeStart))
+                            }
 
                             let stream = service.getTaddressTxids(filter)
 
                             for try await rawTransaction in stream {
                                 let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max) 
                                 ? nil : UInt32(rawTransaction.height)
+
+                                // Ignore transactions that don't match the status filter.
+                                if (tia.txStatusFilter == .mined && minedHeight == nil) || (tia.txStatusFilter == .mempool && minedHeight != nil) {
+                                    continue
+                                }
 
                                 try await rustBackend.decryptAndStoreTransaction(
                                     txBytes: rawTransaction.data.bytes,

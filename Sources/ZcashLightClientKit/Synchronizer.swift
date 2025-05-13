@@ -152,7 +152,7 @@ public protocol Synchronizer: AnyObject {
     /// - Returns the address or nil if account index is incorrect
     func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress
 
-    /// Gets the unified address for the given account.
+    /// Gets the default unified address for the given account.
     /// - Parameter accountUUID: the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
     func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
@@ -161,6 +161,12 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter accountUUID: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress
+
+    /// Obtains a fresh unified address for the given account with the specified receiver types.
+    /// - Parameter accountUUID: the account whose address is of interest.
+    /// - Parameter receivers: the receiver types to include in the address.
+    /// - Returns the address or nil if account index is incorrect
+    func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) async throws -> UnifiedAddress
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///

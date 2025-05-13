@@ -77,7 +77,7 @@ class RustBackendMockHelper {
         rustBackendMock.getTransparentBalanceAccountUUIDReturnValue = 0
         rustBackendMock.listTransparentReceiversAccountUUIDReturnValue = []
         rustBackendMock.getCurrentAddressAccountUUIDThrowableError = ZcashError.rustGetCurrentAddress("mocked error")
-        rustBackendMock.getNextAvailableAddressAccountUUIDThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
+        rustBackendMock.getNextAvailableAddressAccountUUIDReceiverFlagsThrowableError = ZcashError.rustGetNextAvailableAddress("mocked error")
         rustBackendMock.createAccountSeedTreeStateRecoverUntilNameKeySourceThrowableError = ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
         rustBackendMock.getMemoTxIdOutputPoolOutputIndexReturnValue = nil
         rustBackendMock.initDataDbSeedReturnValue = .seedRequired
