@@ -116,11 +116,13 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             // TODO: [#1551] Support this.
                             if tia.requestAt != nil {
                                 logger.error("transactionsInvolvingAddress \(tia) has requestAt set, ignoring the unsupported request.")
+                                retry = false
                                 continue
                             }
 
                             // TODO: [#1552] Support the OutputStatusFilter
-                            if (tia.outputStatusFilter == .unspent) {
+                            if tia.outputStatusFilter == .unspent {
+                                retry = false
                                 continue
                             }
 
