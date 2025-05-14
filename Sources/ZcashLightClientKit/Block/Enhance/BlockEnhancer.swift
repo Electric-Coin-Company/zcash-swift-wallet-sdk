@@ -113,6 +113,12 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
 
                         case .transactionsInvolvingAddress(let tia):
+                            // TODO: [#1554] Remove this guard once lightwalletd servers support open-ended ranges.
+                            guard let blockRangeEnd = tia.blockRangeEnd else {
+                                logger.error("transactionsInvolvingAddress \(tia) is missing blockRangeEnd, ignoring the request.")
+                                continue
+                            }
+
                             // TODO: [#1551] Support this.
                             if tia.requestAt != nil {
                                 logger.error("transactionsInvolvingAddress \(tia) has requestAt set, ignoring the unsupported request.")
