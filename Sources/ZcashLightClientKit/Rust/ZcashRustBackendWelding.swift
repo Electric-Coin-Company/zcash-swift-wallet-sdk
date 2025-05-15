@@ -106,10 +106,11 @@ protocol ZcashRustBackendWelding {
 
     /// Returns a newly-generated unified payment address for the specified account, with the next available diversifier.
     /// - parameter account: index of the given account
+    /// - parameter receiverFlags: bitflags specifying which receivers to include in the address.
     /// - Throws:
     ///     - `rustGetNextAvailableAddress` if rust layer returns error.
     ///     - `rustGetNextAvailableAddressInvalidAddress` if generated unified address isn't valid.
-    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
+    func getNextAvailableAddress(accountUUID: AccountUUID, receiverFlags: UInt32) async throws -> UnifiedAddress
 
     /// Get memo from note.
     /// - parameter txId: ID of transaction containing the note

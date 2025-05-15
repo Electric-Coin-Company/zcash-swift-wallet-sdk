@@ -37,6 +37,7 @@ public protocol ClosureSynchronizer {
     func getSaplingAddress(accountUUID: AccountUUID, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
     func getUnifiedAddress(accountUUID: AccountUUID, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
     func getTransparentAddress(accountUUID: AccountUUID, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
+    func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///

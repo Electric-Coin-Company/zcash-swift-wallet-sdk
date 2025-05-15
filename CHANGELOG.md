@@ -6,6 +6,10 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.getCustomUnifiedAddress`: Obtain a newly-generated Unified Address
+  with the specified receiver types.
+
 # 2.2.14 - 2025-04-30
 
 ## Fixed

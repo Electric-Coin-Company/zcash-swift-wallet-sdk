@@ -852,6 +852,10 @@ extension CompactBlockProcessor {
     func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress {
         try await getUnifiedAddress(accountUUID: accountUUID).transparentReceiver()
     }
+
+    func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) async throws -> UnifiedAddress {
+        try await rustBackend.getNextAvailableAddress(accountUUID: accountUUID, receiverFlags: receivers.toFlags())
+    }
 }
 
 extension CompactBlockProcessor {

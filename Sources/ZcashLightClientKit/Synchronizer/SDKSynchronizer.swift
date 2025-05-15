@@ -616,6 +616,10 @@ public class SDKSynchronizer: Synchronizer {
         try await blockProcessor.getTransparentAddress(accountUUID: accountUUID)
     }
 
+    public func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) async throws -> UnifiedAddress {
+        try await blockProcessor.getCustomUnifiedAddress(accountUUID: accountUUID, receivers: receivers)
+    }
+
     // MARK: Rewind
 
     public func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error> {

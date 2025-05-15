@@ -1476,6 +1476,30 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - getCustomUnifiedAddress
+
+    var getCustomUnifiedAddressAccountUUIDReceiversThrowableError: Error?
+    var getCustomUnifiedAddressAccountUUIDReceiversCallsCount = 0
+    var getCustomUnifiedAddressAccountUUIDReceiversCalled: Bool {
+        return getCustomUnifiedAddressAccountUUIDReceiversCallsCount > 0
+    }
+    var getCustomUnifiedAddressAccountUUIDReceiversReceivedArguments: (accountUUID: AccountUUID, receivers: Set<ReceiverType>)?
+    var getCustomUnifiedAddressAccountUUIDReceiversReturnValue: UnifiedAddress!
+    var getCustomUnifiedAddressAccountUUIDReceiversClosure: ((AccountUUID, Set<ReceiverType>) async throws -> UnifiedAddress)?
+
+    func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) async throws -> UnifiedAddress {
+        if let error = getCustomUnifiedAddressAccountUUIDReceiversThrowableError {
+            throw error
+        }
+        getCustomUnifiedAddressAccountUUIDReceiversCallsCount += 1
+        getCustomUnifiedAddressAccountUUIDReceiversReceivedArguments = (accountUUID: accountUUID, receivers: receivers)
+        if let closure = getCustomUnifiedAddressAccountUUIDReceiversClosure {
+            return try await closure(accountUUID, receivers)
+        } else {
+            return getCustomUnifiedAddressAccountUUIDReceiversReturnValue
+        }
+    }
+
     // MARK: - proposeTransfer
 
     var proposeTransferAccountUUIDRecipientAmountMemoThrowableError: Error?
@@ -2737,25 +2761,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getNextAvailableAddress
 
-    var getNextAvailableAddressAccountUUIDThrowableError: Error?
-    var getNextAvailableAddressAccountUUIDCallsCount = 0
-    var getNextAvailableAddressAccountUUIDCalled: Bool {
-        return getNextAvailableAddressAccountUUIDCallsCount > 0
+    var getNextAvailableAddressAccountUUIDReceiverFlagsThrowableError: Error?
+    var getNextAvailableAddressAccountUUIDReceiverFlagsCallsCount = 0
+    var getNextAvailableAddressAccountUUIDReceiverFlagsCalled: Bool {
+        return getNextAvailableAddressAccountUUIDReceiverFlagsCallsCount > 0
     }
-    var getNextAvailableAddressAccountUUIDReceivedAccountUUID: AccountUUID?
-    var getNextAvailableAddressAccountUUIDReturnValue: UnifiedAddress!
-    var getNextAvailableAddressAccountUUIDClosure: ((AccountUUID) async throws -> UnifiedAddress)?
+    var getNextAvailableAddressAccountUUIDReceiverFlagsReceivedArguments: (accountUUID: AccountUUID, receiverFlags: UInt32)?
+    var getNextAvailableAddressAccountUUIDReceiverFlagsReturnValue: UnifiedAddress!
+    var getNextAvailableAddressAccountUUIDReceiverFlagsClosure: ((AccountUUID, UInt32) async throws -> UnifiedAddress)?
 
-    func getNextAvailableAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress {
-        if let error = getNextAvailableAddressAccountUUIDThrowableError {
+    func getNextAvailableAddress(accountUUID: AccountUUID, receiverFlags: UInt32) async throws -> UnifiedAddress {
+        if let error = getNextAvailableAddressAccountUUIDReceiverFlagsThrowableError {
             throw error
         }
-        getNextAvailableAddressAccountUUIDCallsCount += 1
-        getNextAvailableAddressAccountUUIDReceivedAccountUUID = accountUUID
-        if let closure = getNextAvailableAddressAccountUUIDClosure {
-            return try await closure(accountUUID)
+        getNextAvailableAddressAccountUUIDReceiverFlagsCallsCount += 1
+        getNextAvailableAddressAccountUUIDReceiverFlagsReceivedArguments = (accountUUID: accountUUID, receiverFlags: receiverFlags)
+        if let closure = getNextAvailableAddressAccountUUIDReceiverFlagsClosure {
+            return try await closure(accountUUID, receiverFlags)
         } else {
-            return getNextAvailableAddressAccountUUIDReturnValue
+            return getNextAvailableAddressAccountUUIDReceiverFlagsReturnValue
         }
     }
 

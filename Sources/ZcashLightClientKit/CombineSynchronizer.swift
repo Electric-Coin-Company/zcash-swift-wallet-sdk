@@ -36,6 +36,7 @@ public protocol CombineSynchronizer {
     func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error>
     func getUnifiedAddress(accountUUID: AccountUUID) -> SinglePublisher<UnifiedAddress, Error>
     func getTransparentAddress(accountUUID: AccountUUID) -> SinglePublisher<TransparentAddress, Error>
+    func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) -> SinglePublisher<UnifiedAddress, Error>
 
     /// Creates a proposal for transferring funds to the given recipient.
     ///

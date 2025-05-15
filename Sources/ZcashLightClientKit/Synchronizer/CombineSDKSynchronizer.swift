@@ -77,6 +77,12 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
+    public func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) -> SinglePublisher<UnifiedAddress, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.getCustomUnifiedAddress(accountUUID: accountUUID, receivers: receivers)
+        }
+    }
+
     public func proposeTransfer(
         accountUUID: AccountUUID,
         recipient: Recipient,
