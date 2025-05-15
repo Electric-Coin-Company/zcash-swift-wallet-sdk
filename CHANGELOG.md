@@ -6,9 +6,29 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.15 - 2025-05-15
+
 ## Added
 - `SDKSynchronizer.getCustomUnifiedAddress`: Obtain a newly-generated Unified Address
   with the specified receiver types.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2907500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2922500.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3380000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3390000.json
+````
 
 # 2.2.14 - 2025-04-30
 
