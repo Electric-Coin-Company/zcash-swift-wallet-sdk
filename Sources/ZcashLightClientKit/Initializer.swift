@@ -42,8 +42,7 @@ public struct LightWalletEndpoint {
     }
 
     var urlString: String {
-        return String(
-            format: "%@://%@:%d", secure ? "https" : "http", host, port)
+        String(format: "%@://%@:%d", secure ? "https" : "http", host, port)
     }
 }
 
@@ -54,7 +53,7 @@ public struct SaplingParamsSourceURL {
     public let outputParamFileURL: URL
 
     public static var `default`: SaplingParamsSourceURL {
-        return SaplingParamsSourceURL(spendParamFileURL: ZcashSDK.spendParamFileURL, outputParamFileURL: ZcashSDK.outputParamFileURL)
+        SaplingParamsSourceURL(spendParamFileURL: ZcashSDK.spendParamFileURL, outputParamFileURL: ZcashSDK.outputParamFileURL)
     }
 }
 
