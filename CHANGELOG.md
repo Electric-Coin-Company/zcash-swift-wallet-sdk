@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.16 - 2025-05-21
+
+## Fixed
+- BlockEnhancer has got stuck in a while loop due to a missing break (retry = false)
+
 # 2.2.15 - 2025-05-15
 
 ## Added
