@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+- `LightWalletGRPCService` updated to use Tor connection for: fetching and submission of the transaction, getting server info, latest block height and tree state.
+
 # 2.2.16 - 2025-05-21
 
 ## Fixed

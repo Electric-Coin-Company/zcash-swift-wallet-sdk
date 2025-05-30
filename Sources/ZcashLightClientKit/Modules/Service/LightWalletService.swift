@@ -167,7 +167,7 @@ protocol LightWalletService: AnyObject {
     /// - Parameter spendTransaction: data representing the transaction to be sent
     /// - Throws: `serviceSubmitFailed` when GRPC call fails.
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse
-    
+
     /// Gets a transaction by id
     /// - Parameter txId: data representing the transaction ID
     /// - Throws: LightWalletServiceError
@@ -198,6 +198,6 @@ protocol LightWalletService: AnyObject {
     func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
 
     func getTreeState(_ id: BlockID) async throws -> TreeState
-    
+
     func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>
 }

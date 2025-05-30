@@ -144,7 +144,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             let stream = service.getTaddressTxids(filter)
 
                             for try await rawTransaction in stream {
-                                let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max) 
+                                let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max)
                                 ? nil : UInt32(rawTransaction.height)
 
                                 // Ignore transactions that don't match the status filter.
