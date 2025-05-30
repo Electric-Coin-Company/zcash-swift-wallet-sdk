@@ -59,7 +59,7 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
     }
 
     override func latestBlockHeight() async throws -> BlockHeight {
-        BlockHeight(try connectToLightwalletd().latestBlock().height)
+        BlockHeight(try await latestBlock().height)
     }
 
     override func latestBlock() async throws -> BlockID {
