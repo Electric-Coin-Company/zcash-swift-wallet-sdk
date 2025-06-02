@@ -1,5 +1,5 @@
 //
-//  LightWalletTORServiceOverTor.swift
+//  LightWalletGRPCServiceOverTor.swift
 //  ZcashLightClientKit
 //
 //  Created by Lukáš Korba on 2025-04-08.
