@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import ZcashLightClientKit
+@preconcurrency import ZcashLightClientKit
 
 final class TransactionDetailModel {
     // swiftlint:disable:next todos

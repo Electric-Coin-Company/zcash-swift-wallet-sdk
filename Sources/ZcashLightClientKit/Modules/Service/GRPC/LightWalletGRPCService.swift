@@ -54,22 +54,39 @@ class LiveLatestBlockHeightProvider: LatestBlockHeightProvider {
     }
 }
 
-class LightWalletGRPCService {
-    let channel: Channel
-    let connectionManager: ConnectionStatusManager
-    let compactTxStreamer: CompactTxStreamerAsyncClient
+class LightWalletGRPCService: LightWalletService {
+    var channel: Channel?
+    var connectionManager: ConnectionStatusManager?
+    var compactTxStreamerInternal: CompactTxStreamerAsyncClient?
+    var compactTxStreamer: CompactTxStreamerAsyncClient {
+        resolveLazyConnect()
+    }
     let singleCallTimeout: TimeLimit
     let streamingCallTimeout: TimeLimit
     var latestBlockHeightProvider: LatestBlockHeightProvider = LiveLatestBlockHeightProvider()
 
+    let host: String
+    let port: Int
+    let secure: Bool
+
     var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? {
-        get { connectionManager.connectionStateChange }
-        set { connectionManager.connectionStateChange = newValue }
+        get { connectionManager?.connectionStateChange }
+        set { connectionManager?.connectionStateChange = newValue }
     }
 
     let queue: DispatchQueue
-    
+
     convenience init(endpoint: LightWalletEndpoint) {
+        self.init(
+            host: endpoint.host,
+            port: endpoint.port,
+            secure: endpoint.secure,
+            singleCallTimeout: endpoint.singleCallTimeoutInMillis,
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
+        )
+    }
+
+    convenience init(endpoint: LightWalletEndpoint, torURL: URL) {
         self.init(
             host: endpoint.host,
             port: endpoint.port,
@@ -98,31 +115,49 @@ class LightWalletGRPCService {
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
 
+        self.host = host
+        self.port = port
+        self.secure = secure
+    }
+
+    deinit {
+        _ = channel?.close()
+        _ = compactTxStreamer.channel.close()
+    }
+
+    func resolveLazyConnect() -> CompactTxStreamerAsyncClient {
+        guard self.channel == nil else {
+            if let compactTxStreamerInternal {
+                return compactTxStreamerInternal
+            } else {
+                fatalError("Initialization of CompactTxStreamerAsyncClient failed")
+            }
+        }
+
         let connectionBuilder = secure ?
         ClientConnection.usingPlatformAppropriateTLS(for: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default)) :
         ClientConnection.insecure(group: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default))
-
+        
         let channel = connectionBuilder
             .withConnectivityStateDelegate(connectionManager, executingOn: queue)
             .connect(host: host, port: port)
 
         self.channel = channel
-        
-        compactTxStreamer = CompactTxStreamerAsyncClient(
-            channel: self.channel,
+
+        let compactTxStreamerInstance = CompactTxStreamerAsyncClient(
+            channel: channel,
             defaultCallOptions: Self.callOptions(
                 timeLimit: self.singleCallTimeout
             )
         )
-    }
-
-    deinit {
-        _ = channel.close()
-        _ = compactTxStreamer.channel.close()
+        
+        self.compactTxStreamerInternal = compactTxStreamerInstance
+        
+        return compactTxStreamerInstance
     }
 
     func stop() {
-        _ = channel.close()
+        _ = channel?.close()
     }
 
     func latestBlock() async throws -> BlockID {
@@ -144,11 +179,7 @@ class LightWalletGRPCService {
             cacheable: false
         )
     }
-}
 
-// MARK: - LightWalletService
-
-extension LightWalletGRPCService: LightWalletService {
     func getInfo() async throws -> LightWalletdInfo {
         do {
             return try await compactTxStreamer.getLightdInfo(Empty())
@@ -157,11 +188,11 @@ extension LightWalletGRPCService: LightWalletService {
             throw ZcashError.serviceGetInfoFailed(serviceError)
         }
     }
-    
+
     func latestBlockHeight() async throws -> BlockHeight {
         try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
     }
-    
+
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         let stream = compactTxStreamer.getBlockRange(range.blockRange())
         var iterator = stream.makeAsyncIterator()
@@ -176,7 +207,7 @@ extension LightWalletGRPCService: LightWalletService {
             }
         }
     }
-    
+
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         do {
             let transaction = RawTransaction.with { $0.data = spendTransaction }
@@ -186,7 +217,7 @@ extension LightWalletGRPCService: LightWalletService {
             throw ZcashError.serviceSubmitFailed(serviceError)
         }
     }
-    
+
     func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         var txFilter = TxFilter()
         txFilter.hash = txId
@@ -318,7 +349,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     func closeConnection() {
-        _ = channel.close()
+        _ = channel?.close()
     }
 }
 

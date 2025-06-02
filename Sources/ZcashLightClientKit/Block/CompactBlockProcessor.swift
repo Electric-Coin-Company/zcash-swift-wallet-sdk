@@ -780,7 +780,7 @@ extension CompactBlockProcessor {
                     guard let self else { return }
                     if await self.isIdle() {
                         if await self.canStartSync() {
-                            self.logger.debug(
+                            await self.logger.debug(
                                 """
                                 Timer triggered: Starting compact Block processor!.
                                 Processor State: \(await self.context.state)
