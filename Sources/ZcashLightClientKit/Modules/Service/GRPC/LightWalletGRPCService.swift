@@ -160,7 +160,7 @@ class LightWalletGRPCService: LightWalletService {
         _ = channel?.close()
     }
 
-    func latestBlock() async throws -> BlockID {
+    func latestBlock(mode: ServiceMode) async throws -> BlockID {
         do {
             return try await compactTxStreamer.getLatestBlock(ChainSpec())
         } catch {
@@ -180,7 +180,7 @@ class LightWalletGRPCService: LightWalletService {
         )
     }
 
-    func getInfo() async throws -> LightWalletdInfo {
+    func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
         do {
             return try await compactTxStreamer.getLightdInfo(Empty())
         } catch {
@@ -189,7 +189,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
 
-    func latestBlockHeight() async throws -> BlockHeight {
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
         try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
     }
 
@@ -208,7 +208,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
 
-    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+    func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
         do {
             let transaction = RawTransaction.with { $0.data = spendTransaction }
             return try await compactTxStreamer.sendTransaction(transaction)
@@ -218,7 +218,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
 
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
@@ -329,7 +329,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
 
-    func getTreeState(_ id: BlockID) async throws -> TreeState {
+    func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
         try await compactTxStreamer.getTreeState(id)
     }
 

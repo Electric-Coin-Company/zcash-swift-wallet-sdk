@@ -333,7 +333,9 @@ public class SDKSynchronizer: Synchronizer {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID {
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight())
+        // ServiceMode to resolve
+        // called when a new account is imported
+        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .torInGroup(ServiceMode.Constants.rare)))
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
 
@@ -557,7 +559,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.latestHeight()
+        // ServiceMode to resolve
+        try await blockProcessor.latestHeight(mode: .defaultTor)
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -766,9 +769,13 @@ public class SDKSynchronizer: Synchronizer {
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
-                    let info = try? await service.service.getInfo()
+                    // ServiceMode to resolve
+                    // called when performance of servers is evaluated
+                    let info = try? await service.service.getInfo(mode: .defaultTor)
                     let markTime = Date().timeIntervalSince1970
-                    let latestBlockHeight = try? await service.service.latestBlockHeight()
+                    // ServiceMode to resolve
+                    // called when performance of servers is evaluated
+                    let latestBlockHeight = try? await service.service.latestBlockHeight(mode: .defaultTor)
                     let endTime = Date().timeIntervalSince1970
 
                     let getInfoTime = markTime - startTime

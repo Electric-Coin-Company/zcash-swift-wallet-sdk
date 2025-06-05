@@ -36,7 +36,7 @@ class MockLightWalletService: LightWalletService {
         service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
 
-    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+    func latestBlock(mode: ServiceMode) async throws -> ZcashLightClientKit.BlockID {
         throw "Not mocked"
     }
 
@@ -60,11 +60,11 @@ class MockLightWalletService: LightWalletService {
         self.service = service
     }
     
-    func latestBlockHeight() async throws -> BlockHeight {
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
         latestHeight
     }
 
-    func getInfo() async throws -> LightWalletdInfo {
+    func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
         guard let info = mockLightDInfo else {
             throw ZcashError.serviceGetInfoFailed(.generalError(message: "Not Implemented"))
         }
@@ -75,11 +75,11 @@ class MockLightWalletService: LightWalletService {
         service.blockRange(range)
     }
     
-    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+    func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
 
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         return (nil, .txidNotRecognized)
     }
 
@@ -87,7 +87,7 @@ class MockLightWalletService: LightWalletService {
         service.getSubtreeRoots(request)
     }
     
-    func getTreeState(_ id: BlockID) async throws -> TreeState {
-        try await service.getTreeState(id)
+    func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
+        try await service.getTreeState(id, mode: mode)
     }
 }

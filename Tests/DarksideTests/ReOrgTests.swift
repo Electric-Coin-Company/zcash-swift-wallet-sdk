@@ -178,7 +178,7 @@ class ReOrgTests: ZcashTestCase {
         */
         var latestDownloadedHeight = BlockHeight(0)
         do {
-            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight()
+            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight(mode: .direct)
             XCTAssertTrue(latestDownloadedHeight > 0)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -213,7 +213,7 @@ class ReOrgTests: ZcashTestCase {
         // now everything should be fine. latest block should be targetHeight
 
         do {
-            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight()
+            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight(mode: .direct)
             XCTAssertEqual(latestDownloadedHeight, targetHeight)
         } catch {
             XCTFail("Unexpected error: \(error)")

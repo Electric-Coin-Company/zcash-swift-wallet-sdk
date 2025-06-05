@@ -54,7 +54,7 @@ class BlockStreamingTest: ZcashTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
-        latestBlockHeight = try await service.latestBlockHeight()
+        latestBlockHeight = try await service.latestBlockHeight(mode: .direct)
         startHeight = latestBlockHeight - 10_000
     }
 

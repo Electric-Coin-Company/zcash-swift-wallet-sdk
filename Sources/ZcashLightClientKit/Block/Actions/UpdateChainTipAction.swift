@@ -23,7 +23,10 @@ final class UpdateChainTipAction {
     }
     
     func updateChainTip(_ context: ActionContext, time: TimeInterval) async throws {
-        let latestBlockHeight = try await service.latestBlockHeight()
+        // ServiceMode to resolve
+        // called each sync, right after getInfo in ValidateServerAction
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
+        let latestBlockHeight = try await service.latestBlockHeight(mode: .defaultTor)
         
         logger.debug("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))

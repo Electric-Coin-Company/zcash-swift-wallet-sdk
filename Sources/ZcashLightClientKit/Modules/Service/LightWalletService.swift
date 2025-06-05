@@ -142,20 +142,34 @@ struct LightWalletServiceFactory {
     }
 }
 
+enum ServiceMode: Equatable {
+    enum Constants {
+        static let rare = "rare"
+    }
+    
+    case defaultTor
+    case direct
+    case torInGroup(String)
+    
+    static func txIdGroup(prefix: String, txId: Data) -> String {
+        "\(prefix)-\(txId.hexEncodedString())"
+    }
+}
+
 protocol LightWalletService: AnyObject {
     /// Closure which is called when connection state changes.
     var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? { get set }
 
     /// Returns the info for this lightwalletd server
     /// - Throws: `serviceGetInfoFailed` when GRPC call fails.
-    func getInfo() async throws -> LightWalletdInfo
+    func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo
 
     /// - Throws: `serviceLatestBlockHeightFailed` when GRPC call fails.
-    func latestBlock() async throws -> BlockID
+    func latestBlock(mode: ServiceMode) async throws -> BlockID
 
     /// Return the latest block height known to the service.
     /// - Throws: `serviceLatestBlockFailed` when GRPC call fails.
-    func latestBlockHeight() async throws -> BlockHeight
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight
 
     /// Return the given range of blocks.
     /// - Parameter range: the inclusive range to fetch.
@@ -166,14 +180,14 @@ protocol LightWalletService: AnyObject {
     /// Submits a raw transaction over lightwalletd.
     /// - Parameter spendTransaction: data representing the transaction to be sent
     /// - Throws: `serviceSubmitFailed` when GRPC call fails.
-    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse
+    func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse
 
     /// Gets a transaction by id
     /// - Parameter txId: data representing the transaction ID
     /// - Throws: LightWalletServiceError
     /// - Returns: LightWalletServiceResponse
     /// - Throws: `serviceFetchTransactionFailed` when GRPC call fails.
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus)
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus)
 
     /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
     // sourcery: mockedName="fetchUTXOsSingle"
@@ -197,7 +211,7 @@ protocol LightWalletService: AnyObject {
     ///   - request: Request to send to GetSubtreeRoots.
     func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
 
-    func getTreeState(_ id: BlockID) async throws -> TreeState
+    func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState
 
     func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>
 }

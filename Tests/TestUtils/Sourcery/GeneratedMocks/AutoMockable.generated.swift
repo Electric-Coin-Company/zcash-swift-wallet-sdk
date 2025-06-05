@@ -365,47 +365,49 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
 
     // MARK: - latestBlockHeight
 
-    var latestBlockHeightThrowableError: Error?
-    var latestBlockHeightCallsCount = 0
-    var latestBlockHeightCalled: Bool {
-        return latestBlockHeightCallsCount > 0
+    var latestBlockHeightModeThrowableError: Error?
+    var latestBlockHeightModeCallsCount = 0
+    var latestBlockHeightModeCalled: Bool {
+        return latestBlockHeightModeCallsCount > 0
     }
-    var latestBlockHeightReturnValue: BlockHeight!
-    var latestBlockHeightClosure: (() async throws -> BlockHeight)?
+    var latestBlockHeightModeReceivedMode: ServiceMode?
+    var latestBlockHeightModeReturnValue: BlockHeight!
+    var latestBlockHeightModeClosure: ((ServiceMode) async throws -> BlockHeight)?
 
-    func latestBlockHeight() async throws -> BlockHeight {
-        if let error = latestBlockHeightThrowableError {
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
+        if let error = latestBlockHeightModeThrowableError {
             throw error
         }
-        latestBlockHeightCallsCount += 1
-        if let closure = latestBlockHeightClosure {
-            return try await closure()
+        latestBlockHeightModeCallsCount += 1
+        latestBlockHeightModeReceivedMode = mode
+        if let closure = latestBlockHeightModeClosure {
+            return try await closure(mode)
         } else {
-            return latestBlockHeightReturnValue
+            return latestBlockHeightModeReturnValue
         }
     }
 
     // MARK: - fetchTransaction
 
-    var fetchTransactionTxIdThrowableError: Error?
-    var fetchTransactionTxIdCallsCount = 0
-    var fetchTransactionTxIdCalled: Bool {
-        return fetchTransactionTxIdCallsCount > 0
+    var fetchTransactionTxIdModeThrowableError: Error?
+    var fetchTransactionTxIdModeCallsCount = 0
+    var fetchTransactionTxIdModeCalled: Bool {
+        return fetchTransactionTxIdModeCallsCount > 0
     }
-    var fetchTransactionTxIdReceivedTxId: Data?
-    var fetchTransactionTxIdReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
-    var fetchTransactionTxIdClosure: ((Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
+    var fetchTransactionTxIdModeReceivedArguments: (txId: Data, mode: ServiceMode)?
+    var fetchTransactionTxIdModeReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
+    var fetchTransactionTxIdModeClosure: ((Data, ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
 
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
-        if let error = fetchTransactionTxIdThrowableError {
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+        if let error = fetchTransactionTxIdModeThrowableError {
             throw error
         }
-        fetchTransactionTxIdCallsCount += 1
-        fetchTransactionTxIdReceivedTxId = txId
-        if let closure = fetchTransactionTxIdClosure {
-            return try await closure(txId)
+        fetchTransactionTxIdModeCallsCount += 1
+        fetchTransactionTxIdModeReceivedArguments = (txId: txId, mode: mode)
+        if let closure = fetchTransactionTxIdModeClosure {
+            return try await closure(txId, mode)
         } else {
-            return fetchTransactionTxIdReturnValue
+            return fetchTransactionTxIdModeReturnValue
         }
     }
 
@@ -751,67 +753,73 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - getInfo
 
-    var getInfoThrowableError: Error?
-    var getInfoCallsCount = 0
-    var getInfoCalled: Bool {
-        return getInfoCallsCount > 0
+    var getInfoModeThrowableError: Error?
+    var getInfoModeCallsCount = 0
+    var getInfoModeCalled: Bool {
+        return getInfoModeCallsCount > 0
     }
-    var getInfoReturnValue: LightWalletdInfo!
-    var getInfoClosure: (() async throws -> LightWalletdInfo)?
+    var getInfoModeReceivedMode: ServiceMode?
+    var getInfoModeReturnValue: LightWalletdInfo!
+    var getInfoModeClosure: ((ServiceMode) async throws -> LightWalletdInfo)?
 
-    func getInfo() async throws -> LightWalletdInfo {
-        if let error = getInfoThrowableError {
+    func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
+        if let error = getInfoModeThrowableError {
             throw error
         }
-        getInfoCallsCount += 1
-        if let closure = getInfoClosure {
-            return try await closure()
+        getInfoModeCallsCount += 1
+        getInfoModeReceivedMode = mode
+        if let closure = getInfoModeClosure {
+            return try await closure(mode)
         } else {
-            return getInfoReturnValue
+            return getInfoModeReturnValue
         }
     }
 
     // MARK: - latestBlock
 
-    var latestBlockThrowableError: Error?
-    var latestBlockCallsCount = 0
-    var latestBlockCalled: Bool {
-        return latestBlockCallsCount > 0
+    var latestBlockModeThrowableError: Error?
+    var latestBlockModeCallsCount = 0
+    var latestBlockModeCalled: Bool {
+        return latestBlockModeCallsCount > 0
     }
-    var latestBlockReturnValue: BlockID!
-    var latestBlockClosure: (() async throws -> BlockID)?
+    var latestBlockModeReceivedMode: ServiceMode?
+    var latestBlockModeReturnValue: BlockID!
+    var latestBlockModeClosure: ((ServiceMode) async throws -> BlockID)?
 
-    func latestBlock() async throws -> BlockID {
-        if let error = latestBlockThrowableError {
+    func latestBlock(mode: ServiceMode) async throws -> BlockID {
+        if let error = latestBlockModeThrowableError {
             throw error
         }
-        latestBlockCallsCount += 1
-        if let closure = latestBlockClosure {
-            return try await closure()
+        latestBlockModeCallsCount += 1
+        latestBlockModeReceivedMode = mode
+        if let closure = latestBlockModeClosure {
+            return try await closure(mode)
         } else {
-            return latestBlockReturnValue
+            return latestBlockModeReturnValue
         }
     }
 
     // MARK: - latestBlockHeight
 
-    var latestBlockHeightThrowableError: Error?
-    var latestBlockHeightCallsCount = 0
-    var latestBlockHeightCalled: Bool {
-        return latestBlockHeightCallsCount > 0
+    var latestBlockHeightModeThrowableError: Error?
+    var latestBlockHeightModeCallsCount = 0
+    var latestBlockHeightModeCalled: Bool {
+        return latestBlockHeightModeCallsCount > 0
     }
-    var latestBlockHeightReturnValue: BlockHeight!
-    var latestBlockHeightClosure: (() async throws -> BlockHeight)?
+    var latestBlockHeightModeReceivedMode: ServiceMode?
+    var latestBlockHeightModeReturnValue: BlockHeight!
+    var latestBlockHeightModeClosure: ((ServiceMode) async throws -> BlockHeight)?
 
-    func latestBlockHeight() async throws -> BlockHeight {
-        if let error = latestBlockHeightThrowableError {
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
+        if let error = latestBlockHeightModeThrowableError {
             throw error
         }
-        latestBlockHeightCallsCount += 1
-        if let closure = latestBlockHeightClosure {
-            return try await closure()
+        latestBlockHeightModeCallsCount += 1
+        latestBlockHeightModeReceivedMode = mode
+        if let closure = latestBlockHeightModeClosure {
+            return try await closure(mode)
         } else {
-            return latestBlockHeightReturnValue
+            return latestBlockHeightModeReturnValue
         }
     }
 
@@ -837,49 +845,49 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - submit
 
-    var submitSpendTransactionThrowableError: Error?
-    var submitSpendTransactionCallsCount = 0
-    var submitSpendTransactionCalled: Bool {
-        return submitSpendTransactionCallsCount > 0
+    var submitSpendTransactionModeThrowableError: Error?
+    var submitSpendTransactionModeCallsCount = 0
+    var submitSpendTransactionModeCalled: Bool {
+        return submitSpendTransactionModeCallsCount > 0
     }
-    var submitSpendTransactionReceivedSpendTransaction: Data?
-    var submitSpendTransactionReturnValue: LightWalletServiceResponse!
-    var submitSpendTransactionClosure: ((Data) async throws -> LightWalletServiceResponse)?
+    var submitSpendTransactionModeReceivedArguments: (spendTransaction: Data, mode: ServiceMode)?
+    var submitSpendTransactionModeReturnValue: LightWalletServiceResponse!
+    var submitSpendTransactionModeClosure: ((Data, ServiceMode) async throws -> LightWalletServiceResponse)?
 
-    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
-        if let error = submitSpendTransactionThrowableError {
+    func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
+        if let error = submitSpendTransactionModeThrowableError {
             throw error
         }
-        submitSpendTransactionCallsCount += 1
-        submitSpendTransactionReceivedSpendTransaction = spendTransaction
-        if let closure = submitSpendTransactionClosure {
-            return try await closure(spendTransaction)
+        submitSpendTransactionModeCallsCount += 1
+        submitSpendTransactionModeReceivedArguments = (spendTransaction: spendTransaction, mode: mode)
+        if let closure = submitSpendTransactionModeClosure {
+            return try await closure(spendTransaction, mode)
         } else {
-            return submitSpendTransactionReturnValue
+            return submitSpendTransactionModeReturnValue
         }
     }
 
     // MARK: - fetchTransaction
 
-    var fetchTransactionTxIdThrowableError: Error?
-    var fetchTransactionTxIdCallsCount = 0
-    var fetchTransactionTxIdCalled: Bool {
-        return fetchTransactionTxIdCallsCount > 0
+    var fetchTransactionTxIdModeThrowableError: Error?
+    var fetchTransactionTxIdModeCallsCount = 0
+    var fetchTransactionTxIdModeCalled: Bool {
+        return fetchTransactionTxIdModeCallsCount > 0
     }
-    var fetchTransactionTxIdReceivedTxId: Data?
-    var fetchTransactionTxIdReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
-    var fetchTransactionTxIdClosure: ((Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
+    var fetchTransactionTxIdModeReceivedArguments: (txId: Data, mode: ServiceMode)?
+    var fetchTransactionTxIdModeReturnValue: (tx: ZcashTransaction.Fetched?, status: TransactionStatus)!
+    var fetchTransactionTxIdModeClosure: ((Data, ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus))?
 
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
-        if let error = fetchTransactionTxIdThrowableError {
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+        if let error = fetchTransactionTxIdModeThrowableError {
             throw error
         }
-        fetchTransactionTxIdCallsCount += 1
-        fetchTransactionTxIdReceivedTxId = txId
-        if let closure = fetchTransactionTxIdClosure {
-            return try await closure(txId)
+        fetchTransactionTxIdModeCallsCount += 1
+        fetchTransactionTxIdModeReceivedArguments = (txId: txId, mode: mode)
+        if let closure = fetchTransactionTxIdModeClosure {
+            return try await closure(txId, mode)
         } else {
-            return fetchTransactionTxIdReturnValue
+            return fetchTransactionTxIdModeReturnValue
         }
     }
 
@@ -978,25 +986,25 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - getTreeState
 
-    var getTreeStateThrowableError: Error?
-    var getTreeStateCallsCount = 0
-    var getTreeStateCalled: Bool {
-        return getTreeStateCallsCount > 0
+    var getTreeStateModeThrowableError: Error?
+    var getTreeStateModeCallsCount = 0
+    var getTreeStateModeCalled: Bool {
+        return getTreeStateModeCallsCount > 0
     }
-    var getTreeStateReceivedId: BlockID?
-    var getTreeStateReturnValue: TreeState!
-    var getTreeStateClosure: ((BlockID) async throws -> TreeState)?
+    var getTreeStateModeReceivedArguments: (id: BlockID, mode: ServiceMode)?
+    var getTreeStateModeReturnValue: TreeState!
+    var getTreeStateModeClosure: ((BlockID, ServiceMode) async throws -> TreeState)?
 
-    func getTreeState(_ id: BlockID) async throws -> TreeState {
-        if let error = getTreeStateThrowableError {
+    func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
+        if let error = getTreeStateModeThrowableError {
             throw error
         }
-        getTreeStateCallsCount += 1
-        getTreeStateReceivedId = id
-        if let closure = getTreeStateClosure {
-            return try await closure(id)
+        getTreeStateModeCallsCount += 1
+        getTreeStateModeReceivedArguments = (id: id, mode: mode)
+        if let closure = getTreeStateModeClosure {
+            return try await closure(id, mode)
         } else {
-            return getTreeStateReturnValue
+            return getTreeStateModeReturnValue
         }
     }
 

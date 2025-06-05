@@ -131,8 +131,8 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         lightWalletdInfoMock.underlyingChainName = underlyingChainName
 
         let serviceMock = LightWalletServiceMock()
-        serviceMock.getInfoReturnValue = lightWalletdInfoMock
-        serviceMock.latestBlockHeightReturnValue = 1
+        serviceMock.getInfoModeReturnValue = lightWalletdInfoMock
+        serviceMock.latestBlockHeightModeReturnValue = 1
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }

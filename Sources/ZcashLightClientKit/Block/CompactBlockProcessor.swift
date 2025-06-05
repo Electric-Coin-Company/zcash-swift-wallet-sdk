@@ -289,8 +289,8 @@ extension CompactBlockProcessor {
         serviceFailureRetryAttempts = 0
     }
 
-    func latestHeight() async throws -> BlockHeight {
-        try await blockDownloaderService.latestBlockHeight()
+    func latestHeight(mode: ServiceMode) async throws -> BlockHeight {
+        try await blockDownloaderService.latestBlockHeight(mode: mode)
     }
     
     func consensusBranchIdFor(_ height: Int32) -> Int32? {

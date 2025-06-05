@@ -14,7 +14,7 @@ import SwiftProtobuf
 extension String: Error { }
 
 class AwfulLightWalletService: MockLightWalletService {
-    override func latestBlockHeight() async throws -> BlockHeight {
+    override func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
         throw ZcashError.serviceLatestBlockFailed(.criticalError)
     }
 
@@ -23,7 +23,7 @@ class AwfulLightWalletService: MockLightWalletService {
     }
 
     /// Submits a raw transaction over lightwalletd.
-    override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+    override func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
         throw ZcashError.serviceSubmitFailed(.invalidBlock)
     }
 }
@@ -32,7 +32,7 @@ extension LightWalletServiceMockResponse: Error { }
 
 class SlightlyBadLightWalletService: MockLightWalletService {
     /// Submits a raw transaction over lightwalletd.
-    override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+    override func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
         throw LightWalletServiceMockResponse.error
     }
 }
