@@ -161,6 +161,10 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func latestBlock(mode: ServiceMode) async throws -> BlockID {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         do {
             return try await compactTxStreamer.getLatestBlock(ChainSpec())
         } catch {
@@ -181,6 +185,10 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+        
         do {
             return try await compactTxStreamer.getLightdInfo(Empty())
         } catch {
@@ -190,10 +198,18 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
-        try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
+        return try await latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
     }
 
-    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+    func blockRange(_ range: CompactBlockRange, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         let stream = compactTxStreamer.getBlockRange(range.blockRange())
         var iterator = stream.makeAsyncIterator()
         
@@ -209,6 +225,10 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         do {
             let transaction = RawTransaction.with { $0.data = spendTransaction }
             return try await compactTxStreamer.sendTransaction(transaction)
@@ -219,6 +239,10 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         var txFilter = TxFilter()
         txFilter.hash = txId
         
@@ -253,14 +277,23 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
 
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        return fetchUTXOs(for: [tAddress], height: height)
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
+        return try fetchUTXOs(for: [tAddress], height: height, mode: mode)
     }
 
     func fetchUTXOs(
         for tAddresses: [String],
-        height: BlockHeight
-    ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        height: BlockHeight,
+        mode: ServiceMode
+    ) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         guard !tAddresses.isEmpty else {
             return AsyncThrowingStream { continuation in continuation.finish() }
         }
@@ -292,8 +325,13 @@ class LightWalletGRPCService: LightWalletService {
     
     func blockStream(
         startHeight: BlockHeight,
-        endHeight: BlockHeight
-    ) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        endHeight: BlockHeight,
+        mode: ServiceMode
+    ) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         let stream = compactTxStreamer.getBlockRange(
             BlockRange(
                 startHeight: startHeight,
@@ -314,7 +352,11 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error> {
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<SubtreeRoot, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         let stream = compactTxStreamer.getSubtreeRoots(request)
         var iterator = stream.makeAsyncIterator()
         
@@ -330,10 +372,18 @@ class LightWalletGRPCService: LightWalletService {
     }
 
     func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
-        try await compactTxStreamer.getTreeState(id)
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
+        return try await compactTxStreamer.getTreeState(id)
     }
 
-    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error> {
+        guard mode == .direct else {
+            throw ZcashError.grpcServiceCalledWithTorMode
+        }
+
         let stream = compactTxStreamer.getTaddressTxids(request)
         var iterator = stream.makeAsyncIterator()
         
@@ -348,7 +398,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func closeConnection() {
+    func closeConnection(mode: ServiceMode) {
         _ = channel?.close()
     }
 }

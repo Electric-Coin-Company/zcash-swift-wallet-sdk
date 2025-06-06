@@ -47,7 +47,7 @@ class LightWalletServiceTests: XCTestCase {
         let blockRange = lowerRange ... upperRange
         
         var blocks: [ZcashCompactBlock] = []
-        for try await block in service.blockRange(blockRange) {
+        for try await block in try service.blockRange(blockRange, mode: .direct) {
             blocks.append(block)
         }
         XCTAssertEqual(blocks.count, blockRange.count)
@@ -61,7 +61,7 @@ class LightWalletServiceTests: XCTestCase {
         let blockRange = lowerRange ... upperRange
 
         var blocks: [ZcashCompactBlock] = []
-        for try await block in service.blockRange(blockRange) {
+        for try await block in try service.blockRange(blockRange, mode: .direct) {
             blocks.append(block)
         }
         XCTAssertEqual(blocks.count, blockRange.count)

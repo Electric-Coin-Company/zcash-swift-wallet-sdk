@@ -862,9 +862,11 @@ extension CompactBlockProcessor {
     func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
+        // ServiceMode to resolve
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = try blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddress: tAddress.stringEncoded,
-            startHeight: startHeight
+            startHeight: startHeight,
+            mode: .direct
         )
         var utxos: [UnspentTransactionOutputEntity] = []
         

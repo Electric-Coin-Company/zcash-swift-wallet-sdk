@@ -305,21 +305,21 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
 
     // MARK: - downloadBlockRange
 
-    var downloadBlockRangeThrowableError: Error?
-    var downloadBlockRangeCallsCount = 0
-    var downloadBlockRangeCalled: Bool {
-        return downloadBlockRangeCallsCount > 0
+    var downloadBlockRangeModeThrowableError: Error?
+    var downloadBlockRangeModeCallsCount = 0
+    var downloadBlockRangeModeCalled: Bool {
+        return downloadBlockRangeModeCallsCount > 0
     }
-    var downloadBlockRangeReceivedHeightRange: CompactBlockRange?
-    var downloadBlockRangeClosure: ((CompactBlockRange) async throws -> Void)?
+    var downloadBlockRangeModeReceivedArguments: (heightRange: CompactBlockRange, mode: ServiceMode)?
+    var downloadBlockRangeModeClosure: ((CompactBlockRange, ServiceMode) async throws -> Void)?
 
-    func downloadBlockRange(_ heightRange: CompactBlockRange) async throws {
-        if let error = downloadBlockRangeThrowableError {
+    func downloadBlockRange(_ heightRange: CompactBlockRange, mode: ServiceMode) async throws {
+        if let error = downloadBlockRangeModeThrowableError {
             throw error
         }
-        downloadBlockRangeCallsCount += 1
-        downloadBlockRangeReceivedHeightRange = heightRange
-        try await downloadBlockRangeClosure!(heightRange)
+        downloadBlockRangeModeCallsCount += 1
+        downloadBlockRangeModeReceivedArguments = (heightRange: heightRange, mode: mode)
+        try await downloadBlockRangeModeClosure!(heightRange, mode)
     }
 
     // MARK: - rewind
@@ -413,55 +413,65 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
 
     // MARK: - fetchUnspentTransactionOutputs
 
-    var fetchUnspentTransactionOutputsTAddressStartHeightCallsCount = 0
-    var fetchUnspentTransactionOutputsTAddressStartHeightCalled: Bool {
-        return fetchUnspentTransactionOutputsTAddressStartHeightCallsCount > 0
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeThrowableError: Error?
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeCallsCount = 0
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeCalled: Bool {
+        return fetchUnspentTransactionOutputsTAddressStartHeightModeCallsCount > 0
     }
-    var fetchUnspentTransactionOutputsTAddressStartHeightReceivedArguments: (tAddress: String, startHeight: BlockHeight)?
-    var fetchUnspentTransactionOutputsTAddressStartHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
-    var fetchUnspentTransactionOutputsTAddressStartHeightClosure: ((String, BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeReceivedArguments: (tAddress: String, startHeight: BlockHeight, mode: ServiceMode)?
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUnspentTransactionOutputsTAddressStartHeightModeClosure: ((String, BlockHeight, ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
 
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        fetchUnspentTransactionOutputsTAddressStartHeightCallsCount += 1
-        fetchUnspentTransactionOutputsTAddressStartHeightReceivedArguments = (tAddress: tAddress, startHeight: startHeight)
-        if let closure = fetchUnspentTransactionOutputsTAddressStartHeightClosure {
-            return closure(tAddress, startHeight)
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        if let error = fetchUnspentTransactionOutputsTAddressStartHeightModeThrowableError {
+            throw error
+        }
+        fetchUnspentTransactionOutputsTAddressStartHeightModeCallsCount += 1
+        fetchUnspentTransactionOutputsTAddressStartHeightModeReceivedArguments = (tAddress: tAddress, startHeight: startHeight, mode: mode)
+        if let closure = fetchUnspentTransactionOutputsTAddressStartHeightModeClosure {
+            return try closure(tAddress, startHeight, mode)
         } else {
-            return fetchUnspentTransactionOutputsTAddressStartHeightReturnValue
+            return fetchUnspentTransactionOutputsTAddressStartHeightModeReturnValue
         }
     }
 
     // MARK: - fetchUnspentTransactionOutputs
 
-    var fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount = 0
-    var fetchUnspentTransactionOutputsTAddressesStartHeightCalled: Bool {
-        return fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount > 0
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeThrowableError: Error?
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeCallsCount = 0
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeCalled: Bool {
+        return fetchUnspentTransactionOutputsTAddressesStartHeightModeCallsCount > 0
     }
-    var fetchUnspentTransactionOutputsTAddressesStartHeightReceivedArguments: (tAddresses: [String], startHeight: BlockHeight)?
-    var fetchUnspentTransactionOutputsTAddressesStartHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
-    var fetchUnspentTransactionOutputsTAddressesStartHeightClosure: (([String], BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeReceivedArguments: (tAddresses: [String], startHeight: BlockHeight, mode: ServiceMode)?
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUnspentTransactionOutputsTAddressesStartHeightModeClosure: (([String], BlockHeight, ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
 
-    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount += 1
-        fetchUnspentTransactionOutputsTAddressesStartHeightReceivedArguments = (tAddresses: tAddresses, startHeight: startHeight)
-        if let closure = fetchUnspentTransactionOutputsTAddressesStartHeightClosure {
-            return closure(tAddresses, startHeight)
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        if let error = fetchUnspentTransactionOutputsTAddressesStartHeightModeThrowableError {
+            throw error
+        }
+        fetchUnspentTransactionOutputsTAddressesStartHeightModeCallsCount += 1
+        fetchUnspentTransactionOutputsTAddressesStartHeightModeReceivedArguments = (tAddresses: tAddresses, startHeight: startHeight, mode: mode)
+        if let closure = fetchUnspentTransactionOutputsTAddressesStartHeightModeClosure {
+            return try closure(tAddresses, startHeight, mode)
         } else {
-            return fetchUnspentTransactionOutputsTAddressesStartHeightReturnValue
+            return fetchUnspentTransactionOutputsTAddressesStartHeightModeReturnValue
         }
     }
 
     // MARK: - closeConnection
 
-    var closeConnectionCallsCount = 0
-    var closeConnectionCalled: Bool {
-        return closeConnectionCallsCount > 0
+    var closeConnectionModeCallsCount = 0
+    var closeConnectionModeCalled: Bool {
+        return closeConnectionModeCallsCount > 0
     }
-    var closeConnectionClosure: (() -> Void)?
+    var closeConnectionModeReceivedMode: ServiceMode?
+    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
 
-    func closeConnection() {
-        closeConnectionCallsCount += 1
-        closeConnectionClosure!()
+    func closeConnection(mode: ServiceMode) {
+        closeConnectionModeCallsCount += 1
+        closeConnectionModeReceivedMode = mode
+        closeConnectionModeClosure!(mode)
     }
 
 }
@@ -825,21 +835,25 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - blockRange
 
-    var blockRangeCallsCount = 0
-    var blockRangeCalled: Bool {
-        return blockRangeCallsCount > 0
+    var blockRangeModeThrowableError: Error?
+    var blockRangeModeCallsCount = 0
+    var blockRangeModeCalled: Bool {
+        return blockRangeModeCallsCount > 0
     }
-    var blockRangeReceivedRange: CompactBlockRange?
-    var blockRangeReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
-    var blockRangeClosure: ((CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
+    var blockRangeModeReceivedArguments: (range: CompactBlockRange, mode: ServiceMode)?
+    var blockRangeModeReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
+    var blockRangeModeClosure: ((CompactBlockRange, ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
 
-    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        blockRangeCallsCount += 1
-        blockRangeReceivedRange = range
-        if let closure = blockRangeClosure {
-            return closure(range)
+    func blockRange(_ range: CompactBlockRange, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        if let error = blockRangeModeThrowableError {
+            throw error
+        }
+        blockRangeModeCallsCount += 1
+        blockRangeModeReceivedArguments = (range: range, mode: mode)
+        if let closure = blockRangeModeClosure {
+            return try closure(range, mode)
         } else {
-            return blockRangeReturnValue
+            return blockRangeModeReturnValue
         }
     }
 
@@ -893,19 +907,23 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - fetchUTXOs
 
+    var fetchUTXOsSingleThrowableError: Error?
     var fetchUTXOsSingleCallsCount = 0
     var fetchUTXOsSingleCalled: Bool {
         return fetchUTXOsSingleCallsCount > 0
     }
-    var fetchUTXOsSingleReceivedArguments: (tAddress: String, height: BlockHeight)?
+    var fetchUTXOsSingleReceivedArguments: (tAddress: String, height: BlockHeight, mode: ServiceMode)?
     var fetchUTXOsSingleReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
-    var fetchUTXOsSingleClosure: ((String, BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+    var fetchUTXOsSingleClosure: ((String, BlockHeight, ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
 
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        if let error = fetchUTXOsSingleThrowableError {
+            throw error
+        }
         fetchUTXOsSingleCallsCount += 1
-        fetchUTXOsSingleReceivedArguments = (tAddress: tAddress, height: height)
+        fetchUTXOsSingleReceivedArguments = (tAddress: tAddress, height: height, mode: mode)
         if let closure = fetchUTXOsSingleClosure {
-            return closure(tAddress, height)
+            return try closure(tAddress, height, mode)
         } else {
             return fetchUTXOsSingleReturnValue
         }
@@ -913,74 +931,84 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - fetchUTXOs
 
-    var fetchUTXOsForHeightCallsCount = 0
-    var fetchUTXOsForHeightCalled: Bool {
-        return fetchUTXOsForHeightCallsCount > 0
+    var fetchUTXOsForHeightModeThrowableError: Error?
+    var fetchUTXOsForHeightModeCallsCount = 0
+    var fetchUTXOsForHeightModeCalled: Bool {
+        return fetchUTXOsForHeightModeCallsCount > 0
     }
-    var fetchUTXOsForHeightReceivedArguments: (tAddresses: [String], height: BlockHeight)?
-    var fetchUTXOsForHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
-    var fetchUTXOsForHeightClosure: (([String], BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+    var fetchUTXOsForHeightModeReceivedArguments: (tAddresses: [String], height: BlockHeight, mode: ServiceMode)?
+    var fetchUTXOsForHeightModeReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUTXOsForHeightModeClosure: (([String], BlockHeight, ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
 
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        fetchUTXOsForHeightCallsCount += 1
-        fetchUTXOsForHeightReceivedArguments = (tAddresses: tAddresses, height: height)
-        if let closure = fetchUTXOsForHeightClosure {
-            return closure(tAddresses, height)
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        if let error = fetchUTXOsForHeightModeThrowableError {
+            throw error
+        }
+        fetchUTXOsForHeightModeCallsCount += 1
+        fetchUTXOsForHeightModeReceivedArguments = (tAddresses: tAddresses, height: height, mode: mode)
+        if let closure = fetchUTXOsForHeightModeClosure {
+            return try closure(tAddresses, height, mode)
         } else {
-            return fetchUTXOsForHeightReturnValue
+            return fetchUTXOsForHeightModeReturnValue
         }
     }
 
     // MARK: - blockStream
 
-    var blockStreamStartHeightEndHeightCallsCount = 0
-    var blockStreamStartHeightEndHeightCalled: Bool {
-        return blockStreamStartHeightEndHeightCallsCount > 0
+    var blockStreamStartHeightEndHeightModeCallsCount = 0
+    var blockStreamStartHeightEndHeightModeCalled: Bool {
+        return blockStreamStartHeightEndHeightModeCallsCount > 0
     }
-    var blockStreamStartHeightEndHeightReceivedArguments: (startHeight: BlockHeight, endHeight: BlockHeight)?
-    var blockStreamStartHeightEndHeightReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
-    var blockStreamStartHeightEndHeightClosure: ((BlockHeight, BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
+    var blockStreamStartHeightEndHeightModeReceivedArguments: (startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode)?
+    var blockStreamStartHeightEndHeightModeReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
+    var blockStreamStartHeightEndHeightModeClosure: ((BlockHeight, BlockHeight, ServiceMode) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
 
-    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        blockStreamStartHeightEndHeightCallsCount += 1
-        blockStreamStartHeightEndHeightReceivedArguments = (startHeight: startHeight, endHeight: endHeight)
-        if let closure = blockStreamStartHeightEndHeightClosure {
-            return closure(startHeight, endHeight)
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        blockStreamStartHeightEndHeightModeCallsCount += 1
+        blockStreamStartHeightEndHeightModeReceivedArguments = (startHeight: startHeight, endHeight: endHeight, mode: mode)
+        if let closure = blockStreamStartHeightEndHeightModeClosure {
+            return closure(startHeight, endHeight, mode)
         } else {
-            return blockStreamStartHeightEndHeightReturnValue
+            return blockStreamStartHeightEndHeightModeReturnValue
         }
     }
 
     // MARK: - closeConnection
 
-    var closeConnectionCallsCount = 0
-    var closeConnectionCalled: Bool {
-        return closeConnectionCallsCount > 0
+    var closeConnectionModeCallsCount = 0
+    var closeConnectionModeCalled: Bool {
+        return closeConnectionModeCallsCount > 0
     }
-    var closeConnectionClosure: (() -> Void)?
+    var closeConnectionModeReceivedMode: ServiceMode?
+    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
 
-    func closeConnection() {
-        closeConnectionCallsCount += 1
-        closeConnectionClosure!()
+    func closeConnection(mode: ServiceMode) {
+        closeConnectionModeCallsCount += 1
+        closeConnectionModeReceivedMode = mode
+        closeConnectionModeClosure!(mode)
     }
 
     // MARK: - getSubtreeRoots
 
-    var getSubtreeRootsCallsCount = 0
-    var getSubtreeRootsCalled: Bool {
-        return getSubtreeRootsCallsCount > 0
+    var getSubtreeRootsModeThrowableError: Error?
+    var getSubtreeRootsModeCallsCount = 0
+    var getSubtreeRootsModeCalled: Bool {
+        return getSubtreeRootsModeCallsCount > 0
     }
-    var getSubtreeRootsReceivedRequest: GetSubtreeRootsArg?
-    var getSubtreeRootsReturnValue: AsyncThrowingStream<SubtreeRoot, Error>!
-    var getSubtreeRootsClosure: ((GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>)?
+    var getSubtreeRootsModeReceivedArguments: (request: GetSubtreeRootsArg, mode: ServiceMode)?
+    var getSubtreeRootsModeReturnValue: AsyncThrowingStream<SubtreeRoot, Error>!
+    var getSubtreeRootsModeClosure: ((GetSubtreeRootsArg, ServiceMode) throws -> AsyncThrowingStream<SubtreeRoot, Error>)?
 
-    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error> {
-        getSubtreeRootsCallsCount += 1
-        getSubtreeRootsReceivedRequest = request
-        if let closure = getSubtreeRootsClosure {
-            return closure(request)
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<SubtreeRoot, Error> {
+        if let error = getSubtreeRootsModeThrowableError {
+            throw error
+        }
+        getSubtreeRootsModeCallsCount += 1
+        getSubtreeRootsModeReceivedArguments = (request: request, mode: mode)
+        if let closure = getSubtreeRootsModeClosure {
+            return try closure(request, mode)
         } else {
-            return getSubtreeRootsReturnValue
+            return getSubtreeRootsModeReturnValue
         }
     }
 
@@ -1010,21 +1038,25 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - getTaddressTxids
 
-    var getTaddressTxidsCallsCount = 0
-    var getTaddressTxidsCalled: Bool {
-        return getTaddressTxidsCallsCount > 0
+    var getTaddressTxidsModeThrowableError: Error?
+    var getTaddressTxidsModeCallsCount = 0
+    var getTaddressTxidsModeCalled: Bool {
+        return getTaddressTxidsModeCallsCount > 0
     }
-    var getTaddressTxidsReceivedRequest: TransparentAddressBlockFilter?
-    var getTaddressTxidsReturnValue: AsyncThrowingStream<RawTransaction, Error>!
-    var getTaddressTxidsClosure: ((TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>)?
+    var getTaddressTxidsModeReceivedArguments: (request: TransparentAddressBlockFilter, mode: ServiceMode)?
+    var getTaddressTxidsModeReturnValue: AsyncThrowingStream<RawTransaction, Error>!
+    var getTaddressTxidsModeClosure: ((TransparentAddressBlockFilter, ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error>)?
 
-    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error> {
-        getTaddressTxidsCallsCount += 1
-        getTaddressTxidsReceivedRequest = request
-        if let closure = getTaddressTxidsClosure {
-            return closure(request)
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error> {
+        if let error = getTaddressTxidsModeThrowableError {
+            throw error
+        }
+        getTaddressTxidsModeCallsCount += 1
+        getTaddressTxidsModeReceivedArguments = (request: request, mode: mode)
+        if let closure = getTaddressTxidsModeClosure {
+            return try closure(request, mode)
         } else {
-            return getTaddressTxidsReturnValue
+            return getTaddressTxidsModeReturnValue
         }
     }
 

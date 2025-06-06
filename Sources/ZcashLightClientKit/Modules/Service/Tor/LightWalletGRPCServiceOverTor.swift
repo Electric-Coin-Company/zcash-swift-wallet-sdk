@@ -7,44 +7,18 @@
 
 import Foundation
 
-class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
+actor ServiceConnections {
     var tor: TorClient?
     var endpointString: String?
     var groups: [String: TorLwdConn] = [:]
     var defaultTorLwdConn: TorLwdConn?
     
-    convenience init(endpoint: LightWalletEndpoint, tor: TorClient?) {
-        self.init(
-            host: endpoint.host,
-            port: endpoint.port,
-            secure: endpoint.secure,
-            singleCallTimeout: endpoint.singleCallTimeoutInMillis,
-            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-            tor: tor
-        )
-    }
-    
-    init(
-        host: String,
-        port: Int,
-        secure: Bool,
-        singleCallTimeout: Int64,
-        streamingCallTimeout: Int64,
-        tor: TorClient?
-    ) {
+    init(endpoint: LightWalletEndpoint, tor: TorClient?) {
         self.tor = tor
-        endpointString = String(format: "%@://%@:%d", secure ? "https" : "http", host, port)
-        
-        super.init(
-            host: host,
-            port: port,
-            secure: secure,
-            singleCallTimeout: singleCallTimeout,
-            streamingCallTimeout: streamingCallTimeout
-        )
+        endpointString = String(format: "%@://%@:%d", endpoint.secure ? "https" : "http", endpoint.host, endpoint.port)
     }
     
-    func connectToLightwalletd(_ mode: ServiceMode) throws -> TorLwdConn {
+    func connectToLightwalletd(_ mode: ServiceMode) async throws -> TorLwdConn {
         guard let endpointString else {
             throw ZcashError.torServiceMissingEndpoint
         }
@@ -53,17 +27,21 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             throw ZcashError.torServiceMissingTorClient
         }
         
-        // defaultTor
-        if mode == .defaultTor {
-            if defaultTorLwdConn == nil {
-                defaultTorLwdConn = try tor.connectToLightwalletd(endpoint: endpointString)
+        // uniqueTor
+        if mode == .uniqueTor {
+            return try tor.connectToLightwalletd(endpoint: endpointString)
+        } else if mode == .defaultTor {
+            // defaultTor
+            let connection: TorLwdConn
+            
+            if let defaultTorLwdConn {
+                connection = defaultTorLwdConn
+            } else {
+                connection = try tor.connectToLightwalletd(endpoint: endpointString)
+                defaultTorLwdConn = connection
             }
             
-            guard let defaultTorLwdConn else {
-                throw ZcashError.torServiceUnableToCreateDefaultTorLwdConn
-            }
-            
-            return defaultTorLwdConn
+            return connection
         } else if case let .torInGroup(groupName) = mode {
             // torInGroup
             guard let torInGroup = groups[groupName] else {
@@ -79,13 +57,56 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             throw ZcashError.torServiceUnresolvedMode
         }
     }
+    
+    func responseToTorFailure(_ mode: ServiceMode) async {
+        if mode == .defaultTor {
+            defaultTorLwdConn = nil
+        }
+    }
+}
+
+class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
+    var tor: TorClient?
+    let serviceConnections: ServiceConnections
+
+    convenience init(endpoint: LightWalletEndpoint, tor: TorClient?) {
+        self.init(
+            endpoint: endpoint,
+            singleCallTimeout: endpoint.singleCallTimeoutInMillis,
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
+            tor: tor
+        )
+    }
+    
+    init(
+        endpoint: LightWalletEndpoint,
+        singleCallTimeout: Int64,
+        streamingCallTimeout: Int64,
+        tor: TorClient?
+    ) {
+        self.tor = tor
+        serviceConnections = ServiceConnections(endpoint: endpoint, tor: tor)
+
+        super.init(
+            host: endpoint.host,
+            port: endpoint.port,
+            secure: endpoint.secure,
+            singleCallTimeout: singleCallTimeout,
+            streamingCallTimeout: streamingCallTimeout
+        )
+    }
 
     override func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
         guard mode != .direct else {
             return try await super.getInfo(mode: mode)
         }
         
-        return try connectToLightwalletd(mode).getInfo()
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).getInfo()
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
     }
 
     override func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
@@ -93,7 +114,7 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             return try await super.latestBlockHeight(mode: mode)
         }
 
-        return BlockHeight(try await latestBlock(mode: .defaultTor).height)
+        return BlockHeight(try await latestBlock(mode: mode).height)
     }
 
     override func latestBlock(mode: ServiceMode) async throws -> BlockID {
@@ -101,7 +122,12 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             return try await super.latestBlock(mode: mode)
         }
 
-        return try connectToLightwalletd(mode).latestBlock()
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).latestBlock()
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
     }
     
     override func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
@@ -109,7 +135,12 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             return try await super.submit(spendTransaction: spendTransaction, mode: mode)
         }
 
-        return try connectToLightwalletd(mode).submit(spendTransaction: spendTransaction)
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).submit(spendTransaction: spendTransaction)
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
     }
     
     override func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
@@ -117,7 +148,12 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             return try await super.fetchTransaction(txId: txId, mode: mode)
         }
 
-        return try connectToLightwalletd(mode).fetchTransaction(txId: txId)
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).fetchTransaction(txId: txId)
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
     }
     
     override func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
@@ -125,6 +161,11 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             return try await super.getTreeState(id, mode: mode)
         }
 
-        return try connectToLightwalletd(mode).getTreeState(height: BlockHeight(id.height))
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).getTreeState(height: BlockHeight(id.height))
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
     }
 }

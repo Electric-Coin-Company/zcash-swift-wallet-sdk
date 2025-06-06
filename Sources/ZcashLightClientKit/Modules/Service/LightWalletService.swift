@@ -142,17 +142,19 @@ struct LightWalletServiceFactory {
     }
 }
 
+/// Mode that determines which connection is used for the lightwalletd networking calls.
 enum ServiceMode: Equatable {
-    enum Constants {
-        static let rare = "rare"
-    }
-    
+    /// Default Tor connection is used, lives for the lifetime of the Synchronizer.
     case defaultTor
+    /// GRPC connection is used, no Tor involved.
     case direct
+    /// Tor connection is used tagged by a given group name (String). Tags are held in memory for the lifetime of the Synchronizer.
     case torInGroup(String)
-    
-    static func txIdGroup(prefix: String, txId: Data) -> String {
-        "\(prefix)-\(txId.hexEncodedString())"
+    /// Tor connection is used, each time a new one, not held in memory, used only once.
+    case uniqueTor
+
+    static func txIdGroup(prefix: String, txId: Data) -> ServiceMode {
+        torInGroup("\(prefix)-\(txId.hexEncodedString())")
     }
 }
 
@@ -175,7 +177,7 @@ protocol LightWalletService: AnyObject {
     /// - Parameter range: the inclusive range to fetch.
     ///     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
     /// - Throws: `serviceBlockRangeFailed` when GRPC call fails.
-    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>
+    func blockRange(_ range: CompactBlockRange, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error>
     
     /// Submits a raw transaction over lightwalletd.
     /// - Parameter spendTransaction: data representing the transaction to be sent
@@ -191,27 +193,28 @@ protocol LightWalletService: AnyObject {
 
     /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
     // sourcery: mockedName="fetchUTXOsSingle"
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
     /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
     /// - Throws: `serviceBlockStreamFailed` when GRPC call fails.
     func blockStream(
         startHeight: BlockHeight,
-        endHeight: BlockHeight
-    ) -> AsyncThrowingStream<ZcashCompactBlock, Error>
+        endHeight: BlockHeight,
+        mode: ServiceMode
+    ) throws -> AsyncThrowingStream<ZcashCompactBlock, Error>
 
-    func closeConnection()
+    func closeConnection(mode: ServiceMode)
     
     /// Returns a stream of information about roots of subtrees of the Sapling and Orchard
     /// note commitment trees.
     ///
     /// - Parameters:
     ///   - request: Request to send to GetSubtreeRoots.
-    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<SubtreeRoot, Error>
 
     func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState
 
-    func getTaddressTxids(_ request: TransparentAddressBlockFilter) -> AsyncThrowingStream<RawTransaction, Error>
+    func getTaddressTxids(_ request: TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error>
 }

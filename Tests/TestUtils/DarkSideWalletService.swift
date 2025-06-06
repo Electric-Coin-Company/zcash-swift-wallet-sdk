@@ -38,8 +38,8 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
-    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter) -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
-        service.getTaddressTxids(request)
+    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
+        try service.getTaddressTxids(request, mode: mode)
     }
     
     var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
@@ -66,23 +66,23 @@ class DarksideWalletService: LightWalletService {
         self.init(endpoint: LightWalletEndpointBuilder.default)
     }
     
-    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        service.blockStream(startHeight: startHeight, endHeight: endHeight)
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        try service.blockStream(startHeight: startHeight, endHeight: endHeight, mode: mode)
     }
     
     func latestBlock(mode: ServiceMode) async throws -> ZcashLightClientKit.BlockID {
         throw "Not mocked"
     }
     
-    func closeConnection() {
+    func closeConnection(mode: ServiceMode) {
     }
     
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        service.fetchUTXOs(for: tAddress, height: height)
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try service.fetchUTXOs(for: tAddress, height: height, mode: mode)
     }
     
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        service.fetchUTXOs(for: tAddresses, height: height)
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try service.fetchUTXOs(for: tAddresses, height: height, mode: mode)
     }
     
     func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
@@ -178,8 +178,8 @@ class DarksideWalletService: LightWalletService {
         try await service.getInfo(mode: mode)
     }
 
-    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        service.blockRange(range)
+    func blockRange(_ range: CompactBlockRange, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        try service.blockRange(range, mode: mode)
     }
     
     /// Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
@@ -191,8 +191,8 @@ class DarksideWalletService: LightWalletService {
         try await service.fetchTransaction(txId: txId, mode: mode)
     }
 
-    func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
-        service.getSubtreeRoots(request)
+    func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
+        try service.getSubtreeRoots(request, mode: mode)
     }
 
     func addTreeState(_ treeState: TreeState) throws {

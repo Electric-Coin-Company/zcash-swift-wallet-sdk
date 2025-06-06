@@ -70,12 +70,12 @@ public enum ZcashError: Equatable, Error {
     /// Tor client is not available
     /// ZTSRV0002
     case torServiceMissingTorClient
-    /// Tor client fails to create an instance of TorLwdConn
-    /// ZTSRV0003
-    case torServiceUnableToCreateDefaultTorLwdConn
     /// Tor client fails to resolve ServiceMode
     /// ZTSRV0004
     case torServiceUnresolvedMode
+    /// GRPC Service is called with a Tor mode instead of direct one
+    /// ZTSRV0005
+    case grpcServiceCalledWithTorMode
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
     case simpleConnectionProvider(_ error: Error)
@@ -738,8 +738,8 @@ public enum ZcashError: Equatable, Error {
         case .serviceGetTaddressTxidsFailed: return "LightWalletService.getTaddressTxids failed."
         case .torServiceMissingEndpoint: return "Endpoint is not provided"
         case .torServiceMissingTorClient: return "Tor client is not available"
-        case .torServiceUnableToCreateDefaultTorLwdConn: return "Tor client fails to create an instance of TorLwdConn"
         case .torServiceUnresolvedMode: return "Tor client fails to resolve ServiceMode"
+        case .grpcServiceCalledWithTorMode: return "GRPC Service is called with a Tor mode instead of direct one"
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         case .saplingParamsInvalidSpendParams: return "Downloaded file with sapling spending parameters isn't valid."
         case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
@@ -944,8 +944,8 @@ public enum ZcashError: Equatable, Error {
         case .serviceGetTaddressTxidsFailed: return .serviceGetTaddressTxidsFailed
         case .torServiceMissingEndpoint: return .torServiceMissingEndpoint
         case .torServiceMissingTorClient: return .torServiceMissingTorClient
-        case .torServiceUnableToCreateDefaultTorLwdConn: return .torServiceUnableToCreateDefaultTorLwdConn
         case .torServiceUnresolvedMode: return .torServiceUnresolvedMode
+        case .grpcServiceCalledWithTorMode: return .grpcServiceCalledWithTorMode
         case .simpleConnectionProvider: return .simpleConnectionProvider
         case .saplingParamsInvalidSpendParams: return .saplingParamsInvalidSpendParams
         case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams

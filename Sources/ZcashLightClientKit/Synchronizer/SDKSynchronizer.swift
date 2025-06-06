@@ -335,7 +335,7 @@ public class SDKSynchronizer: Synchronizer {
     ) async throws -> AccountUUID {
         // ServiceMode to resolve
         // called when a new account is imported
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .torInGroup(ServiceMode.Constants.rare)))
+        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .uniqueTor))
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
 
@@ -864,10 +864,15 @@ public class SDKSynchronizer: Synchronizer {
             guard info.blockHeight >= nBlocksToFetch else {
                 continue
             }
-            
-            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - nBlocksToFetch), endHeight: BlockHeight(info.blockHeight))
-            
+
             do {
+                // ServiceMode to resolve
+                let stream = try service.service.blockStream(
+                    startHeight: BlockHeight(info.blockHeight - nBlocksToFetch),
+                    endHeight: BlockHeight(info.blockHeight),
+                    mode: .direct
+                )
+
                 let startTime = Date().timeIntervalSince1970
                 var endTime = startTime
                 for try await _ in stream {

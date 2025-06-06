@@ -117,7 +117,7 @@ class BlockStreamingTest: ZcashTestCase {
         try await makeDependencies(timeout: 10000)
 
         var blocks: [ZcashCompactBlock] = []
-        let stream = service.blockStream(startHeight: startHeight, endHeight: latestBlockHeight)
+        let stream = try service.blockStream(startHeight: startHeight, endHeight: latestBlockHeight, mode: .direct)
         
         do {
             for try await compactBlock in stream {

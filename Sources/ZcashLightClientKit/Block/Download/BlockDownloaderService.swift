@@ -21,7 +21,7 @@ protocol BlockDownloaderService {
     /**
     Downloads and stores the given block range.
     */
-    func downloadBlockRange(_ heightRange: CompactBlockRange) async throws
+    func downloadBlockRange(_ heightRange: CompactBlockRange, mode: ServiceMode) async throws
 
     /**
     Restore the download progress up to the given height.
@@ -45,11 +45,11 @@ protocol BlockDownloaderService {
     */
     func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus)
 
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
-    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
-    func closeConnection()
+    func closeConnection(mode: ServiceMode)
 }
 
 /**
@@ -71,27 +71,28 @@ class BlockDownloaderServiceImpl {
 }
 
 extension BlockDownloaderServiceImpl: BlockDownloaderService {
-    func closeConnection() {
-        lightwalletService.closeConnection()
+    func closeConnection(mode: ServiceMode) {
+        lightwalletService.closeConnection(mode: mode)
     }
             
     func fetchUnspentTransactionOutputs(
         tAddresses: [String],
-        startHeight: BlockHeight
-    ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
+        startHeight: BlockHeight,
+        mode: ServiceMode
+    ) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight, mode: mode)
     }
     
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try lightwalletService.fetchUTXOs(for: tAddress, height: startHeight, mode: mode)
     }
     
     func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
         try await lightwalletService.latestBlockHeight(mode: mode)
     }
     
-    func downloadBlockRange( _ heightRange: CompactBlockRange) async throws {
-        let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = lightwalletService.blockRange(heightRange)
+    func downloadBlockRange( _ heightRange: CompactBlockRange, mode: ServiceMode) async throws {
+        let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = try lightwalletService.blockRange(heightRange, mode: mode)
         do {
             var compactBlocks: [ZcashCompactBlock] = []
             for try await compactBlock in stream {

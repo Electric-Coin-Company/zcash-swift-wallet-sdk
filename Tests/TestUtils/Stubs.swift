@@ -18,7 +18,7 @@ class AwfulLightWalletService: MockLightWalletService {
         throw ZcashError.serviceLatestBlockFailed(.criticalError)
     }
 
-    override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+    override func blockRange(_ range: CompactBlockRange, mode: ServiceMode) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubmitFailed(.invalidBlock)) }
     }
 

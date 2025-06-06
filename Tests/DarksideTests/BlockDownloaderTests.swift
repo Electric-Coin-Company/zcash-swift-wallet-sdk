@@ -73,7 +73,7 @@ class BlockDownloaderTests: XCTestCase {
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
         do {
-            try await downloader.downloadBlockRange(range)
+            try await downloader.downloadBlockRange(range, mode: .direct)
             
             // check what was 'stored'
             let latestHeight = try await self.storage.latestHeight()
@@ -101,7 +101,7 @@ class BlockDownloaderTests: XCTestCase {
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
 
         do {
-            try await awfulDownloader.downloadBlockRange(range)
+            try await awfulDownloader.downloadBlockRange(range, mode: .direct)
         } catch {
             XCTAssertNotNil(error)
         }
