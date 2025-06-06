@@ -415,7 +415,7 @@ class RewindRescanTests: ZcashTestCase {
             return
         }
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in

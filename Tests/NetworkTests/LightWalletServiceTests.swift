@@ -47,7 +47,7 @@ class LightWalletServiceTests: XCTestCase {
         let blockRange = lowerRange ... upperRange
         
         var blocks: [ZcashCompactBlock] = []
-        for try await block in service.blockRange(blockRange) {
+        for try await block in try service.blockRange(blockRange, mode: .direct) {
             blocks.append(block)
         }
         XCTAssertEqual(blocks.count, blockRange.count)
@@ -61,14 +61,14 @@ class LightWalletServiceTests: XCTestCase {
         let blockRange = lowerRange ... upperRange
 
         var blocks: [ZcashCompactBlock] = []
-        for try await block in service.blockRange(blockRange) {
+        for try await block in try service.blockRange(blockRange, mode: .direct) {
             blocks.append(block)
         }
         XCTAssertEqual(blocks.count, blockRange.count)
     }
     
     func testLatestBlock() async throws {
-        let height = try await service.latestBlockHeight()
+        let height = try await service.latestBlockHeight(mode: .direct)
         XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
     }
 }

@@ -135,7 +135,8 @@ actor BlockDownloaderImpl {
                 logger.debug("Creating new stream for range \(streamRange.lowerBound)...\(streamRange.upperBound)")
 
                 downloadStreamCreatedAtRange = streamRange
-                let stream = service.blockStream(startHeight: streamRange.lowerBound, endHeight: streamRange.upperBound)
+                // ServiceMode to resolve
+                let stream = try service.blockStream(startHeight: streamRange.lowerBound, endHeight: streamRange.upperBound, mode: .direct)
                 downloadStream = BlockDownloaderStream(stream: stream)
                 self.downloadStream = downloadStream
             }
@@ -182,7 +183,8 @@ actor BlockDownloaderImpl {
 
     private func compactBlocksDownloadStream(startHeight: BlockHeight, targetHeight: BlockHeight) async throws -> BlockDownloaderStream {
         try Task.checkCancellation()
-        let stream = service.blockStream(startHeight: startHeight, endHeight: targetHeight)
+        // ServiceMode to resolve
+        let stream = try service.blockStream(startHeight: startHeight, endHeight: targetHeight, mode: .direct)
         return BlockDownloaderStream(stream: stream)
     }
 

@@ -132,7 +132,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
@@ -287,7 +287,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
 
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
 
         notificationHandler.transactionsFound = { txs in
@@ -506,7 +506,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
@@ -653,7 +653,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight)
         
@@ -815,7 +815,7 @@ class BalanceTests: ZcashTestCase {
             presendBalance - self.sendAmount - network.constants.defaultFee()
         )
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight)
         guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
@@ -967,7 +967,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
         
-        let latestHeight = try await coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight(mode: .direct)
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight, count: 12)
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)

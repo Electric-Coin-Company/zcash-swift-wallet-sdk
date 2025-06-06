@@ -37,7 +37,7 @@ class WalletTests: ZcashTestCase {
 
         let serviceMock = LightWalletServiceMock()
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
-        serviceMock.latestBlockHeightReturnValue = 1
+        serviceMock.latestBlockHeightModeReturnValue = 1
         
         let wallet = Initializer(
             container: mockContainer,

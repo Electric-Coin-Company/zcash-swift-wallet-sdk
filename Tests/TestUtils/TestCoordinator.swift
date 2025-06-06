@@ -205,8 +205,8 @@ extension TestCoordinator {
         try service.stageTransaction(from: url, at: height)
     }
     
-    func latestHeight() async throws -> BlockHeight {
-        try await service.latestBlockHeight()
+    func latestHeight(mode: ServiceMode) async throws -> BlockHeight {
+        try await service.latestBlockHeight(mode: mode)
     }
     
     func reset(saplingActivation: BlockHeight, startSaplingTreeSize: UInt32, startOrchardTreeSize: UInt32, branchID: String, chainName: String) async throws {

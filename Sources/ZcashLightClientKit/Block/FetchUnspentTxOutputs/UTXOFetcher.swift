@@ -44,9 +44,11 @@ extension UTXOFetcherImpl: UTXOFetcher {
         }
 
         var utxos: [UnspentTransactionOutputEntity] = []
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
+        // ServiceMode to resolve
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = try blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddresses: tAddresses.map { $0.stringEncoded },
-            startHeight: BlockHeight(0)
+            startHeight: BlockHeight(0),
+            mode: .direct
         )
 
         do {

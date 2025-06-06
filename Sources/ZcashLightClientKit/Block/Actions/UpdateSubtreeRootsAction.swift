@@ -29,7 +29,8 @@ extension UpdateSubtreeRootsAction: Action {
         request.shieldedProtocol = .sapling
         
         logger.debug("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
-        let stream = service.getSubtreeRoots(request)
+        // ServiceMode to resolve
+        let stream = try service.getSubtreeRoots(request, mode: .direct)
 
         var saplingRoots: [SubtreeRoot] = []
         
@@ -59,7 +60,8 @@ extension UpdateSubtreeRootsAction: Action {
             var orchardRequest = GetSubtreeRootsArg()
             orchardRequest.shieldedProtocol = .orchard
 
-            let stream = service.getSubtreeRoots(orchardRequest)
+            // ServiceMode to resolve
+            let stream = try service.getSubtreeRoots(orchardRequest, mode: .direct)
 
             var orchardRoots: [SubtreeRoot] = []
 

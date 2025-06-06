@@ -31,7 +31,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+        tupple.serviceMock.getSubtreeRootsModeClosure = { _, _ in
             AsyncThrowingStream { continuation in continuation.finish(
                 throwing: ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
             )
@@ -63,7 +63,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+        tupple.serviceMock.getSubtreeRootsModeClosure = { _, _ in
             AsyncThrowingStream { continuation in
                 continuation.yield(SubtreeRoot())
                 continuation.finish()
@@ -93,7 +93,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+        tupple.serviceMock.getSubtreeRootsModeClosure = { _, _ in
             AsyncThrowingStream { continuation in
                 continuation.yield(SubtreeRoot())
                 continuation.finish()
@@ -124,7 +124,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+        tupple.serviceMock.getSubtreeRootsModeClosure = { _, _ in
             AsyncThrowingStream { continuation in
                 continuation.yield(SubtreeRoot())
                 continuation.finish()
@@ -172,7 +172,7 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         lightWalletdInfoMock.underlyingChainName = underlyingChainName
 
         let serviceMock = LightWalletServiceMock()
-        serviceMock.getInfoReturnValue = lightWalletdInfoMock
+        serviceMock.getInfoModeReturnValue = lightWalletdInfoMock
 
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }

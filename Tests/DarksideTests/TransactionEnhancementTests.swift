@@ -199,7 +199,7 @@ class TransactionEnhancementTests: ZcashTestCase {
         request latest height -> receive firstLatestHeight
         */
         do {
-            dump("first latest height:  \(try await darksideWalletService.latestBlockHeight())")
+            dump("first latest height:  \(try await darksideWalletService.latestBlockHeight(mode: .direct))")
         } catch {
             XCTFail("Error: \(error)")
             return

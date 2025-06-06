@@ -148,7 +148,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         lightWalletdInfoMock.underlyingChainName = underlyingChainName
 
         let serviceMock = LightWalletServiceMock()
-        serviceMock.getInfoReturnValue = lightWalletdInfoMock
+        serviceMock.getInfoModeReturnValue = lightWalletdInfoMock
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }

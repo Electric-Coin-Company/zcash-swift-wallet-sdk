@@ -24,7 +24,10 @@ extension ValidateServerAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         let config = await configProvider.config
-        let info = try await service.getInfo()
+        // ServiceMode to resolve
+        // called each sync, an action in a state machine diagram
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
+        let info = try await service.getInfo(mode: .defaultTor)
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
 
