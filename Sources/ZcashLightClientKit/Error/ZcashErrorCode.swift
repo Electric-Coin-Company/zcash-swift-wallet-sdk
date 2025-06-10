@@ -48,9 +48,9 @@ public enum ZcashErrorCode: String {
     /// Tor client is not available
     case torServiceMissingTorClient = "ZTSRV0002"
     /// Tor client fails to resolve ServiceMode
-    case torServiceUnresolvedMode = "ZTSRV0004"
+    case torServiceUnresolvedMode = "ZTSRV0003"
     /// GRPC Service is called with a Tor mode instead of direct one
-    case grpcServiceCalledWithTorMode = "ZTSRV0005"
+    case grpcServiceCalledWithTorMode = "ZTSRV0004"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.

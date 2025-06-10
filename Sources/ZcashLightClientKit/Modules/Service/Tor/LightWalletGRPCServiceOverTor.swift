@@ -61,6 +61,8 @@ actor ServiceConnections {
     func responseToTorFailure(_ mode: ServiceMode) async {
         if mode == .defaultTor {
             defaultTorLwdConn = nil
+        } else if case let .torInGroup(groupName) = mode {
+            groups.removeValue(forKey: groupName)
         }
     }
 }

@@ -153,6 +153,7 @@ enum ServiceMode: Equatable {
     /// Tor connection is used, each time a new one, not held in memory, used only once.
     case uniqueTor
 
+    /// Helper method that generates a tagged group for a given transaction ID with a prefix. 
     static func txIdGroup(prefix: String, txId: Data) -> ServiceMode {
         torInGroup("\(prefix)-\(txId.hexEncodedString())")
     }

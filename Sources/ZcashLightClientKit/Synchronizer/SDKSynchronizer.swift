@@ -559,8 +559,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        // ServiceMode to resolve
-        try await blockProcessor.latestHeight(mode: .defaultTor)
+        try await blockProcessor.latestHeight(mode: .torInGroup("SDKSynchronizer.latestHeight"))
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -769,13 +768,12 @@ public class SDKSynchronizer: Synchronizer {
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
-                    // ServiceMode to resolve
                     // called when performance of servers is evaluated
-                    let info = try? await service.service.getInfo(mode: .defaultTor)
+                    let mode = ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
+                    let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
-                    // ServiceMode to resolve
                     // called when performance of servers is evaluated
-                    let latestBlockHeight = try? await service.service.latestBlockHeight(mode: .defaultTor)
+                    let latestBlockHeight = try? await service.service.latestBlockHeight(mode: mode)
                     let endTime = Date().timeIntervalSince1970
 
                     let getInfoTime = markTime - startTime
@@ -866,7 +864,7 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             do {
-                // ServiceMode to resolve
+                // Fetched the same way as in `BlockDownloader`.
                 let stream = try service.service.blockStream(
                     startHeight: BlockHeight(info.blockHeight - nBlocksToFetch),
                     endHeight: BlockHeight(info.blockHeight),

@@ -93,10 +93,10 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZTSRV0002"
     case torServiceMissingTorClient
     /// Tor client fails to resolve ServiceMode
-    // sourcery: code="ZTSRV0004"
+    // sourcery: code="ZTSRV0003"
     case torServiceUnresolvedMode
     /// GRPC Service is called with a Tor mode instead of direct one
-    // sourcery: code="ZTSRV0005"
+    // sourcery: code="ZTSRV0004"
     case grpcServiceCalledWithTorMode
 
     // MARK: SQLite connection

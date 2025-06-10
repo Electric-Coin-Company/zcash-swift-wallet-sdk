@@ -92,8 +92,10 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         switch transactionDataRequest {
                         case .getStatus(let txId):
-                            // ServiceMode to resolve
-                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data, mode: .defaultTor)
+                            let response = try await blockDownloaderService.fetchTransaction(
+                                txId: txId.data,
+                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                            )
                             retry = false
 
                             if let fetchedTransaction = response.tx {
@@ -101,8 +103,10 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
                             
                         case .enhancement(let txId):
-                            // ServiceMode to resolve
-                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data, mode: .defaultTor)
+                            let response = try await blockDownloaderService.fetchTransaction(
+                                txId: txId.data,
+                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                            )
                             retry = false
 
                             if response.status == .txidNotRecognized {

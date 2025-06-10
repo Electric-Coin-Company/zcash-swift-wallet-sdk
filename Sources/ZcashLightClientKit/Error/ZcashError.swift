@@ -71,10 +71,10 @@ public enum ZcashError: Equatable, Error {
     /// ZTSRV0002
     case torServiceMissingTorClient
     /// Tor client fails to resolve ServiceMode
-    /// ZTSRV0004
+    /// ZTSRV0003
     case torServiceUnresolvedMode
     /// GRPC Service is called with a Tor mode instead of direct one
-    /// ZTSRV0005
+    /// ZTSRV0004
     case grpcServiceCalledWithTorMode
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
