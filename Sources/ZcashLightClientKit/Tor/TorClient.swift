@@ -53,6 +53,95 @@ public class TorClient {
         return TorClient(runtimePtr: isolatedPtr)
     }
 
+    /// Changes the client's current dormant mode, putting background tasks to sleep or waking
+    /// them up as appropriate.
+    ///
+    /// This can be used to conserve CPU usage if you aren’t planning on using the client for
+    /// a while, especially on mobile platforms.
+    ///
+    /// - Parameter mode: what level of sleep to put a Tor client into.
+    public func setDormant(mode: TorDormantMode) throws {
+        if !zcashlc_tor_set_dormant(runtime, mode) {
+            throw ZcashError.rustTorIsolatedClient(
+                lastErrorMessage(
+                    fallback:
+                        "`TorClient.setDormant` failed with unknown error"
+                )
+            )
+        }
+    }
+
+    /// Makes an HTTP request over Tor.
+    ///
+    /// - Parameter retryLimit: the maximum number of times that a failed request should be retried.
+    ///             Set this to 0 to disable retries.
+    public func httpRequest(for request: URLRequest, retryLimit: UInt8) throws -> (Data, HTTPURLResponse) {
+        let url = request.url
+        guard let url else {
+            throw ZcashError.rustTorHttpRequest("`TorClient.httpRequest` requires a URL")
+        }
+
+        let headers = request.allHTTPHeaderFields ?? [:]
+        // Duplicate the header names and values into C strings.
+        let cHeadersMut = headers.map { key, value in
+            (strdup(key), strdup(value))
+        }
+        // Create the array of const pointers we will actually pass to Rust.
+        let cHeaders = cHeadersMut.map { key, value in
+            FfiHttpRequestHeader(name: key, value: value)
+        }
+        // Free the duplicate C strings once we are done.
+        defer {
+            for (namePtr, valuePtr) in cHeadersMut {
+                free(namePtr)
+                free(valuePtr)
+            }
+        }
+
+        var responsePtr: UnsafeMutablePointer<FfiHttpResponseBytes>?
+        try cHeaders.withUnsafeBufferPointer { headersPtr in
+            switch request.httpMethod?.lowercased() {
+            case "get":
+                responsePtr = zcashlc_tor_http_get(
+                    runtime,
+                    [CChar](url.absoluteString.utf8CString),
+                    headersPtr.baseAddress,
+                    UInt(headersPtr.count),
+                    retryLimit
+                )
+            case "post":
+                let data = request.httpBody ?? Data()
+                responsePtr = zcashlc_tor_http_post(
+                    runtime,
+                    [CChar](url.absoluteString.utf8CString),
+                    headersPtr.baseAddress,
+                    UInt(headersPtr.count),
+                    data.bytes,
+                    UInt(data.count),
+                    retryLimit
+                )
+            default:
+                throw ZcashError.rustTorHttpRequest("Only GET and POST requests are supported")
+            }
+        }
+
+        guard let responsePtr else {
+            throw ZcashError.rustTorHttpRequest(
+                lastErrorMessage(fallback: "`TorClient.httpRequest` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_http_response_bytes(responsePtr) }
+
+        let response = responsePtr.pointee.unsafeToResponse(url: url)
+
+        guard let response else {
+            throw ZcashError.rustTorHttpRequest("`TorClient.httpRequest` returned invalid HTTP response")
+        }
+
+        return response
+    }
+
     public func getExchangeRateUSD() throws -> FiatCurrencyResult {
         let rate = zcashlc_get_exchange_rate_usd(runtime)
 
@@ -256,5 +345,49 @@ public class TorLwdConn {
         } catch {
             throw ZcashError.rustTorLwdGetTreeState("`TorLwdConn.getTreeState` Failed to decode protobuf TreeState: \(error)")
         }
+    }
+}
+
+extension FfiHttpResponseBytes {
+    func unsafeToResponse(url: URL) -> (Data, HTTPURLResponse)? {
+        var headerFields: [String: String] = [:]
+
+        for i in (0 ..< Int(headers_len)) {
+            let headerPtr = headers_ptr.advanced(by: i).pointee
+
+            let name = String(validatingCString: headerPtr.name)
+            let value = String(validatingCString: headerPtr.value)
+
+            guard let name, let value else {
+                return nil
+            }
+
+            if headerFields.contains(where: { $0.key == name }) {
+                // Duplicate header names correspond to a single header name
+                // with multiple values separated by commas.
+                headerFields[name]?.append(", \(value)")
+            } else {
+                headerFields[name] = value
+            }
+        }
+
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: Int(status),
+            httpVersion: String(validatingCString: version),
+            headerFields: headerFields
+        )
+
+        guard let response else {
+            return nil
+        }
+
+        return (
+            Data(
+                bytes: body_ptr,
+                count: Int(body_len)
+            ),
+            response
+        )
     }
 }
