@@ -63,7 +63,7 @@ class DownloadTests: ZcashTestCase {
         let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
         
         do {
-            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
+            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range, mode: .direct)
         } catch {
             XCTFail("Download failed with error: \(error)")
         }

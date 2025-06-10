@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 /// Synchronizer implementation for UIKit and iOS 13+
-// swiftlint:disable type_body_length
+// swiftlint:disable:next type_body_length file_length
 public class SDKSynchronizer: Synchronizer {
     private enum Constants {
         static let fixWitnessesLastVersionCall = "ud_fixWitnessesLastVersionCall"
@@ -333,7 +333,9 @@ public class SDKSynchronizer: Synchronizer {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID {
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight())
+        // ServiceMode to resolve
+        // called when a new account is imported
+        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .uniqueTor))
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
 
@@ -557,7 +559,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.latestHeight()
+        try await blockProcessor.latestHeight(mode: .torInGroup("SDKSynchronizer.latestHeight"))
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -719,6 +721,7 @@ public class SDKSynchronizer: Synchronizer {
     ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
     ///    - kServers: The expected number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
+    // swiftlint:disable:next cyclomatic_complexity
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         latencyThresholdMillis: Double = 300.0,
@@ -766,9 +769,12 @@ public class SDKSynchronizer: Synchronizer {
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
-                    let info = try? await service.service.getInfo()
+                    // called when performance of servers is evaluated
+                    let mode = ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
+                    let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
-                    let latestBlockHeight = try? await service.service.latestBlockHeight()
+                    // called when performance of servers is evaluated
+                    let latestBlockHeight = try? await service.service.latestBlockHeight(mode: mode)
                     let endTime = Date().timeIntervalSince1970
 
                     let getInfoTime = markTime - startTime
@@ -857,10 +863,15 @@ public class SDKSynchronizer: Synchronizer {
             guard info.blockHeight >= nBlocksToFetch else {
                 continue
             }
-            
-            let stream = service.service.blockStream(startHeight: BlockHeight(info.blockHeight - nBlocksToFetch), endHeight: BlockHeight(info.blockHeight))
-            
+
             do {
+                // Fetched the same way as in `BlockDownloader`.
+                let stream = try service.service.blockStream(
+                    startHeight: BlockHeight(info.blockHeight - nBlocksToFetch),
+                    endHeight: BlockHeight(info.blockHeight),
+                    mode: .direct
+                )
+
                 let startTime = Date().timeIntervalSince1970
                 var endTime = startTime
                 for try await _ in stream {

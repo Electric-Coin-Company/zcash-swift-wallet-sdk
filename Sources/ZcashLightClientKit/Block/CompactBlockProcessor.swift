@@ -289,8 +289,8 @@ extension CompactBlockProcessor {
         serviceFailureRetryAttempts = 0
     }
 
-    func latestHeight() async throws -> BlockHeight {
-        try await blockDownloaderService.latestBlockHeight()
+    func latestHeight(mode: ServiceMode) async throws -> BlockHeight {
+        try await blockDownloaderService.latestBlockHeight(mode: mode)
     }
     
     func consensusBranchIdFor(_ height: Int32) -> Int32? {
@@ -862,9 +862,11 @@ extension CompactBlockProcessor {
     func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
+        // ServiceMode to resolve
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = try blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddress: tAddress.stringEncoded,
-            startHeight: startHeight
+            startHeight: startHeight,
+            mode: .direct
         )
         var utxos: [UnspentTransactionOutputEntity] = []
         

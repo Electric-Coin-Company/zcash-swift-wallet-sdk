@@ -433,7 +433,8 @@ public class Initializer {
         if let seed, try await rustBackend.listAccounts().isEmpty {
             var chainTip: UInt32?
             
-            if walletMode == .restoreWallet, let latestBlockHeight = try? await lightWalletService.latestBlockHeight() {
+            // called when client starts and restore of the wallet is in progress
+            if walletMode == .restoreWallet, let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: .uniqueTor) {
                 chainTip = UInt32(latestBlockHeight)
             }
             

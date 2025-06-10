@@ -65,6 +65,7 @@ struct BlockEnhancerImpl {
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
+    // swiftlint:disable:next cyclomatic_complexity
     func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
         try Task.checkCancellation()
         
@@ -92,7 +93,10 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         switch transactionDataRequest {
                         case .getStatus(let txId):
-                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data)
+                            let response = try await blockDownloaderService.fetchTransaction(
+                                txId: txId.data,
+                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                            )
                             retry = false
 
                             if let fetchedTransaction = response.tx {
@@ -100,7 +104,10 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
                             
                         case .enhancement(let txId):
-                            let response = try await blockDownloaderService.fetchTransaction(txId: txId.data)
+                            let response = try await blockDownloaderService.fetchTransaction(
+                                txId: txId.data,
+                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                            )
                             retry = false
 
                             if response.status == .txidNotRecognized {
@@ -141,7 +148,8 @@ extension BlockEnhancerImpl: BlockEnhancer {
                                 BlockRange(startHeight: Int(tia.blockRangeStart))
                             }
 
-                            let stream = service.getTaddressTxids(filter)
+                            // ServiceMode to resolve
+                            let stream = try service.getTaddressTxids(filter, mode: .direct)
 
                             for try await rawTransaction in stream {
                                 let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max)

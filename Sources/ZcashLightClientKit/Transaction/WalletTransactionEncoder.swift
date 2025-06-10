@@ -129,7 +129,11 @@ class WalletTransactionEncoder: TransactionEncoder {
     func submit(
         transaction: EncodedTransaction
     ) async throws {
-        let response = try await self.lightWalletService.submit(spendTransaction: transaction.raw)
+        // ServiceMode to resolve
+        let response = try await self.lightWalletService.submit(
+            spendTransaction: transaction.raw,
+            mode: ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId)
+        )
 
         guard response.errorCode >= 0 else {
             throw TransactionEncoderError.submitError(code: Int(response.errorCode), message: response.errorMessage)

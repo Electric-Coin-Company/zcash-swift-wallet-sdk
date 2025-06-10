@@ -21,8 +21,8 @@ struct MockCancellable: CancellableCall {
 }
 
 class MockLightWalletService: LightWalletService {
-    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter) -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
-        service.getTaddressTxids(request)
+    func getTaddressTxids(_ request: ZcashLightClientKit.TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashLightClientKit.RawTransaction, any Error> {
+        try service.getTaddressTxids(request, mode: mode)
     }
     
     var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
@@ -32,23 +32,23 @@ class MockLightWalletService: LightWalletService {
     var mockLightDInfo: LightWalletdInfo?
     var queue = DispatchQueue(label: "mock service queue")
 
-    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        service.blockStream(startHeight: startHeight, endHeight: endHeight)
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        try service.blockStream(startHeight: startHeight, endHeight: endHeight, mode: mode)
     }
 
-    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+    func latestBlock(mode: ServiceMode) async throws -> ZcashLightClientKit.BlockID {
         throw "Not mocked"
     }
 
-    func closeConnection() {
+    func closeConnection(mode: ServiceMode) {
     }
 
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        service.fetchUTXOs(for: tAddress, height: height)
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try service.fetchUTXOs(for: tAddress, height: height, mode: mode)
     }
 
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        service.fetchUTXOs(for: tAddresses, height: height)
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        try service.fetchUTXOs(for: tAddresses, height: height, mode: mode)
     }
 
     private var service: LightWalletService
@@ -60,34 +60,34 @@ class MockLightWalletService: LightWalletService {
         self.service = service
     }
     
-    func latestBlockHeight() async throws -> BlockHeight {
+    func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
         latestHeight
     }
 
-    func getInfo() async throws -> LightWalletdInfo {
+    func getInfo(mode: ServiceMode) async throws -> LightWalletdInfo {
         guard let info = mockLightDInfo else {
             throw ZcashError.serviceGetInfoFailed(.generalError(message: "Not Implemented"))
         }
         return info
     }
 
-    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        service.blockRange(range)
+    func blockRange(_ range: CompactBlockRange, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        try service.blockRange(range, mode: mode)
     }
     
-    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+    func submit(spendTransaction: Data, mode: ServiceMode) async throws -> LightWalletServiceResponse {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
 
-    func fetchTransaction(txId: Data) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
+    func fetchTransaction(txId: Data, mode: ServiceMode) async throws -> (tx: ZcashTransaction.Fetched?, status: TransactionStatus) {
         return (nil, .txidNotRecognized)
     }
 
-    func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg) -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
-        service.getSubtreeRoots(request)
+    func getSubtreeRoots(_ request: ZcashLightClientKit.GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashLightClientKit.SubtreeRoot, Error> {
+        try service.getSubtreeRoots(request, mode: mode)
     }
     
-    func getTreeState(_ id: BlockID) async throws -> TreeState {
-        try await service.getTreeState(id)
+    func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
+        try await service.getTreeState(id, mode: mode)
     }
 }

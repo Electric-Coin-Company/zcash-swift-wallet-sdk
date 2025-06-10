@@ -31,6 +31,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     public var stateStream: AnyPublisher<SynchronizerState, Never> { synchronizer.stateStream }
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { synchronizer.eventStream }
 
+    // swiftlint:disable:next function_parameter_count
     public func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
