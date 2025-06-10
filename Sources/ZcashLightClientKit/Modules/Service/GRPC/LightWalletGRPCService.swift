@@ -54,6 +54,7 @@ class LiveLatestBlockHeightProvider: LatestBlockHeightProvider {
     }
 }
 
+// swiftlint:disable:next type_body_length
 class LightWalletGRPCService: LightWalletService {
     var channel: Channel?
     var connectionManager: ConnectionStatusManager?
@@ -261,11 +262,13 @@ class LightWalletGRPCService: LightWalletService {
                 status: isNotMined ? .notInMainChain : .mined(Int(rawTx.height))
             )
         } catch let error as GRPCStatus {
+            let noMempoolMsg = "No such mempool or blockchain transaction. Use gettransaction for wallet transactions."
+            
             if error.makeGRPCStatus().code == .notFound {
                 return (tx: nil, .txidNotRecognized)
             } else if let notFound = error.message?.contains("Transaction not found"), notFound {
                 return (tx: nil, .txidNotRecognized)
-            } else if let notFound = error.message?.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions."), notFound {
+            } else if let notFound = error.message?.contains(noMempoolMsg), notFound {
                 return (tx: nil, .txidNotRecognized)
             } else {
                 let serviceError = error.mapToServiceError()

@@ -8,6 +8,7 @@
 import Foundation
 
 enum Dependencies {
+    // swiftlint:disable:next cyclomatic_complexity
     static func setup(
         in container: DIContainer,
         urls: Initializer.URLs,

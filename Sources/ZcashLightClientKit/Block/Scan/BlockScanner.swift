@@ -58,7 +58,7 @@ extension BlockScannerImpl: BlockScanner {
             let scanStartTime = Date()
             do {
                 // Directly correlated with `BlockDownloader` ranges.
-                let fromState = try await service.getTreeState(BlockID(height: startHeight - 1), mode: .defaultTor)
+                let fromState = try await service.getTreeState(BlockID(height: startHeight - 1), mode: .direct)
 
                 scanSummary = try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), fromState: fromState, limit: batchSize)
             } catch {

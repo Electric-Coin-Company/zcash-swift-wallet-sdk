@@ -24,7 +24,7 @@ public enum LightWalletServiceError: Error {
 }
 
 extension LightWalletServiceError: Equatable {
-    // swiftlint:disable cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
         case .generalError(let message):

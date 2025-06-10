@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 /// Synchronizer implementation for UIKit and iOS 13+
-// swiftlint:disable type_body_length
+// swiftlint:disable:next type_body_length file_length
 public class SDKSynchronizer: Synchronizer {
     private enum Constants {
         static let fixWitnessesLastVersionCall = "ud_fixWitnessesLastVersionCall"
@@ -721,6 +721,7 @@ public class SDKSynchronizer: Synchronizer {
     ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
     ///    - kServers: The expected number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
+    // swiftlint:disable:next cyclomatic_complexity
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         latencyThresholdMillis: Double = 300.0,
