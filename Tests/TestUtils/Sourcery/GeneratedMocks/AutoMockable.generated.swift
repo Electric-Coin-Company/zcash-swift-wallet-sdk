@@ -955,19 +955,23 @@ class LightWalletServiceMock: LightWalletService {
 
     // MARK: - blockStream
 
+    var blockStreamStartHeightEndHeightModeThrowableError: Error?
     var blockStreamStartHeightEndHeightModeCallsCount = 0
     var blockStreamStartHeightEndHeightModeCalled: Bool {
         return blockStreamStartHeightEndHeightModeCallsCount > 0
     }
     var blockStreamStartHeightEndHeightModeReceivedArguments: (startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode)?
     var blockStreamStartHeightEndHeightModeReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
-    var blockStreamStartHeightEndHeightModeClosure: ((BlockHeight, BlockHeight, ServiceMode) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
+    var blockStreamStartHeightEndHeightModeClosure: ((BlockHeight, BlockHeight, ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
 
-    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        if let error = blockStreamStartHeightEndHeightModeThrowableError {
+            throw error
+        }
         blockStreamStartHeightEndHeightModeCallsCount += 1
         blockStreamStartHeightEndHeightModeReceivedArguments = (startHeight: startHeight, endHeight: endHeight, mode: mode)
         if let closure = blockStreamStartHeightEndHeightModeClosure {
-            return closure(startHeight, endHeight, mode)
+            return try closure(startHeight, endHeight, mode)
         } else {
             return blockStreamStartHeightEndHeightModeReturnValue
         }
@@ -1442,6 +1446,32 @@ class SynchronizerMock: Synchronizer {
     func stop() {
         stopCallsCount += 1
         stopClosure!()
+    }
+
+    // MARK: - pause
+
+    var pauseCallsCount = 0
+    var pauseCalled: Bool {
+        return pauseCallsCount > 0
+    }
+    var pauseClosure: (() -> Void)?
+
+    func pause() {
+        pauseCallsCount += 1
+        pauseClosure!()
+    }
+
+    // MARK: - resume
+
+    var resumeCallsCount = 0
+    var resumeCalled: Bool {
+        return resumeCallsCount > 0
+    }
+    var resumeClosure: (() -> Void)?
+
+    func resume() {
+        resumeCallsCount += 1
+        resumeClosure!()
     }
 
     // MARK: - getSaplingAddress

@@ -32,6 +32,8 @@ public protocol CombineSynchronizer {
 
     func start(retry: Bool) -> CompletablePublisher<Error>
     func stop()
+    func pause()
+    func resume()
 
     func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error>
     func getUnifiedAddress(accountUUID: AccountUUID) -> SinglePublisher<UnifiedAddress, Error>

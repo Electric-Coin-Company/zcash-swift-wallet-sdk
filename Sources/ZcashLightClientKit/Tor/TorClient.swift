@@ -60,7 +60,7 @@ public class TorClient {
     /// a while, especially on mobile platforms.
     ///
     /// - Parameter mode: what level of sleep to put a Tor client into.
-    public func setDormant(mode: TorDormantMode) throws {
+    func setDormant(mode: TorDormantMode) throws {
         if !zcashlc_tor_set_dormant(runtime, mode) {
             throw ZcashError.rustTorIsolatedClient(
                 lastErrorMessage(
@@ -69,6 +69,14 @@ public class TorClient {
                 )
             )
         }
+    }
+
+    public func pause() {
+        try? setDormant(mode: Soft)
+    }
+    
+    public func resume() {
+        try? setDormant(mode: Normal)
     }
 
     /// Makes an HTTP request over Tor.

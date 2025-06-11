@@ -147,6 +147,13 @@ public protocol Synchronizer: AnyObject {
     /// Observe `stateStream` or `latestState` to recognize that the SDK stopped any activity.
     func stop()
 
+    /// This method is intended to perform any calls or actions that optimize the usage of the SDK, typically for efficiency and performance reasons.
+    /// It won't stop the synchronizer; if stopping is required, use `stop()` instead.
+    func pause()
+    
+    /// This method is the counterpart to `pause()`, so whatever happened during the pause, this is the appropriate place to resume it.
+    func resume()
+    
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountUUID: the  account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect

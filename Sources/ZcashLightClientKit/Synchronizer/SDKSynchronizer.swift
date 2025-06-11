@@ -220,6 +220,14 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.stop()
         }
     }
+    
+    public func pause() {
+        tor?.pause()
+    }
+    
+    public func resume() {
+        tor?.resume()
+    }
 
     // MARK: Witnesses Fix
     
