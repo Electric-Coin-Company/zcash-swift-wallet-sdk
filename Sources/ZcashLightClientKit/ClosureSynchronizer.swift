@@ -33,8 +33,6 @@ public protocol ClosureSynchronizer {
 
     func start(retry: Bool, completion: @escaping (Error?) -> Void)
     func stop()
-    func pause()
-    func resume()
 
     func getSaplingAddress(accountUUID: AccountUUID, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
     func getUnifiedAddress(accountUUID: AccountUUID, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)

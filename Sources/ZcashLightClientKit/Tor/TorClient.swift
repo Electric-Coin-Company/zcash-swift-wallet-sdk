@@ -71,11 +71,11 @@ public class TorClient {
         }
     }
 
-    public func pause() {
+    public func stop() {
         try? setDormant(mode: Soft)
     }
     
-    public func resume() {
+    public func start() {
         try? setDormant(mode: Normal)
     }
 

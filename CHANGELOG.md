@@ -6,9 +6,6 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-## Added
-- New public APIs `pause()` and counterpart `resume()`. Intended to perform any calls or actions that optimize the usage of the SDK, typically for efficiency and performance reasons.
-
 ## Changed
 - `LightWalletGRPCService` updated to use Tor connection for: fetching and submission of the transaction, getting server info, latest block height and tree state.
 

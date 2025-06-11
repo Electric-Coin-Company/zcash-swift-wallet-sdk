@@ -1448,32 +1448,6 @@ class SynchronizerMock: Synchronizer {
         stopClosure!()
     }
 
-    // MARK: - pause
-
-    var pauseCallsCount = 0
-    var pauseCalled: Bool {
-        return pauseCallsCount > 0
-    }
-    var pauseClosure: (() -> Void)?
-
-    func pause() {
-        pauseCallsCount += 1
-        pauseClosure!()
-    }
-
-    // MARK: - resume
-
-    var resumeCallsCount = 0
-    var resumeCalled: Bool {
-        return resumeCallsCount > 0
-    }
-    var resumeClosure: (() -> Void)?
-
-    func resume() {
-        resumeCallsCount += 1
-        resumeClosure!()
-    }
-
     // MARK: - getSaplingAddress
 
     var getSaplingAddressAccountUUIDThrowableError: Error?

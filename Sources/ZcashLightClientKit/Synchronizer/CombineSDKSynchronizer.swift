@@ -59,14 +59,6 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         synchronizer.stop()
     }
 
-    public func pause() {
-        synchronizer.pause()
-    }
-
-    public func resume() {
-        synchronizer.resume()
-    }
-
     public func getSaplingAddress(accountUUID: AccountUUID) -> SinglePublisher<SaplingAddress, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getSaplingAddress(accountUUID: accountUUID)

@@ -60,14 +60,6 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     public func stop() {
         synchronizer.stop()
     }
-    
-    public func pause() {
-        synchronizer.pause()
-    }
-    
-    public func resume() {
-        synchronizer.resume()
-    }
 
     public func getSaplingAddress(accountUUID: AccountUUID, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
         AsyncToClosureGateway.executeThrowingAction(completion) {

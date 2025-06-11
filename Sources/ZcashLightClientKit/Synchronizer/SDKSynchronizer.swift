@@ -171,6 +171,7 @@ public class SDKSynchronizer: Synchronizer {
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
+            tor?.start()
 
         case .stopped, .synced, .disconnected, .error:
             let walletSummary = try? await initializer.rustBackend.getWalletSummary()
@@ -202,6 +203,7 @@ public class SDKSynchronizer: Synchronizer {
             }
             await updateStatus(.syncing(syncProgress, areFundsSpendable))
             await blockProcessor.start(retry: retry)
+            tor?.start()
         }
     }
 
@@ -218,15 +220,8 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             await blockProcessor.stop()
+            tor?.stop()
         }
-    }
-    
-    public func pause() {
-        tor?.pause()
-    }
-    
-    public func resume() {
-        tor?.resume()
     }
 
     // MARK: Witnesses Fix
