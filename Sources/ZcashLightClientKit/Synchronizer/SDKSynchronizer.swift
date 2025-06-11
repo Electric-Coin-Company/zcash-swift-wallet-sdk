@@ -219,8 +219,8 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
 
-            tor?.sleep()
             await blockProcessor.stop()
+            tor?.sleep()
         }
     }
 
