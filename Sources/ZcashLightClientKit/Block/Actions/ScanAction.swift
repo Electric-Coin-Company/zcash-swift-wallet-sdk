@@ -96,7 +96,7 @@ extension ScanAction: Action {
                     }
                     
                     let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
-                    let areFundsSpendable = scanProgress == 1.0
+                    let areFundsSpendable = composedNumerator == composedDenominator || composedDenominator == 0
 
                     logger.debug("progress float: \(progress)")
                     await didUpdate(.syncProgress(progress, areFundsSpendable))

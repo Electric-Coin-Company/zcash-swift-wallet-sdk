@@ -196,7 +196,7 @@ public class SDKSynchronizer: Synchronizer {
                 }
 
                 let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
-                areFundsSpendable = scanProgress == 1.0
+                areFundsSpendable = composedNumerator == composedDenominator || composedDenominator == 0
 
                 syncProgress = progress
             }
