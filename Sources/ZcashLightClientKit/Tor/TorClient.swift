@@ -9,10 +9,13 @@ import Foundation
 import libzcashlc
 
 public class TorClient {
-    private let runtime: OpaquePointer
+    private var underlyingRuntime: OpaquePointer?
+    private var torDir: URL?
+
     public var cachedFiatCurrencyResult: FiatCurrencyResult?
 
     init(torDir: URL) throws {
+        self.torDir = torDir
         // Ensure that the directory exists.
         let fileManager = FileManager()
         if !fileManager.fileExists(atPath: torDir.path) {
@@ -22,26 +25,42 @@ public class TorClient {
                 throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(torDir, error)
             }
         }
-
-        let rawDir = torDir.osPathStr()
-        let runtimePtr = zcashlc_create_tor_runtime(rawDir.0, rawDir.1)
-
-        guard let runtimePtr else {
-            throw ZcashError.rustTorClientInit(lastErrorMessage(fallback: "`TorClient` init failed with unknown error"))
-        }
-
-        runtime = runtimePtr
     }
 
     private init(runtimePtr: OpaquePointer) {
-        runtime = runtimePtr
+        underlyingRuntime = runtimePtr
     }
 
     deinit {
+        guard let runtime = underlyingRuntime else { return }
+        
         zcashlc_free_tor_runtime(runtime)
+    }
+    
+    private func resolveRuntime() throws -> OpaquePointer {
+        if let runtime = underlyingRuntime {
+            return runtime
+        }
+
+        guard let torDir else {
+            throw ZcashError.rustTorClientInit(lastErrorMessage(fallback: "`TorClient` init failed with torDir nil"))
+        }
+
+        let rawDir = torDir.osPathStr()
+        let runtimePtr = zcashlc_create_tor_runtime(rawDir.0, rawDir.1)
+        
+        guard let runtimePtr else {
+            throw ZcashError.rustTorClientInit(lastErrorMessage(fallback: "`TorClient` init failed with unknown error"))
+        }
+        
+        underlyingRuntime = runtimePtr
+        
+        return runtimePtr
     }
 
     public func isolatedClient() throws -> TorClient {
+        let runtime = try resolveRuntime()
+
         let isolatedPtr = zcashlc_tor_isolated_client(runtime)
 
         guard let isolatedPtr else {
@@ -61,6 +80,8 @@ public class TorClient {
     ///
     /// - Parameter mode: what level of sleep to put a Tor client into.
     func setDormant(mode: TorDormantMode) throws {
+        let runtime = try resolveRuntime()
+
         if !zcashlc_tor_set_dormant(runtime, mode) {
             throw ZcashError.rustTorIsolatedClient(
                 lastErrorMessage(
@@ -84,6 +105,8 @@ public class TorClient {
     /// - Parameter retryLimit: the maximum number of times that a failed request should be retried.
     ///             Set this to 0 to disable retries.
     public func httpRequest(for request: URLRequest, retryLimit: UInt8) throws -> (Data, HTTPURLResponse) {
+        let runtime = try resolveRuntime()
+
         let url = request.url
         guard let url else {
             throw ZcashError.rustTorHttpRequest("`TorClient.httpRequest` requires a URL")
@@ -151,6 +174,8 @@ public class TorClient {
     }
 
     public func getExchangeRateUSD() throws -> FiatCurrencyResult {
+        let runtime = try resolveRuntime()
+
         let rate = zcashlc_get_exchange_rate_usd(runtime)
 
         if rate.is_sign_negative {
@@ -173,6 +198,8 @@ public class TorClient {
     }
 
     public func connectToLightwalletd(endpoint: String) throws -> TorLwdConn {
+        let runtime = try resolveRuntime()
+
         guard !endpoint.containsCStringNullBytesBeforeStringEnding() else {
             throw ZcashError.rustTorConnectToLightwalletd("endpoint string contains null bytes")
         }

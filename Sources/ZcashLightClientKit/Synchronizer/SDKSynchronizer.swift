@@ -576,36 +576,38 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
-        // ignore refresh request when one is already in flight
-        if let latestState = tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
-            return
-        }
-        
-        // broadcast cached value but update the state
-        if let cachedFiatCurrencyResult = tor?.cachedFiatCurrencyResult {
-            var fetchingState = cachedFiatCurrencyResult
-            fetchingState.state = .fetching
-            tor?.cachedFiatCurrencyResult = fetchingState
-            
-            exchangeRateUSDSubject.send(fetchingState)
-        }
-
-        do {
-            if tor == nil {
-                logger.info("Bootstrapping Tor client for fetching exchange rates")
-                if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
-                    tor = try torService.tor?.isolatedClient()
-                }
+        Task {
+            // ignore refresh request when one is already in flight
+            if let latestState = tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
+                return
             }
-            // broadcast new value in case of success
-            exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())
-        } catch {
-            // broadcast cached value but update the state
-            var errorState = tor?.cachedFiatCurrencyResult
-            errorState?.state = .error
-            tor?.cachedFiatCurrencyResult = errorState
             
-            exchangeRateUSDSubject.send(errorState)
+            // broadcast cached value but update the state
+            if let cachedFiatCurrencyResult = tor?.cachedFiatCurrencyResult {
+                var fetchingState = cachedFiatCurrencyResult
+                fetchingState.state = .fetching
+                tor?.cachedFiatCurrencyResult = fetchingState
+                
+                exchangeRateUSDSubject.send(fetchingState)
+            }
+            
+            do {
+                if tor == nil {
+                    logger.info("Bootstrapping Tor client for fetching exchange rates")
+                    if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
+                        tor = try torService.tor?.isolatedClient()
+                    }
+                }
+                // broadcast new value in case of success
+                exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())
+            } catch {
+                // broadcast cached value but update the state
+                var errorState = tor?.cachedFiatCurrencyResult
+                errorState?.state = .error
+                tor?.cachedFiatCurrencyResult = errorState
+                
+                exchangeRateUSDSubject.send(errorState)
+            }
         }
     }
 
