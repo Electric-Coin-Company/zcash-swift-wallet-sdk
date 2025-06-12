@@ -15,12 +15,12 @@ import libzcashlc
 class TorClientTests: ZcashTestCase {
     let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
 
-    func testApis() throws {
+    func testApis() async throws {
         // Spin up a new Tor client.
         let client = try TorClient(torDir: testTempDirectory)
 
         // Connect to a testnet lightwalletd server.
-        let lwdConn = try client.connectToLightwalletd(
+        let lwdConn = try await client.connectToLightwalletd(
             endpoint: LightWalletEndpointBuilder.publicTestnet.urlString)
 
         // Fetch a known testnet transaction.
@@ -39,7 +39,7 @@ class TorClientTests: ZcashTestCase {
         )
 
         // We can background the Tor client.
-        try client.setDormant(mode: Soft)
+        try await client.setDormant(mode: Soft)
         // Usage of the Tor client after this point should un-background it automatically.
 
         // Test HTTP GET.
@@ -47,7 +47,7 @@ class TorClientTests: ZcashTestCase {
         var getRequest = URLRequest(url: URL(string: getUrl)!)
         getRequest.httpMethod = "GET"
         getRequest.addValue("testHeaderValue", forHTTPHeaderField: "X-Test-Header")
-        let (getData, getResponse) = try client.httpRequest(for: getRequest, retryLimit: 3)
+        let (getData, getResponse) = try await client.httpRequest(for: getRequest, retryLimit: 3)
         XCTAssertEqual(getResponse.statusCode, 200)
         let getPayload: HTTPBinGet = try JSONDecoder().decode(HTTPBinGet.self, from: getData)
         XCTAssertEqual(getPayload.url, getUrl)
@@ -59,7 +59,7 @@ class TorClientTests: ZcashTestCase {
         let getErrorUrl = "https://httpbin.org/status/419"
         var getErrorRequest = URLRequest(url: URL(string: getErrorUrl)!)
         getErrorRequest.httpMethod = "GET"
-        let (_, getErrorResponse) = try client.httpRequest(for: getErrorRequest, retryLimit: 3)
+        let (_, getErrorResponse) = try await client.httpRequest(for: getErrorRequest, retryLimit: 3)
         XCTAssertEqual(getErrorResponse.statusCode, 419)
 
         // Test HTTP POST.
@@ -69,7 +69,7 @@ class TorClientTests: ZcashTestCase {
         postRequest.httpMethod = "POST"
         postRequest.httpBody = Data(postedData.utf8)
         postRequest.addValue("testHeaderValue", forHTTPHeaderField: "X-Test-Header")
-        let (postData, postResponse) = try client.httpRequest(for: postRequest, retryLimit: 3)
+        let (postData, postResponse) = try await client.httpRequest(for: postRequest, retryLimit: 3)
         XCTAssertEqual(postResponse.statusCode, 200)
         let postPayload: HTTPBinPost = try JSONDecoder().decode(HTTPBinPost.self, from: postData)
         XCTAssertEqual(postPayload.url, postUrl)

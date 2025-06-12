@@ -29,7 +29,7 @@ actor ServiceConnections {
         
         // uniqueTor
         if mode == .uniqueTor {
-            return try tor.connectToLightwalletd(endpoint: endpointString)
+            return try await tor.connectToLightwalletd(endpoint: endpointString)
         } else if mode == .defaultTor {
             // defaultTor
             let connection: TorLwdConn
@@ -37,7 +37,7 @@ actor ServiceConnections {
             if let defaultTorLwdConn {
                 connection = defaultTorLwdConn
             } else {
-                connection = try tor.connectToLightwalletd(endpoint: endpointString)
+                connection = try await tor.connectToLightwalletd(endpoint: endpointString)
                 defaultTorLwdConn = connection
             }
             
@@ -45,7 +45,7 @@ actor ServiceConnections {
         } else if case let .torInGroup(groupName) = mode {
             // torInGroup
             guard let torInGroup = groups[groupName] else {
-                let torInGroupNamed = try tor.connectToLightwalletd(endpoint: endpointString)
+                let torInGroupNamed = try await tor.connectToLightwalletd(endpoint: endpointString)
                 
                 groups[groupName] = torInGroupNamed
                 

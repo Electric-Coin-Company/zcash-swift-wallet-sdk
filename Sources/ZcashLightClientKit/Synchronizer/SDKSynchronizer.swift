@@ -168,7 +168,7 @@ public class SDKSynchronizer: Synchronizer {
 
         case .syncing:
             logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
-            tor?.wake()
+            await tor?.wake()
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
@@ -201,7 +201,7 @@ public class SDKSynchronizer: Synchronizer {
                 syncProgress = progress
             }
             await updateStatus(.syncing(syncProgress, areFundsSpendable))
-            tor?.wake()
+            await tor?.wake()
             await blockProcessor.start(retry: retry)
         }
     }
@@ -219,7 +219,7 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             await blockProcessor.stop()
-            tor?.sleep()
+            await tor?.sleep()
         }
     }
 
@@ -575,36 +575,38 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
-        // ignore refresh request when one is already in flight
-        if let latestState = tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
-            return
-        }
-        
-        // broadcast cached value but update the state
-        if let cachedFiatCurrencyResult = tor?.cachedFiatCurrencyResult {
-            var fetchingState = cachedFiatCurrencyResult
-            fetchingState.state = .fetching
-            tor?.cachedFiatCurrencyResult = fetchingState
-            
-            exchangeRateUSDSubject.send(fetchingState)
-        }
-
-        do {
-            if tor == nil {
-                logger.info("Bootstrapping Tor client for fetching exchange rates")
-                if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
-                    tor = try torService.tor?.isolatedClient()
-                }
+        Task {
+            // ignore refresh request when one is already in flight
+            if let latestState = await tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
+                return
             }
-            // broadcast new value in case of success
-            exchangeRateUSDSubject.send(try tor?.getExchangeRateUSD())
-        } catch {
-            // broadcast cached value but update the state
-            var errorState = tor?.cachedFiatCurrencyResult
-            errorState?.state = .error
-            tor?.cachedFiatCurrencyResult = errorState
             
-            exchangeRateUSDSubject.send(errorState)
+            // broadcast cached value but update the state
+            if let cachedFiatCurrencyResult = await tor?.cachedFiatCurrencyResult {
+                var fetchingState = cachedFiatCurrencyResult
+                fetchingState.state = .fetching
+                await tor?.updateCachedFiatCurrencyResult(fetchingState)
+                
+                exchangeRateUSDSubject.send(fetchingState)
+            }
+            
+            do {
+                if tor == nil {
+                    logger.info("Bootstrapping Tor client for fetching exchange rates")
+                    if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
+                        tor = try await torService.tor?.isolatedClient()
+                    }
+                }
+                // broadcast new value in case of success
+                exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
+            } catch {
+                // broadcast cached value but update the state
+                var errorState = await tor?.cachedFiatCurrencyResult
+                errorState?.state = .error
+                await tor?.updateCachedFiatCurrencyResult(errorState)
+                
+                exchangeRateUSDSubject.send(errorState)
+            }
         }
     }
 
