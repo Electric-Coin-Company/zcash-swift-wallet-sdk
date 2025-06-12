@@ -195,8 +195,7 @@ public class SDKSynchronizer: Synchronizer {
                     throw ZcashError.rustScanProgressOutOfRange("\(progress)")
                 }
 
-                let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
-                areFundsSpendable = composedNumerator == composedDenominator || composedDenominator == 0
+                areFundsSpendable = scanProgress.areFundsSpendable
 
                 syncProgress = progress
             }

@@ -31,6 +31,10 @@ struct ScanProgress: Equatable {
     let numerator: UInt64
     let denominator: UInt64
     
+    var areFundsSpendable: Bool {
+        numerator == denominator
+    }
+    
     func progress() throws -> Float {
         guard denominator != 0 else {
             return 1.0

@@ -94,12 +94,9 @@ extension ScanAction: Action {
                     if progress > 1.0 {
                         throw ZcashError.rustScanProgressOutOfRange("\(progress)")
                     }
-                    
-                    let scanProgress: Float = (try? scanProgress.progress()) ?? 0.0
-                    let areFundsSpendable = composedNumerator == composedDenominator || composedDenominator == 0
 
                     logger.debug("progress float: \(progress)")
-                    await didUpdate(.syncProgress(progress, areFundsSpendable))
+                    await didUpdate(.syncProgress(progress, scanProgress.areFundsSpendable))
                 }
 
                 progressReportReducer = Constants.reportDelay
