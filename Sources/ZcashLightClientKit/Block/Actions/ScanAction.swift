@@ -96,7 +96,7 @@ extension ScanAction: Action {
                     }
 
                     logger.debug("progress float: \(progress)")
-                    await didUpdate(.syncProgress(progress, scanProgress.areFundsSpendable))
+                    await didUpdate(.syncProgress(progress, scanProgress.isComplete))
                 }
 
                 progressReportReducer = Constants.reportDelay

@@ -31,7 +31,7 @@ struct ScanProgress: Equatable {
     let numerator: UInt64
     let denominator: UInt64
     
-    var areFundsSpendable: Bool {
+    var isComplete: Bool {
         numerator == denominator
     }
     
