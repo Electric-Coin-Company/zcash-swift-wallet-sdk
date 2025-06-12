@@ -8,9 +8,9 @@
 import Foundation
 import libzcashlc
 
-public class TorClient {
+public actor TorClient {
     private var underlyingRuntime: OpaquePointer?
-    private var torDir: URL?
+    private var torDir: URL
 
     public var cachedFiatCurrencyResult: FiatCurrencyResult?
 
@@ -27,8 +27,9 @@ public class TorClient {
         }
     }
 
-    private init(runtimePtr: OpaquePointer) {
+    private init(runtimePtr: OpaquePointer, torDir: URL) {
         underlyingRuntime = runtimePtr
+        self.torDir = torDir
     }
 
     deinit {
@@ -37,13 +38,13 @@ public class TorClient {
         zcashlc_free_tor_runtime(runtime)
     }
     
+    public func updateCachedFiatCurrencyResult(_ result: FiatCurrencyResult?) async {
+        cachedFiatCurrencyResult = result
+    }
+    
     private func resolveRuntime() throws -> OpaquePointer {
         if let runtime = underlyingRuntime {
             return runtime
-        }
-
-        guard let torDir else {
-            throw ZcashError.rustTorClientInit(lastErrorMessage(fallback: "`TorClient` init failed with torDir nil"))
         }
 
         let rawDir = torDir.osPathStr()
@@ -69,7 +70,7 @@ public class TorClient {
             )
         }
 
-        return TorClient(runtimePtr: isolatedPtr)
+        return TorClient(runtimePtr: isolatedPtr, torDir: torDir)
     }
 
     /// Changes the client's current dormant mode, putting background tasks to sleep or waking
