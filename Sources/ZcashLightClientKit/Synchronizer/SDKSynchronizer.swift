@@ -168,6 +168,7 @@ public class SDKSynchronizer: Synchronizer {
 
         case .syncing:
             logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            tor?.wake()
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
@@ -201,6 +202,7 @@ public class SDKSynchronizer: Synchronizer {
                 syncProgress = progress
             }
             await updateStatus(.syncing(syncProgress, areFundsSpendable))
+            tor?.wake()
             await blockProcessor.start(retry: retry)
         }
     }
@@ -218,6 +220,7 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             await blockProcessor.stop()
+            tor?.sleep()
         }
     }
 
