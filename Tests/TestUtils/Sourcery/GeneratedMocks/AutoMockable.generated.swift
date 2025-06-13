@@ -484,25 +484,25 @@ class BlockEnhancerMock: BlockEnhancer {
 
     // MARK: - enhance
 
-    var enhanceAtDidEnhanceThrowableError: Error?
-    var enhanceAtDidEnhanceCallsCount = 0
-    var enhanceAtDidEnhanceCalled: Bool {
-        return enhanceAtDidEnhanceCallsCount > 0
+    var enhanceOverTorThrowableError: Error?
+    var enhanceOverTorCallsCount = 0
+    var enhanceOverTorCalled: Bool {
+        return enhanceOverTorCallsCount > 0
     }
-    var enhanceAtDidEnhanceReceivedArguments: (range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void)?
-    var enhanceAtDidEnhanceReturnValue: [ZcashTransaction.Overview]?
-    var enhanceAtDidEnhanceClosure: ((CompactBlockRange, @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?)?
+    var enhanceOverTorReceivedOverTor: Bool?
+    var enhanceOverTorReturnValue: [ZcashTransaction.Overview]?
+    var enhanceOverTorClosure: ((Bool) async throws -> [ZcashTransaction.Overview]?)?
 
-    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
-        if let error = enhanceAtDidEnhanceThrowableError {
+    func enhance(overTor: Bool) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceOverTorThrowableError {
             throw error
         }
-        enhanceAtDidEnhanceCallsCount += 1
-        enhanceAtDidEnhanceReceivedArguments = (range: range, didEnhance: didEnhance)
-        if let closure = enhanceAtDidEnhanceClosure {
-            return try await closure(range, didEnhance)
+        enhanceOverTorCallsCount += 1
+        enhanceOverTorReceivedOverTor = overTor
+        if let closure = enhanceOverTorClosure {
+            return try await closure(overTor)
         } else {
-            return enhanceAtDidEnhanceReturnValue
+            return enhanceOverTorReturnValue
         }
     }
 

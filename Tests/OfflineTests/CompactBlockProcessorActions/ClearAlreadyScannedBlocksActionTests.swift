@@ -16,14 +16,20 @@ final class ClearAlreadyScannedBlocksActionTests: ZcashTestCase {
         let clearAlreadyScannedBlocksAction = setupAction(compactBlockRepositoryMock)
 
         do {
-            let context = ActionContextMock.default()
-            context.lastScannedHeight = -1
-            
+            let context = ActionContextMock()
+            context.lastScannedHeight = 1
+            context.underlyingSyncControlData = SyncControlData(
+                latestBlockHeight: 2000,
+                latestScannedHeight: 1,
+                firstUnenhancedHeight: nil
+            )
+            context.updateStateClosure = { _ in }
+
             let nextContext = try await clearAlreadyScannedBlocksAction.run(with: context) { _ in }
             
             XCTAssertTrue(compactBlockRepositoryMock.clearUpToCalled, "storage.clear(upTo:) is expected to be called.")
 
-            let acResult = nextContext.checkStateIs(.enhance)
+            let acResult = nextContext.checkStateIs(.txResubmission)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testClearAlreadyScannedBlocksAction_NextAction is not expected to fail. \(error)")

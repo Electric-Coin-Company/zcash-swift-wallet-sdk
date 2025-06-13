@@ -54,8 +54,6 @@ extension CompactBlockProcessor.Event {
             return .progressUpdated
         case .storedUTXOs:
             return .storedUTXOs
-        case .startedEnhancing:
-            return .startedEnhancing
         case .startedFetching:
             return .startedFetching
         case .startedSyncing:

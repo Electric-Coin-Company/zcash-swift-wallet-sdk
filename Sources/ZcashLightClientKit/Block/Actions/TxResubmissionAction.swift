@@ -63,7 +63,7 @@ extension TxResubmissionAction: Action {
             logger.error("TxResubmissionAction failed to find candidates.")
         }
         
-        if await context.prevState == .enhance {
+        if await context.prevState == .clearAlreadyScannedBlocks {
             await context.update(state: .updateChainTip)
         } else {
             await context.update(state: .finished)

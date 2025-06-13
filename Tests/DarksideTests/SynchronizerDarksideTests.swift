@@ -64,7 +64,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
     func testFoundTransactions() async throws {
         coordinator.synchronizer.eventStream
             .map { event in
-                guard case let .foundTransactions(transactions, _) = event else { return nil }
+                guard case let .foundTransactions(transactions) = event else { return nil }
                 return transactions
             }
             .compactMap { $0 }
@@ -95,7 +95,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
         self.idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
         coordinator.synchronizer.eventStream
             .map { event in
-                guard case let .foundTransactions(transactions, _) = event else { return nil }
+                guard case let .foundTransactions(transactions) = event else { return nil }
                 return transactions
             }
             .compactMap { $0 }

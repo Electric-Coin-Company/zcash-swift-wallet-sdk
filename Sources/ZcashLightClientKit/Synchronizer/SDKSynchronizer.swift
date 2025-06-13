@@ -261,8 +261,8 @@ public class SDKSynchronizer: Synchronizer {
             case let .finished(height):
                 await self?.finished(lastScannedHeight: height)
 
-            case let .foundTransactions(transactions, range):
-                self?.foundTransactions(transactions: transactions, in: range)
+            case let .foundTransactions(transactions):
+                self?.foundTransactions(transactions: transactions)
 
             case let .handledReorg(reorgHeight, rewindHeight):
                 // log reorg information
@@ -277,7 +277,7 @@ public class SDKSynchronizer: Synchronizer {
             case let .storedUTXOs(utxos):
                 self?.storedUTXOs(utxos: utxos)
 
-            case .startedEnhancing, .startedFetching, .startedSyncing:
+            case .startedFetching, .startedSyncing:
                 break
 
             case .stopped:
@@ -301,11 +301,11 @@ public class SDKSynchronizer: Synchronizer {
         await updateStatus(.synced)
     }
 
-    private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
+    private func foundTransactions(transactions: [ZcashTransaction.Overview]) {
         guard !transactions.isEmpty else { return }
         
         streamsUpdateQueue.async { [weak self] in
-            self?.eventSubject.send(.foundTransactions(transactions, range))
+            self?.eventSubject.send(.foundTransactions(transactions))
         }
     }
 
@@ -437,7 +437,7 @@ public class SDKSynchronizer: Synchronizer {
 
         // let clients know the transaction repository changed
         if !transactions.isEmpty {
-            eventSubject.send(.foundTransactions(transactions, nil))
+            eventSubject.send(.foundTransactions(transactions))
         }
         
         return AsyncThrowingStream() {
