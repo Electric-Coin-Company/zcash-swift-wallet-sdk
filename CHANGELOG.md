@@ -8,6 +8,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 - `LightWalletGRPCService` updated to use Tor connection for: fetching and submission of the transaction, getting server info, latest block height and tree state.
+- `SynchronizerEvent.foundTransactions([ZcashTransaction.Overview])` no longer returns the range in which the enhancement occurred. The SDK engine has been updated to decouple enhancement from the sync loop and eliminate the dependency on ranges.
 
 # 2.2.16 - 2025-05-21
 

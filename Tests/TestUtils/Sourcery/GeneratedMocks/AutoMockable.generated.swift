@@ -484,25 +484,25 @@ class BlockEnhancerMock: BlockEnhancer {
 
     // MARK: - enhance
 
-    var enhanceOverTorThrowableError: Error?
-    var enhanceOverTorCallsCount = 0
-    var enhanceOverTorCalled: Bool {
-        return enhanceOverTorCallsCount > 0
+    var enhanceProcessTxIdsThrowableError: Error?
+    var enhanceProcessTxIdsCallsCount = 0
+    var enhanceProcessTxIdsCalled: Bool {
+        return enhanceProcessTxIdsCallsCount > 0
     }
-    var enhanceOverTorReceivedOverTor: Bool?
-    var enhanceOverTorReturnValue: [ZcashTransaction.Overview]?
-    var enhanceOverTorClosure: ((Bool) async throws -> [ZcashTransaction.Overview]?)?
+    var enhanceProcessTxIdsReceivedProcessTxIds: Bool?
+    var enhanceProcessTxIdsReturnValue: [ZcashTransaction.Overview]?
+    var enhanceProcessTxIdsClosure: ((Bool) async throws -> [ZcashTransaction.Overview]?)?
 
-    func enhance(overTor: Bool) async throws -> [ZcashTransaction.Overview]? {
-        if let error = enhanceOverTorThrowableError {
+    func enhance(processTxIds: Bool) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceProcessTxIdsThrowableError {
             throw error
         }
-        enhanceOverTorCallsCount += 1
-        enhanceOverTorReceivedOverTor = overTor
-        if let closure = enhanceOverTorClosure {
-            return try await closure(overTor)
+        enhanceProcessTxIdsCallsCount += 1
+        enhanceProcessTxIdsReceivedProcessTxIds = processTxIds
+        if let closure = enhanceProcessTxIdsClosure {
+            return try await closure(processTxIds)
         } else {
-            return enhanceOverTorReturnValue
+            return enhanceProcessTxIdsReturnValue
         }
     }
 

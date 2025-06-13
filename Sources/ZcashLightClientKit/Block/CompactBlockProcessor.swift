@@ -830,7 +830,7 @@ extension CompactBlockProcessor {
                 Task { [weak self] in
                     guard let self else { return }
                     
-                    let transactions = try await self.blockEnhancer?.enhance(overTor: true)
+                    let transactions = try await self.blockEnhancer?.enhance(processTxIds: true)
                     
                     if let transactions {
                         await send(event: .foundTransactions(transactions))
@@ -854,7 +854,7 @@ extension CompactBlockProcessor {
                     
                     if let chainTip = try? await self.rustBackend.maxScannedHeight(), await self.lastKnownChainTipHeight != chainTip {
                         await updateLastKnownChainTip(height: chainTip)
-                        let transactions = try await self.blockEnhancer?.enhance(overTor: false)
+                        let transactions = try await self.blockEnhancer?.enhance(processTxIds: false)
                         if let transactions {
                             await send(event: .foundTransactions(transactions))
                         }

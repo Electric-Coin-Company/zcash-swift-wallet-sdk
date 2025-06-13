@@ -52,7 +52,7 @@ public struct EnhancementProgress: Equatable {
 }
 
 protocol BlockEnhancer {
-    func enhance(overTor: Bool) async throws -> [ZcashTransaction.Overview]?
+    func enhance(processTxIds: Bool) async throws -> [ZcashTransaction.Overview]?
 }
 
 struct BlockEnhancerImpl {
@@ -66,10 +66,14 @@ struct BlockEnhancerImpl {
 
 extension BlockEnhancerImpl: BlockEnhancer {
     // swiftlint:disable:next cyclomatic_complexity
-    func enhance(overTor: Bool) async throws -> [ZcashTransaction.Overview]? {
+    func enhance(processTxIds: Bool) async throws -> [ZcashTransaction.Overview]? {
         try Task.checkCancellation()
         
-        logger.debug("Started Enhancing:")
+        logger.debug(
+            processTxIds
+            ? "Started enhancement of the transactions"
+            : "Started check for transparent address activity"
+        )
 
         var retries = 0
         let maxRetries = 5
@@ -93,7 +97,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 while retry && retries < maxRetries {
                     try Task.checkCancellation()
                     do {
-                        if overTor {
+                        if processTxIds {
                             switch transactionDataRequest {
                             case .getStatus(let txId):
                                 let response = try await blockDownloaderService.fetchTransaction(
@@ -201,12 +205,20 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 }
             }
         } catch {
-            logger.error("error enhancing transactions! \(error)")
+            logger.error(
+                processTxIds
+                ? "error enhancing transactions! \(error)"
+                : "error checking for transparent address activity! \(error)"
+            )
             throw error
         }
         
         if Task.isCancelled {
-            logger.debug("Warning: compactBlockEnhancement cancelled")
+            logger.debug(
+                processTxIds
+                ? "Warning: compactBlockEnhancement cancelled"
+                : "Warning: checking for transparent address activity cancelled"
+            )
         }
 
         return foundTransactions
