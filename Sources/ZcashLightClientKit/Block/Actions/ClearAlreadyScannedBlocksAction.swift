@@ -15,6 +15,22 @@ final class ClearAlreadyScannedBlocksAction {
         storage = container.resolve(CompactBlockRepository.self)
         transactionRepository = container.resolve(TransactionRepository.self)
     }
+    
+    func decideWhatToDoNext(context: ActionContext, lastScannedHeight: BlockHeight) async -> ActionContext {
+        guard await context.syncControlData.latestScannedHeight != nil else {
+            await context.update(state: .clearCache)
+            return context
+        }
+
+        let latestBlockHeight = await context.syncControlData.latestBlockHeight
+        if lastScannedHeight >= latestBlockHeight {
+            await context.update(state: .clearCache)
+        } else {
+            await context.update(state: .txResubmission)
+        }
+
+        return context
+    }
 }
 
 extension ClearAlreadyScannedBlocksAction: Action {
@@ -27,8 +43,7 @@ extension ClearAlreadyScannedBlocksAction: Action {
         
         try await storage.clear(upTo: lastScannedHeight)
 
-        await context.update(state: .enhance)
-        return context
+        return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)
     }
 
     func stop() async { }

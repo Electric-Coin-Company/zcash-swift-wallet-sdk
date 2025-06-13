@@ -484,25 +484,25 @@ class BlockEnhancerMock: BlockEnhancer {
 
     // MARK: - enhance
 
-    var enhanceAtDidEnhanceThrowableError: Error?
-    var enhanceAtDidEnhanceCallsCount = 0
-    var enhanceAtDidEnhanceCalled: Bool {
-        return enhanceAtDidEnhanceCallsCount > 0
+    var enhanceProcessTxIdsThrowableError: Error?
+    var enhanceProcessTxIdsCallsCount = 0
+    var enhanceProcessTxIdsCalled: Bool {
+        return enhanceProcessTxIdsCallsCount > 0
     }
-    var enhanceAtDidEnhanceReceivedArguments: (range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void)?
-    var enhanceAtDidEnhanceReturnValue: [ZcashTransaction.Overview]?
-    var enhanceAtDidEnhanceClosure: ((CompactBlockRange, @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?)?
+    var enhanceProcessTxIdsReceivedProcessTxIds: Bool?
+    var enhanceProcessTxIdsReturnValue: [ZcashTransaction.Overview]?
+    var enhanceProcessTxIdsClosure: ((Bool) async throws -> [ZcashTransaction.Overview]?)?
 
-    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
-        if let error = enhanceAtDidEnhanceThrowableError {
+    func enhance(processTxIds: Bool) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceProcessTxIdsThrowableError {
             throw error
         }
-        enhanceAtDidEnhanceCallsCount += 1
-        enhanceAtDidEnhanceReceivedArguments = (range: range, didEnhance: didEnhance)
-        if let closure = enhanceAtDidEnhanceClosure {
-            return try await closure(range, didEnhance)
+        enhanceProcessTxIdsCallsCount += 1
+        enhanceProcessTxIdsReceivedProcessTxIds = processTxIds
+        if let closure = enhanceProcessTxIdsClosure {
+            return try await closure(processTxIds)
         } else {
-            return enhanceAtDidEnhanceReturnValue
+            return enhanceProcessTxIdsReturnValue
         }
     }
 

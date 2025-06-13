@@ -1234,7 +1234,7 @@ class SDKSynchonizerListener {
                     case let .minedTransaction(transaction):
                         self?.txMined(transaction)
 
-                    case let .foundTransactions(transactions, _):
+                    case let .foundTransactions(transactions):
                         self?.txFound(transactions)
 
                     case .storedUTXOs, .connectionStateChanged:

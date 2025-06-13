@@ -96,6 +96,7 @@ extension ScanAction: Action {
                     }
 
                     logger.debug("progress float: \(progress)")
+                    
                     await didUpdate(.syncProgress(progress, scanProgress.isComplete))
                 }
 

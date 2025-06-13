@@ -41,6 +41,10 @@ actor CompactBlockProcessor {
     private var retryAttempts: Int = 0
     private var serviceFailureRetryAttempts: Int = 0
     private var backoffTimer: Timer?
+    private var blockEnhancer: BlockEnhancer?
+    private var enhancementTimer: Timer?
+    private var chainTipTimer: Timer?
+    private var lastKnownChainTipHeight = BlockHeight(0)
     private var consecutiveChainValidationErrors: Int = 0
     
     private var compactBlockProgress: CompactBlockProgress = .zero
@@ -73,6 +77,12 @@ actor CompactBlockProcessor {
         let cacheDbURL: URL?
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
+        }
+        var enhancementInterval: TimeInterval {
+            TimeInterval.random(in: 9...11)
+        }
+        var chainTipInterval: TimeInterval {
+            TimeInterval.random(in: 3...5)
         }
 
         init(
@@ -196,6 +206,7 @@ actor CompactBlockProcessor {
         self.transactionRepository = container.resolve(TransactionRepository.self)
         self.fileManager = container.resolve(ZcashFileManager.self)
         self.configProvider = configProvider
+        self.blockEnhancer = container.resolve(BlockEnhancer.self)
     }
 
     deinit {
@@ -226,8 +237,6 @@ actor CompactBlockProcessor {
                 action = ScanAction(container: container, configProvider: configProvider)
             case .clearAlreadyScannedBlocks:
                 action = ClearAlreadyScannedBlocksAction(container: container)
-            case .enhance:
-                action = EnhanceAction(container: container, configProvider: configProvider)
             case .fetchUTXO:
                 action = FetchUTXOsAction(container: container)
             case .handleSaplingParams:
@@ -262,6 +271,10 @@ extension CompactBlockProcessor {
             self.serviceFailureRetryAttempts = 0
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
+            self.enhancementTimer?.invalidate()
+            self.enhancementTimer = nil
+            self.chainTipTimer?.invalidate()
+            self.chainTipTimer = nil
         }
 
         guard await canStartSync() else {
@@ -284,6 +297,10 @@ extension CompactBlockProcessor {
         syncTask?.cancel()
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
+        self.enhancementTimer?.invalidate()
+        self.enhancementTimer = nil
+        self.chainTipTimer?.invalidate()
+        self.chainTipTimer = nil
         await stopAllActions()
         retryAttempts = 0
         serviceFailureRetryAttempts = 0
@@ -376,6 +393,10 @@ extension CompactBlockProcessor {
             logger.debug("Sync doesn't run. Executing wipe.")
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
+            self.enhancementTimer?.invalidate()
+            self.enhancementTimer = nil
+            self.chainTipTimer?.invalidate()
+            self.chainTipTimer = nil
             try await doWipe(context: context)
         } else {
             logger.debug("Stopping sync because of wipe")
@@ -448,11 +469,6 @@ extension CompactBlockProcessor {
         (actions[.updateChainTip] as? UpdateChainTipAction)?.downloader = updatedBlockDownloader
         (actions[.rewind] as? RewindAction)?.downloader = updatedBlockDownloader
         self.blockDownloaderService = updatedDownloaderService
-        
-        // BlockEnhancer
-        let updatedEnhancer = container.resolve(BlockEnhancer.self)
-
-        (actions[.enhance] as? EnhanceAction)?.blockEnhancer = updatedEnhancer
 
         // UTXOFetcher
         let updatedUTXOFetcher = container.resolve(UTXOFetcher.self)
@@ -477,7 +493,7 @@ extension CompactBlockProcessor {
         case minedTransaction(ZcashTransaction.Overview)
 
         /// Event sent when the CompactBlockProcessor enhanced a bunch of transactions in some range.
-        case foundTransactions([ZcashTransaction.Overview], CompactBlockRange)
+        case foundTransactions([ZcashTransaction.Overview])
 
         /// Event sent when the CompactBlockProcessor handled a ReOrg.
         /// `reorgHeight` is the height on which the reorg was detected.
@@ -492,9 +508,6 @@ extension CompactBlockProcessor {
 
         /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
         case storedUTXOs((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
-
-        /// Event sent when the CompactBlockProcessor starts enhancing of the transactions.
-        case startedEnhancing
 
         /// Event sent when the CompactBlockProcessor starts fetching of the UTXOs.
         case startedFetching
@@ -544,6 +557,14 @@ extension CompactBlockProcessor {
 
                 if backoffTimer == nil {
                     await setTimer()
+                }
+                
+                if enhancementTimer == nil {
+                    await setEnhancementTimer()
+                }
+                
+                if chainTipTimer == nil {
+                    await setChainTipTimer()
                 }
             }
 
@@ -669,8 +690,6 @@ extension CompactBlockProcessor {
             break
         case .clearAlreadyScannedBlocks:
             break
-        case .enhance:
-            await send(event: .startedEnhancing)
         case .fetchUTXO:
             await send(event: .startedFetching)
         case .handleSaplingParams:
@@ -799,6 +818,56 @@ extension CompactBlockProcessor {
         )
         RunLoop.main.add(timer, forMode: .default)
         self.backoffTimer = timer
+    }
+    
+    private func setEnhancementTimer() async {
+        let interval = config.enhancementInterval
+        self.enhancementTimer?.invalidate()
+        let timer = Timer(
+            timeInterval: interval,
+            repeats: true,
+            block: { [weak self] _ in
+                Task { [weak self] in
+                    guard let self else { return }
+                    
+                    let transactions = try await self.blockEnhancer?.enhance(processTxIds: true)
+                    
+                    if let transactions {
+                        await send(event: .foundTransactions(transactions))
+                    }
+                }
+            }
+        )
+        RunLoop.main.add(timer, forMode: .default)
+        self.enhancementTimer = timer
+    }
+    
+    private func setChainTipTimer() async {
+        let interval = config.chainTipInterval
+        self.chainTipTimer?.invalidate()
+        let timer = Timer(
+            timeInterval: interval,
+            repeats: true,
+            block: { [weak self] _ in
+                Task { [weak self] in
+                    guard let self else { return }
+                    
+                    if let chainTip = try? await self.rustBackend.maxScannedHeight(), await self.lastKnownChainTipHeight != chainTip {
+                        await updateLastKnownChainTip(height: chainTip)
+                        let transactions = try await self.blockEnhancer?.enhance(processTxIds: false)
+                        if let transactions {
+                            await send(event: .foundTransactions(transactions))
+                        }
+                    }
+                }
+            }
+        )
+        RunLoop.main.add(timer, forMode: .default)
+        self.chainTipTimer = timer
+    }
+    
+    private func updateLastKnownChainTip(height: BlockHeight) async {
+        lastKnownChainTipHeight = height
     }
 
     private func isIdle() async -> Bool {

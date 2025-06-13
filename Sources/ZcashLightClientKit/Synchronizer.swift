@@ -70,9 +70,8 @@ public struct SynchronizerState: Equatable {
 public enum SynchronizerEvent {
     // Sent when the synchronizer finds a pendingTransaction that has been newly mined.
     case minedTransaction(ZcashTransaction.Overview)
-
     // Sent when the synchronizer finds a mined transaction
-    case foundTransactions(_ transactions: [ZcashTransaction.Overview], _ inRange: CompactBlockRange?)
+    case foundTransactions(_ transactions: [ZcashTransaction.Overview])
     // Sent when the synchronizer fetched utxos from lightwalletd attempted to store them.
     case storedUTXOs(_ inserted: [UnspentTransactionOutputEntity], _ skipped: [UnspentTransactionOutputEntity])
     // Connection state to LightwalletEndpoint changed.
