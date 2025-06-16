@@ -26,8 +26,11 @@ final class UpdateChainTipAction {
         // ServiceMode to resolve
         // called each sync, right after getInfo in ValidateServerAction
         // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
-        let latestBlockHeight = try await service.latestBlockHeight(mode: .defaultTor)
-        
+        // TODO: [#1571] connection enforeced to .direct for the next SDK release
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
+        //let latestBlockHeight = try await service.latestBlockHeight(mode: .defaultTor)
+        let latestBlockHeight = try await service.latestBlockHeight(mode: .direct)
+
         logger.debug("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))
         await context.update(lastChainTipUpdateTime: time)

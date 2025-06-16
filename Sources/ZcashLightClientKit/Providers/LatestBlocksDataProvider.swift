@@ -51,7 +51,10 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
 
     func updateBlockData() async {
         // called each time syn triggers but sync is still in progress, the goal it to jusst update the chain tip in the provider
-        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: .defaultTor) {
+        // TODO: [#1571] connection enforeced to .direct for the next SDK release
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
+//        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: .defaultTor) {
+        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: .direct) {
             await update(newLatestBlockHeight)
         }
     }

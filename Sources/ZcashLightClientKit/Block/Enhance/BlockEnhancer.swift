@@ -93,9 +93,15 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         switch transactionDataRequest {
                         case .getStatus(let txId):
+                            // TODO: [#1571] connection enforeced to .direct for the next SDK release
+                            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
+//                            let response = try await blockDownloaderService.fetchTransaction(
+//                                txId: txId.data,
+//                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+//                            )
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                                mode: .direct
                             )
                             retry = false
 
@@ -104,9 +110,15 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
                             
                         case .enhancement(let txId):
+                            // TODO: [#1571] connection enforeced to .direct for the next SDK release
+                            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
+//                            let response = try await blockDownloaderService.fetchTransaction(
+//                                txId: txId.data,
+//                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+//                            )
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
+                                mode: .direct
                             )
                             retry = false
 
