@@ -6,8 +6,26 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-## Changed
-- `LightWalletGRPCService` updated to use Tor connection for: fetching and submission of the transaction, getting server info, latest block height and tree state.
+## Fixed
+- FFI 0.17.0 introduces retry logic for Tor, significantly improving the reliability of currency conversion fetches.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2925000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2960000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3400000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3430000.json
+````
 
 # 2.2.16 - 2025-05-21
 

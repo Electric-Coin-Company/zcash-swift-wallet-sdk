@@ -27,7 +27,10 @@ extension ValidateServerAction: Action {
         // ServiceMode to resolve
         // called each sync, an action in a state machine diagram
         // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
-        let info = try await service.getInfo(mode: .defaultTor)
+        // TODO: [#1571] connection enforeced to .direct for the next SDK release
+        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
+//        let info = try await service.getInfo(mode: .defaultTor)
+        let info = try await service.getInfo(mode: .direct)
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
 
