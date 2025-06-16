@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.2.17 - 2025-06-16
+
 ## Fixed
 - FFI 0.17.0 introduces retry logic for Tor, significantly improving the reliability of currency conversion fetches.
 
