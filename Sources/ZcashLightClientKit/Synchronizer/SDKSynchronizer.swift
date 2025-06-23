@@ -924,6 +924,14 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
     
+    public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {
+        guard let tor else {
+            throw ZcashError.torClientUnavailable
+        }
+        
+        return try await tor.isolatedClient().httpRequest(for: request, retryLimit: retryLimit)
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
