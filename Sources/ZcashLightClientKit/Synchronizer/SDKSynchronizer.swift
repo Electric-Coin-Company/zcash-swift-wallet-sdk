@@ -939,7 +939,7 @@ public class SDKSynchronizer: Synchronizer {
     public func estimateBirthdayHeight(for date: Date) -> BlockHeight {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
-    
+
     public func tor(enabled: Bool) async throws {
         let isExchangeRateEnabled = await sdkFlags.exchangeRateEnabled
 
@@ -993,6 +993,15 @@ public class SDKSynchronizer: Synchronizer {
     
     public func isTorSuccessfullyInitialized() async -> Bool? {
         await sdkFlags.torClientInitializationSuccessfullyDone
+
+    }
+
+    public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {
+        guard let tor else {
+            throw ZcashError.torClientUnavailable
+        }
+        
+        return try await tor.isolatedClient().httpRequest(for: request, retryLimit: retryLimit)
     }
     
     // MARK: Server switch

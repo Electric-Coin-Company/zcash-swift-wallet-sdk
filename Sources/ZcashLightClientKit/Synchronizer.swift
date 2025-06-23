@@ -435,7 +435,7 @@ public protocol Synchronizer: AnyObject {
     /// Takes a given date and finds out the closes checkpoint's height for it.
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
-    
+
     /// Allows to setup the Tor opt-in/out runtime.
     /// - Parameters:
     ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls http and lwd service calls.
@@ -452,6 +452,12 @@ public protocol Synchronizer: AnyObject {
     /// Instead, a result of the initialization is stored in the `SDKFLags`
     /// - Returns: nil, the initialization hasn't been initiated, true/false = initialization succeeded/failed
     func isTorSuccessfullyInitialized() async -> Bool?
+
+    /// Makes an http request via rust/Tor pathway and delivers the HTTPURLResponse. The Swift's signature aligns with the URLSession.data(for request: URLRequest.
+    /// - Parameters:
+    ///    - for: URLRequest
+    ///    - retryLimit: How many times the TorClient retries the request in case of failure
+    func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
 }
 
 public enum SyncStatus: Equatable {

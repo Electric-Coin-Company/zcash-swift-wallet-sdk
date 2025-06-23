@@ -2212,6 +2212,30 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - httpRequestOverTor
+
+    var httpRequestOverTorForRetryLimitThrowableError: Error?
+    var httpRequestOverTorForRetryLimitCallsCount = 0
+    var httpRequestOverTorForRetryLimitCalled: Bool {
+        return httpRequestOverTorForRetryLimitCallsCount > 0
+    }
+    var httpRequestOverTorForRetryLimitReceivedArguments: (request: URLRequest, retryLimit: UInt8)?
+    var httpRequestOverTorForRetryLimitReturnValue: (data: Data, response: HTTPURLResponse)!
+    var httpRequestOverTorForRetryLimitClosure: ((URLRequest, UInt8) async throws -> (data: Data, response: HTTPURLResponse))?
+
+    func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse) {
+        if let error = httpRequestOverTorForRetryLimitThrowableError {
+            throw error
+        }
+        httpRequestOverTorForRetryLimitCallsCount += 1
+        httpRequestOverTorForRetryLimitReceivedArguments = (request: request, retryLimit: retryLimit)
+        if let closure = httpRequestOverTorForRetryLimitClosure {
+            return try await closure(request, retryLimit)
+        } else {
+            return httpRequestOverTorForRetryLimitReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
