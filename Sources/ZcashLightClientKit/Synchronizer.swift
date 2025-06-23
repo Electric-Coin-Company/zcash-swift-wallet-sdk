@@ -436,6 +436,19 @@ public protocol Synchronizer: AnyObject {
     /// Takes a given date and finds out the closes checkpoint's height for it.
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
+
+    /// Makes an HTTP request over Tor and delivers the `HTTPURLResponse`.
+    ///
+    /// This request is isolated (using separate circuits) from any other requests or
+    /// Tor usage, but may still be correlatable by the server through request timing
+    /// (if the caller does not mitigate timing attacks).
+    ///
+    /// The Swift's signature aligns with `URLSession.data(for request: URLRequest)`.
+    ///
+    /// - Parameters:
+    ///    - for: URLRequest
+    ///    - retryLimit: How many times the request will be retried in case of failure
+    func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
 }
 
 public enum SyncStatus: Equatable {

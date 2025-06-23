@@ -76,6 +76,9 @@ public enum ZcashError: Equatable, Error {
     /// GRPC Service is called with a Tor mode instead of direct one
     /// ZTSRV0004
     case grpcServiceCalledWithTorMode
+    /// TorClient is nil
+    /// ZTSRV0005
+    case torClientUnavailable
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
     case simpleConnectionProvider(_ error: Error)
@@ -744,6 +747,7 @@ public enum ZcashError: Equatable, Error {
         case .torServiceMissingTorClient: return "Tor client is not available"
         case .torServiceUnresolvedMode: return "Tor client fails to resolve ServiceMode"
         case .grpcServiceCalledWithTorMode: return "GRPC Service is called with a Tor mode instead of direct one"
+        case .torClientUnavailable: return "TorClient is nil"
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         case .saplingParamsInvalidSpendParams: return "Downloaded file with sapling spending parameters isn't valid."
         case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
@@ -951,6 +955,7 @@ public enum ZcashError: Equatable, Error {
         case .torServiceMissingTorClient: return .torServiceMissingTorClient
         case .torServiceUnresolvedMode: return .torServiceUnresolvedMode
         case .grpcServiceCalledWithTorMode: return .grpcServiceCalledWithTorMode
+        case .torClientUnavailable: return .torClientUnavailable
         case .simpleConnectionProvider: return .simpleConnectionProvider
         case .saplingParamsInvalidSpendParams: return .saplingParamsInvalidSpendParams
         case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams
