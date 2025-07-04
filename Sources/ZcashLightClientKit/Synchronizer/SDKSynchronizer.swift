@@ -997,6 +997,13 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {
+        if tor == nil {
+            logger.info("Bootstrapping Tor client for making http requests")
+            if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
+                tor = try await torService.tor?.isolatedClient()
+            }
+        }
+        
         guard let tor else {
             throw ZcashError.torClientUnavailable
         }
