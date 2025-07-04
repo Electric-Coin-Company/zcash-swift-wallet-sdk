@@ -268,6 +268,12 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         return subject.eraseToAnyPublisher()
     }
 
+    public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) -> SinglePublisher<(data: Data, response: HTTPURLResponse), Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.httpRequestOverTor(for: request, retryLimit: retryLimit)
+        }
+    }
+    
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }
