@@ -98,6 +98,9 @@ enum ZcashErrorDefinition {
     /// GRPC Service is called with a Tor mode instead of direct one
     // sourcery: code="ZTSRV0004"
     case grpcServiceCalledWithTorMode
+    /// TorClient is nil
+    // sourcery: code="ZTSRV0005"
+    case torClientUnavailable
 
     // MARK: SQLite connection
 
