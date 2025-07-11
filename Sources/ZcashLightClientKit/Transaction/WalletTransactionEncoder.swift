@@ -129,16 +129,11 @@ class WalletTransactionEncoder: TransactionEncoder {
     func submit(
         transaction: EncodedTransaction
     ) async throws {
-        // ServiceMode to resolve
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        let response = try await self.lightWalletService.submit(
-//            spendTransaction: transaction.raw,
-//            mode: ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId)
-//        )
         let response = try await self.lightWalletService.submit(
             spendTransaction: transaction.raw,
-            mode: ServiceMode.direct
+            mode: await LwdConnectionOverTorFlag.shared.enabled
+            ? ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId)
+            : ServiceMode.direct
         )
 
         guard response.errorCode >= 0 else {

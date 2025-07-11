@@ -335,12 +335,10 @@ public class SDKSynchronizer: Synchronizer {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID {
-        // ServiceMode to resolve
         // called when a new account is imported
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .uniqueTor))
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .direct))
+        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(
+            mode: await LwdConnectionOverTorFlag.shared.enabled ? .uniqueTor : .direct)
+        )
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
 
@@ -564,10 +562,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        try await blockProcessor.latestHeight(mode: .torInGroup("SDKSynchronizer.latestHeight"))
-        try await blockProcessor.latestHeight(mode: .direct)
+        try await blockProcessor.latestHeight(mode: await LwdConnectionOverTorFlag.shared.enabled ? .torInGroup("SDKSynchronizer.latestHeight") : .direct)
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -780,10 +775,10 @@ public class SDKSynchronizer: Synchronizer {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
                     // called when performance of servers is evaluated
-                    // TODO: [#1571] connection enforeced to .direct for the next SDK release
-                    // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//                    let mode = ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
-                    let mode = ServiceMode.direct
+                    let mode = await LwdConnectionOverTorFlag.shared.enabled
+                    ? ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
+                    : ServiceMode.direct
+                    
                     let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
                     // called when performance of servers is evaluated
