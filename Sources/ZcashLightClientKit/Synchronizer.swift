@@ -184,6 +184,21 @@ public protocol Synchronizer: AnyObject {
         memo: Memo?
     ) async throws -> Proposal
 
+    /// Creates a proposal for transferring all spendable funds to the given recipient factoring in the 
+    /// needed variable fees which are deduced from the total spendable amount.
+    ///
+    /// - Parameter accountUUID: the account from which to transfer funds.
+    /// - Parameter recipient: the recipient's address.
+    /// - Parameter memo: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        recipient: Recipient,
+        memo: Memo?
+    ) async throws -> Proposal
+
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
     /// - Parameter accountUUID: the account for which to shield funds.

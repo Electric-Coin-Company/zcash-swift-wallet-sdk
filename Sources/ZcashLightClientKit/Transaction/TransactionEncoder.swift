@@ -35,6 +35,20 @@ protocol TransactionEncoder {
         memoBytes: MemoBytes?
     ) async throws -> Proposal
 
+    /// Creates a proposal for transferring all spendable funds to the given recipient.
+    ///
+    /// - Parameter accountUUID: the account from which to transfer funds.
+    /// - Parameter recipient: string containing the recipient's address.
+    /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
+    ///
+    /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
+    func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        recipient: String,
+        memoBytes: MemoBytes?
+    ) async throws -> Proposal
+
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
     /// - Parameter accountUUID:the account from which to shield funds.

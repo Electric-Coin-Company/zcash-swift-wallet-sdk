@@ -6,6 +6,10 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added 
+-  `Synchronizer.proposeSendMaxTransfer` creates a transaction proposal with all spendable funds
+   calculating the fees from the number of notes involved and deduces it from the resulting amount.
+-  `CombineSynchronizer.Synchronizer` same as above. 
 # 2.2.17 - 2025-06-16
 
 ## Fixed

@@ -71,6 +71,20 @@ class WalletTransactionEncoder: TransactionEncoder {
         return Proposal(inner: proposal)
     }
 
+    func proposeSendMAxTransfer(
+        accountUUID: AccountUUID,
+        recipient: String,
+        memoBytes: MemoBytes?
+    ) async throws -> Proposal {
+        let proposal = try await rustBackend.proposeSendMaxTransfer(
+            accountUUID: accountUUID,
+            to: recipient,
+            memo: memoBytes
+        )
+
+        return Proposal(inner: proposal)
+    }
+
     func proposeShielding(
         accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,

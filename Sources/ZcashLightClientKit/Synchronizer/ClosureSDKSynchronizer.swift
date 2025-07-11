@@ -125,6 +125,21 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
+    public func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        recipient: Recipient,
+        memo: Memo?,
+        completion: @escaping (Result<Proposal, Error>) -> Void
+    ) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.proposeSendMaxTransfer(
+                accountUUID: accountUUID, 
+                recipient: recipient,
+                memo: memo
+            )
+        }
+    }
+
     public func proposeShielding(
         accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
