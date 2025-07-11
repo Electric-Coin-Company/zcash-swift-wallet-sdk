@@ -379,6 +379,26 @@ public class SDKSynchronizer: Synchronizer {
         return proposal
     }
 
+    public func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        recipient: Recipient,
+        memo: Memo?
+    ) async throws -> Proposal {
+        try throwIfUnprepared()
+
+        if case Recipient.transparent = recipient, memo != nil {
+            throw ZcashError.synchronizerSendMemoToTransparentAddress
+        }
+
+        let proposal = try await transactionEncoder.proposeSendMaxTransfer(
+            accountUUID: accountUUID,
+            recipient: recipient.stringEncoded,
+            memoBytes: memo?.asMemoBytes()
+        )
+
+        return proposal
+    }
+
     public func proposeShielding(
         accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,

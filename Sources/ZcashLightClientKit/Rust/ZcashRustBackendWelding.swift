@@ -251,6 +251,20 @@ protocol ZcashRustBackendWelding {
         memo: MemoBytes?
     ) async throws -> FfiProposal
 
+    /// Select all spendable transaction inputs, compute fees, and construct a proposal for a transaction
+    /// that can then be authorized and made ready for submission to the network with
+    /// `createProposedSendMaxTransaction`.
+    ///
+    /// - parameter account: index of the given account
+    /// - Parameter to: recipient address
+    /// - Parameter memo: the `MemoBytes` for this transaction. pass `nil` when sending to transparent receivers
+    /// - Throws: `rustCreateToAddress`.
+    func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        value: Int64,
+        memo: MemoBytes?
+    ) async throws -> FfiProposal
+
     /// Select transaction inputs, compute fees, and construct a proposal for a transaction
     /// that can then be authorized and made ready for submission to the network with
     /// `createProposedTransaction` from a valid [ZIP-321](https://zips.z.cash/zip-0321) Payment Request UR

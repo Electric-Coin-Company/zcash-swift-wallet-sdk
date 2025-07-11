@@ -270,6 +270,35 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
+    func proposeSendMaxTransfer(
+        accountUUID: AccountUUID,
+        to address: String,
+        memo: MemoBytes?
+    ) async throws -> FfiProposal {
+        let proposal = zcashlc_propose_transfer(
+            dbData.0,
+            dbData.1,
+            accountUUID.id,
+            [CChar](address.utf8CString),
+            0, //FIXME
+            memo?.bytes,
+            networkType.networkId,
+            minimumConfirmations
+        )
+
+        guard let proposal else {
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`proposeTransfer` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_boxed_slice(proposal) }
+
+        return try FfiProposal(serializedBytes: Data(
+            bytes: proposal.pointee.ptr,
+            count: Int(proposal.pointee.len)
+        ))
+    }
+
+    @DBActor
     func proposeTransferFromURI(
         _ uri: String,
         accountUUID: AccountUUID
