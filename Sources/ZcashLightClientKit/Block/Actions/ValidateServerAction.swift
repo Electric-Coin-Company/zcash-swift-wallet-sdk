@@ -24,13 +24,8 @@ extension ValidateServerAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         let config = await configProvider.config
-        // ServiceMode to resolve
         // called each sync, an action in a state machine diagram
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        let info = try await service.getInfo(mode: .defaultTor)
-        let info = try await service.getInfo(mode: .direct)
+        let info = try await service.getInfo(mode: await LwdConnectionOverTorFlag.shared.enabled ? .defaultTor : .direct)
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
 

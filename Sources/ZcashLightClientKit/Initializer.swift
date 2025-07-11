@@ -434,10 +434,8 @@ public class Initializer {
             var chainTip: UInt32?
             
             // called when client starts and restore of the wallet is in progress
-            // TODO: [#1571] connection enforeced to .direct for the next SDK release
-            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//            if walletMode == .restoreWallet, let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: .uniqueTor) {
-            if walletMode == .restoreWallet, let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: .direct) {
+            if walletMode == .restoreWallet,
+               let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: await LwdConnectionOverTorFlag.shared.enabled ? .uniqueTor : .direct) {
                 chainTip = UInt32(latestBlockHeight)
             }
             
