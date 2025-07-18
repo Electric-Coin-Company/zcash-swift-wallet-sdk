@@ -31,7 +31,7 @@ actor SDKFlags {
     }
     
     /// Use to update the `torClientInicializationSuccessfullyDone` flag
-    func torClientInicializationSuccessfullyDoneFlagUpdate(_ newFlag: Bool) {
+    func torClientInicializationSuccessfullyDoneFlagUpdate(_ newFlag: Bool?) {
         torClientInicializationSuccessfullyDone = newFlag
     }
 }

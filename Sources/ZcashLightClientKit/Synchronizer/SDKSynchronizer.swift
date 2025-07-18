@@ -951,6 +951,7 @@ public class SDKSynchronizer: Synchronizer {
             tor = nil
 
             await sdkFlags.torFlagUpdate(false)
+            await sdkFlags.torClientInicializationSuccessfullyDoneFlagUpdate(nil)
         }
     }
     
