@@ -172,7 +172,7 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
         loggingPolicy: LoggingPolicy = .default(.debug),
-        isTorEnabled: Bool = false
+        isTorEnabled: Bool
     ) {
         let container = DIContainer()
         
