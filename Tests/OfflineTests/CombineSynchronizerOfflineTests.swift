@@ -654,8 +654,6 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        let accountUUID = TestsData.mockedAccountUUID
-
         synchronizerMock.getAccountsBalancesClosure = {
             throw "Some error"
         }
@@ -684,21 +682,23 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     func testGetShieldedBalanceSucceed() {
         let accountUUID = TestsData.mockedAccountUUID
 
-        let expectedBalance = [accountUUID: AccountBalance(
-            saplingBalance:
-                PoolBalance(
-                    spendableValue: .zero,
-                    changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero
-                ),
-            orchardBalance:
-                PoolBalance(
-                    spendableValue: .zero,
-                    changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero
-                ),
-            unshielded: .zero
-        )]
+        let expectedBalance = [
+            accountUUID: AccountBalance(
+                saplingBalance:
+                    PoolBalance(
+                        spendableValue: .zero,
+                        changePendingConfirmation: Zatoshi(333),
+                        valuePendingSpendability: .zero
+                    ),
+                orchardBalance:
+                    PoolBalance(
+                        spendableValue: .zero,
+                        changePendingConfirmation: Zatoshi(333),
+                        valuePendingSpendability: .zero
+                    ),
+                unshielded: .zero
+            )
+        ]
         
         synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance
@@ -754,21 +754,23 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     func testGetShieldedVerifiedBalanceSucceed() {
         let accountUUID = TestsData.mockedAccountUUID
         
-        let expectedBalance = [accountUUID: AccountBalance(
-            saplingBalance:
-                PoolBalance(
-                    spendableValue: Zatoshi(333),
-                    changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero
-                ),
-            orchardBalance:
-                PoolBalance(
-                    spendableValue: Zatoshi(333),
-                    changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero
-                ),
-            unshielded: .zero
-        )]
+        let expectedBalance = [
+            accountUUID: AccountBalance(
+                saplingBalance:
+                    PoolBalance(
+                        spendableValue: Zatoshi(333),
+                        changePendingConfirmation: .zero,
+                        valuePendingSpendability: .zero
+                    ),
+                orchardBalance:
+                    PoolBalance(
+                        spendableValue: Zatoshi(333),
+                        changePendingConfirmation: .zero,
+                        valuePendingSpendability: .zero
+                    ),
+                unshielded: .zero
+            )
+        ]
         
         synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance

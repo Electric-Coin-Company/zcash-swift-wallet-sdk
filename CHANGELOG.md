@@ -6,11 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-## Added
-- `LwdConnectionOverTorFlag.shared.update(Bool)` to control the connection, either via GRPC or Tor.
-
 ## Updated
-- Connection inside the SDK is now controlled by `LwdConnectionOverTorFlag.shared` singleton. When enabled, the connection over Tor is used instead of GRPC. When disabled, GRPC calls are enforced. 
+- `Initializer.init(..., isTorEnabled: Bool)` The initializer has been updated to include a flag that controls whether the SDK opts in or out of Tor usage.
+
+## Added
+- `func tor(enabled: Bool)` A function that allows clients to configure Tor usage.
+- `func isTorSuccessfullyInitialized() async -> Bool?` A function that returns the result of the TorClient initialization. A nil value indicates that initialization has not been initiated. True/false represents success or failure, respectively.
 
 # 2.2.17 - 2025-06-16
 

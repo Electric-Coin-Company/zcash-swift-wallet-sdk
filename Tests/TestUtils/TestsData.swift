@@ -22,7 +22,8 @@ class TestsData {
             network: ZcashNetworkBuilder.network(for: networkType),
             spendParamsURL: URL(fileURLWithPath: "/"),
             outputParamsURL: URL(fileURLWithPath: "/"),
-            saplingParamsSourceURL: .default
+            saplingParamsSourceURL: .default,
+            isTorEnabled: false
         )
     }()
     lazy var derivationTools: DerivationTool = { DerivationTool(networkType: networkType) }()

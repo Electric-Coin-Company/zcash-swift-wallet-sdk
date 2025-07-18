@@ -13,6 +13,7 @@ final class UpdateChainTipAction {
     var service: LightWalletService
     var latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
+    let sdkFlags: SDKFlags
     
     init(container: DIContainer) {
         service = container.resolve(LightWalletService.self)
@@ -20,11 +21,12 @@ final class UpdateChainTipAction {
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         logger = container.resolve(Logger.self)
+        sdkFlags = container.resolve(SDKFlags.self)
     }
     
     func updateChainTip(_ context: ActionContext, time: TimeInterval) async throws {
         // called each sync, right after getInfo in ValidateServerAction
-        let latestBlockHeight = try await service.latestBlockHeight(mode: await LwdConnectionOverTorFlag.shared.enabled ? .defaultTor : .direct)
+        let latestBlockHeight = try await service.latestBlockHeight(mode: await sdkFlags.torEnabled ? .defaultTor : .direct)
 
         logger.debug("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))

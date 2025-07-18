@@ -171,7 +171,8 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug)
+        loggingPolicy: LoggingPolicy = .default(.debug),
+        isTorEnabled: Bool = false
     ) {
         let container = DIContainer()
         
@@ -190,7 +191,8 @@ public class Initializer {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy
+            loggingPolicy: loggingPolicy,
+            isTorEnabled: isTorEnabled
         )
         
         self.init(
@@ -202,7 +204,8 @@ public class Initializer {
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
             urlsParsingError: parsingError,
-            loggingPolicy: loggingPolicy
+            loggingPolicy: loggingPolicy,
+            isTorEnabled: isTorEnabled
         )
     }
 
@@ -220,7 +223,8 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggingPolicy: LoggingPolicy = .default(.debug)
+        loggingPolicy: LoggingPolicy = .default(.debug),
+        isTorEnabled: Bool
     ) {
         // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
@@ -237,7 +241,8 @@ public class Initializer {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggingPolicy: loggingPolicy
+            loggingPolicy: loggingPolicy,
+            isTorEnabled: isTorEnabled
         )
 
         self.init(
@@ -249,7 +254,8 @@ public class Initializer {
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
             urlsParsingError: parsingError,
-            loggingPolicy: loggingPolicy
+            loggingPolicy: loggingPolicy,
+            isTorEnabled: isTorEnabled
         )
     }
     
@@ -262,7 +268,8 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
         urlsParsingError: ZcashError?,
-        loggingPolicy: LoggingPolicy = .default(.debug)
+        loggingPolicy: LoggingPolicy = .default(.debug),
+        isTorEnabled: Bool
     ) {
         self.container = container
         self.cacheDbURL = cacheDbURL
@@ -300,7 +307,8 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
-        loggingPolicy: LoggingPolicy = .default(.debug)
+        loggingPolicy: LoggingPolicy = .default(.debug),
+        isTorEnabled: Bool
     ) -> (URLs, ZcashError?) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
@@ -321,7 +329,8 @@ public class Initializer {
             alias: alias,
             networkType: network.networkType,
             endpoint: endpoint,
-            loggingPolicy: loggingPolicy
+            loggingPolicy: loggingPolicy,
+            isTorEnabled: isTorEnabled
         )
         
         return (updatedURLs, parsingError)
@@ -433,10 +442,13 @@ public class Initializer {
         if let seed, try await rustBackend.listAccounts().isEmpty {
             var chainTip: UInt32?
             
+            let sdkFlags = container.resolve(SDKFlags.self)
+            
             // called when client starts and restore of the wallet is in progress
-            if walletMode == .restoreWallet,
-               let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: await LwdConnectionOverTorFlag.shared.enabled ? .uniqueTor : .direct) {
-                chainTip = UInt32(latestBlockHeight)
+            if walletMode == .restoreWallet {
+                if let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: await sdkFlags.torEnabled ? .uniqueTor : .direct) {
+                    chainTip = UInt32(latestBlockHeight)
+                }
             }
             
             _ = try await rustBackend.createAccount(

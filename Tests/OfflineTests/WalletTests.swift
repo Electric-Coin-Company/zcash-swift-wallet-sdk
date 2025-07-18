@@ -50,12 +50,19 @@ class WalletTests: ZcashTestCase {
             network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            isTorEnabled: false
         )
         
         let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try await synchronizer.prepare(with: seedData.bytes, walletBirthday: 663194, for: .newWallet, name: "", keySource: nil) else {
+            guard case .success = try await synchronizer.prepare(
+                with: seedData.bytes,
+                walletBirthday: 663194,
+                for: .newWallet,
+                name: "",
+                keySource: nil
+            ) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }

@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 /// Synchronizer implementation for UIKit and iOS 13+
-// swiftlint:disable:next type_body_length file_length
+// swiftlint:disable type_body_length file_length
 public class SDKSynchronizer: Synchronizer {
     private enum Constants {
         static let fixWitnessesLastVersionCall = "ud_fixWitnessesLastVersionCall"
@@ -32,6 +32,7 @@ public class SDKSynchronizer: Synchronizer {
     let metrics: SDKMetrics
     public let logger: Logger
     var tor: TorClient?
+    let sdkFlags: SDKFlags
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -90,6 +91,7 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
+        self.sdkFlags = initializer.container.resolve(SDKFlags.self)
 
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -336,8 +338,10 @@ public class SDKSynchronizer: Synchronizer {
         keySource: String?
     ) async throws -> AccountUUID {
         // called when a new account is imported
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(
-            mode: await LwdConnectionOverTorFlag.shared.enabled ? .uniqueTor : .direct)
+        let chainTip = try? await UInt32(
+            initializer.lightWalletService.latestBlockHeight(
+                mode: await sdkFlags.torEnabled ? .uniqueTor : .direct
+            )
         )
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
@@ -486,13 +490,13 @@ public class SDKSynchronizer: Synchronizer {
         // TODO [#1724]: zcash_client_backend: Make Sapling parameters optional for extract_and_store_transaction
         // TODO [#1724]: https://github.com/zcash/librustzcash/issues/1724
 //        if await initializer.rustBackend.PCZTRequiresSaplingProofs(pczt: pczt) {
-            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
-                spendURL: initializer.spendParamsURL,
-                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
-                outputURL: initializer.outputParamsURL,
-                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
-                logger: logger
-            )
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: initializer.spendParamsURL,
+            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: initializer.outputParamsURL,
+            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
+        )
 //        }
 
         return try await initializer.rustBackend.addProofsToPCZT(
@@ -562,7 +566,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.latestHeight(mode: await LwdConnectionOverTorFlag.shared.enabled ? .torInGroup("SDKSynchronizer.latestHeight") : .direct)
+        try await blockProcessor.latestHeight(mode: await sdkFlags.torEnabled ? .torInGroup("SDKSynchronizer.latestHeight") : .direct)
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -577,6 +581,11 @@ public class SDKSynchronizer: Synchronizer {
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
         Task {
+            // ignore when Tor is not enabled
+            guard await sdkFlags.torEnabled else {
+                return
+            }
+            
             // ignore refresh request when one is already in flight
             if let latestState = await tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
                 return
@@ -594,9 +603,8 @@ public class SDKSynchronizer: Synchronizer {
             do {
                 if tor == nil {
                     logger.info("Bootstrapping Tor client for fetching exchange rates")
-                    if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
-                        tor = try await torService.tor?.isolatedClient()
-                    }
+                    let torClient = initializer.container.resolve(TorClient.self)
+                    tor = try await torClient.isolatedClient()
                 }
                 // broadcast new value in case of success
                 exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
@@ -769,13 +777,14 @@ public class SDKSynchronizer: Synchronizer {
 
         // Parallel part
         var checkResults: [String: CheckResult] = [:]
+        let sdkFlagsRef = sdkFlags
         
         await withTaskGroup(of: CheckResult.self) { group in
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
                     // called when performance of servers is evaluated
-                    let mode = await LwdConnectionOverTorFlag.shared.enabled
+                    let mode = await sdkFlagsRef.torEnabled
                     ? ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
                     : ServiceMode.direct
                     
@@ -919,6 +928,36 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
     
+    public func tor(enabled: Bool) async throws {
+        // get the previous state of Tor
+        let isTorEnabled = await sdkFlags.torEnabled
+        
+        // ignore when previous was disabled and is expected to be disabled
+        // OR when previous is enabled and is expected to be enabled
+        if isTorEnabled == enabled {
+            return
+        }
+        
+        // case when previous was disabled and newly is required to be enabled
+        if !isTorEnabled && enabled {
+            let torClient = initializer.container.resolve(TorClient.self)
+            try await torClient.prepare()
+            
+            await sdkFlags.torFlagUpdate(true)
+        } else {
+            // case when previous was enabled and newly is required to be stopped
+            let torClient = initializer.container.resolve(TorClient.self)
+            try await torClient.close()
+            tor = nil
+
+            await sdkFlags.torFlagUpdate(false)
+        }
+    }
+    
+    public func isTorSuccessfullyInitialized() async -> Bool? {
+        await sdkFlags.torClientInicializationSuccessfullyDone
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
@@ -975,8 +1014,9 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+            let sdkFlags = di.resolve(SDKFlags.self)
 
-            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend)
+            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend, sdkFlags: sdkFlags)
         }
         
         // CompactBlockProcessor dependency update

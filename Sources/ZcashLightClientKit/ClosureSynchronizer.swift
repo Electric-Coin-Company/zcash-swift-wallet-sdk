@@ -22,6 +22,7 @@ public protocol ClosureSynchronizer {
     var stateStream: AnyPublisher<SynchronizerState, Never> { get }
     var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
 
+    // swiftlint:disable:next function_parameter_count
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,

@@ -169,7 +169,8 @@ class RewindRescanTests: ZcashTestCase {
         let newChaintTip = defaultLatestHeight + 10000
         try coordinator.applyStaged(blockheight: newChaintTip)
         sleep(3)
-        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue ?? .zero
+        let spendableValue = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue
+        let initialVerifiedBalance: Zatoshi = spendableValue ?? .zero
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
         do {

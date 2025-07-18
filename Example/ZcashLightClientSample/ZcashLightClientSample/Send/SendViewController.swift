@@ -236,28 +236,23 @@ class SendViewController: UIViewController {
             guard
                 await isFormValid(),
                 let amount = amountTextField.text,
-                let zec = NumberFormatter.zcashNumberFormatter.number(from: amount).flatMap({ Zatoshi($0.int64Value) }),
-                let recipient = addressTextField.text
+                NumberFormatter.zcashNumberFormatter.number(from: amount).flatMap({ Zatoshi($0.int64Value) }) != nil,
+                addressTextField.text != nil
             else {
                 loggerProxy.warn("WARNING: Form is invalid")
                 return
             }
 
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: Zip32AccountIndex(0)) else {
+            let usk = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: Zip32AccountIndex(0))
+            guard usk != nil else {
                 loggerProxy.error("NO SPENDING KEY")
                 return
             }
 
             KRProgressHUD.show()
 
-            do {
-                KRProgressHUD.dismiss()
-            } catch {
-                loggerProxy.error("SEND FAILED: \(error)")
-                KRProgressHUD.dismiss()
-                fail(error)
-            }
+            KRProgressHUD.dismiss()
         }
     }
     

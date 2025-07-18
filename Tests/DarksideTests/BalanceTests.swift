@@ -624,7 +624,8 @@ class BalanceTests: ZcashTestCase {
         let spendingKey = coordinator.spendingKey
         
         let accountUUID = TestsData.mockedAccountUUID
-        let presendVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue ?? .zero
+        let spendableValue = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue
+        let presendVerifiedBalance: Zatoshi = spendableValue ?? .zero
         
         /*
         there's more zatoshi to send than network fee

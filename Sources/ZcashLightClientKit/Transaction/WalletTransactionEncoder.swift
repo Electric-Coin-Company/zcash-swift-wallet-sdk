@@ -12,6 +12,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     let rustBackend: ZcashRustBackendWelding
     let repository: TransactionRepository
     let logger: Logger
+    let sdkFlags: SDKFlags
 
     private let outputParamsURL: URL
     private let spendParamsURL: URL
@@ -28,7 +29,8 @@ class WalletTransactionEncoder: TransactionEncoder {
         outputParams: URL,
         spendParams: URL,
         networkType: NetworkType,
-        logger: Logger
+        logger: Logger,
+        sdkFlags: SDKFlags
     ) {
         self.rustBackend = rustBackend
         self.dataDbURL = dataDb
@@ -39,9 +41,12 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.spendParamsURL = spendParams
         self.networkType = networkType
         self.logger = logger
+        self.sdkFlags = sdkFlags
     }
     
     convenience init(initializer: Initializer) {
+        let sdkFlags = initializer.container.resolve(SDKFlags.self)
+        
         self.init(
             rustBackend: initializer.rustBackend,
             dataDb: initializer.dataDbURL,
@@ -51,7 +56,8 @@ class WalletTransactionEncoder: TransactionEncoder {
             outputParams: initializer.outputParamsURL,
             spendParams: initializer.spendParamsURL,
             networkType: initializer.network.networkType,
-            logger: initializer.logger
+            logger: initializer.logger,
+            sdkFlags: sdkFlags
         )
     }
 
@@ -131,7 +137,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     ) async throws {
         let response = try await self.lightWalletService.submit(
             spendTransaction: transaction.raw,
-            mode: await LwdConnectionOverTorFlag.shared.enabled
+            mode: await sdkFlags.torEnabled
             ? ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId)
             : ServiceMode.direct
         )

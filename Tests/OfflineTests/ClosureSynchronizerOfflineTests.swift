@@ -557,8 +557,6 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetTransparentBalanceThrowsError() {
-        let accountUUID = TestsData.mockedAccountUUID
-        
         synchronizerMock.getAccountsBalancesClosure = {
             throw "Some error"
         }
@@ -580,21 +578,23 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     func testGetShieldedBalanceSucceed() {
         let accountUUID = TestsData.mockedAccountUUID
         
-        let expectedBalance = [accountUUID: AccountBalance(
-            saplingBalance:
-                PoolBalance(
-                    spendableValue: Zatoshi(333),
-                    changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero
-                ),
-            orchardBalance:
-                PoolBalance(
-                    spendableValue: Zatoshi(333),
-                    changePendingConfirmation: .zero,
-                    valuePendingSpendability: .zero
-                ),
-            unshielded: .zero
-        )]
+        let expectedBalance = [
+            accountUUID: AccountBalance(
+                saplingBalance:
+                    PoolBalance(
+                        spendableValue: Zatoshi(333),
+                        changePendingConfirmation: .zero,
+                        valuePendingSpendability: .zero
+                    ),
+                orchardBalance:
+                    PoolBalance(
+                        spendableValue: Zatoshi(333),
+                        changePendingConfirmation: .zero,
+                        valuePendingSpendability: .zero
+                    ),
+                unshielded: .zero
+            )
+        ]
         
         synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance
@@ -622,7 +622,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getAccountsBalances(){ result in
+        synchronizer.getAccountsBalances() { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -635,21 +635,23 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {
-        let expectedBalance = [TestsData.mockedAccountUUID: AccountBalance(
-            saplingBalance:
-                PoolBalance(
-                    spendableValue: .zero,
-                    changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero
-                ),
-            orchardBalance:
-                PoolBalance(
-                    spendableValue: .zero,
-                    changePendingConfirmation: Zatoshi(333),
-                    valuePendingSpendability: .zero
-                ),
-            unshielded: .zero
-        )]
+        let expectedBalance = [
+            TestsData.mockedAccountUUID: AccountBalance(
+                saplingBalance:
+                    PoolBalance(
+                        spendableValue: .zero,
+                        changePendingConfirmation: Zatoshi(333),
+                        valuePendingSpendability: .zero
+                    ),
+                orchardBalance:
+                    PoolBalance(
+                        spendableValue: .zero,
+                        changePendingConfirmation: Zatoshi(333),
+                        valuePendingSpendability: .zero
+                    ),
+                unshielded: .zero
+            )
+        ]
         
         synchronizerMock.getAccountsBalancesClosure = {
             return expectedBalance

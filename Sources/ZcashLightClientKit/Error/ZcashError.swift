@@ -67,14 +67,11 @@ public enum ZcashError: Equatable, Error {
     /// Endpoint is not provided
     /// ZTSRV0001
     case torServiceMissingEndpoint
-    /// Tor client is not available
-    /// ZTSRV0002
-    case torServiceMissingTorClient
     /// Tor client fails to resolve ServiceMode
-    /// ZTSRV0003
+    /// ZTSRV0002
     case torServiceUnresolvedMode
     /// GRPC Service is called with a Tor mode instead of direct one
-    /// ZTSRV0004
+    /// ZTSRV0003
     case grpcServiceCalledWithTorMode
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
@@ -741,7 +738,6 @@ public enum ZcashError: Equatable, Error {
         case .serviceSubtreeRootsStreamFailed: return "LightWalletService.getSubtreeRoots failed."
         case .serviceGetTaddressTxidsFailed: return "LightWalletService.getTaddressTxids failed."
         case .torServiceMissingEndpoint: return "Endpoint is not provided"
-        case .torServiceMissingTorClient: return "Tor client is not available"
         case .torServiceUnresolvedMode: return "Tor client fails to resolve ServiceMode"
         case .grpcServiceCalledWithTorMode: return "GRPC Service is called with a Tor mode instead of direct one"
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
@@ -948,7 +944,6 @@ public enum ZcashError: Equatable, Error {
         case .serviceSubtreeRootsStreamFailed: return .serviceSubtreeRootsStreamFailed
         case .serviceGetTaddressTxidsFailed: return .serviceGetTaddressTxidsFailed
         case .torServiceMissingEndpoint: return .torServiceMissingEndpoint
-        case .torServiceMissingTorClient: return .torServiceMissingTorClient
         case .torServiceUnresolvedMode: return .torServiceUnresolvedMode
         case .grpcServiceCalledWithTorMode: return .grpcServiceCalledWithTorMode
         case .simpleConnectionProvider: return .simpleConnectionProvider

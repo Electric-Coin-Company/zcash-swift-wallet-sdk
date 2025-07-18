@@ -62,6 +62,7 @@ struct BlockEnhancerImpl {
     let metrics: SDKMetrics
     let service: LightWalletService
     let logger: Logger
+    let sdkFlags: SDKFlags
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
@@ -95,7 +96,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         case .getStatus(let txId):
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: await LwdConnectionOverTorFlag.shared.enabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
+                                mode: await sdkFlags.torEnabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
                             )
                             retry = false
 
@@ -106,7 +107,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         case .enhancement(let txId):
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: await LwdConnectionOverTorFlag.shared.enabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
+                                mode: await sdkFlags.torEnabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
                             )
                             retry = false
 
@@ -121,7 +122,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
 
                         case .transactionsInvolvingAddress(let tia):
                             // TODO: [#1554] Remove this guard once lightwalletd servers support open-ended ranges.
-                            guard let blockRangeEnd = tia.blockRangeEnd else {
+                            guard tia.blockRangeEnd != nil else {
                                 logger.error("transactionsInvolvingAddress \(tia) is missing blockRangeEnd, ignoring the request.")
                                 retry = false
                                 continue

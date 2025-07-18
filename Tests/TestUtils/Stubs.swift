@@ -11,7 +11,7 @@ import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
-extension String: Error { }
+extension String: @retroactive Error { }
 
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight(mode: ServiceMode) async throws -> BlockHeight {
@@ -83,7 +83,8 @@ class RustBackendMockHelper {
         rustBackendMock.initDataDbSeedReturnValue = .seedRequired
         rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }
         rustBackendMock.proposeTransferAccountUUIDToValueMemoThrowableError = ZcashError.rustCreateToAddress("mocked error")
-        rustBackendMock.proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError = ZcashError.rustShieldFunds("mocked error")
+        let error = ZcashError.rustShieldFunds("mocked error")
+        rustBackendMock.proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError = error
         rustBackendMock.createProposedTransactionsProposalUskThrowableError = ZcashError.rustCreateToAddress("mocked error")
         rustBackendMock.decryptAndStoreTransactionTxBytesMinedHeightThrowableError = ZcashError.rustDecryptAndStoreTransaction("mock fail")
 

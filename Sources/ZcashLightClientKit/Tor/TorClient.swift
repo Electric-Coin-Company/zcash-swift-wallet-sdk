@@ -14,17 +14,8 @@ public actor TorClient {
 
     public var cachedFiatCurrencyResult: FiatCurrencyResult?
 
-    init(torDir: URL) throws {
+    init(torDir: URL) {
         self.torDir = torDir
-        // Ensure that the directory exists.
-        let fileManager = FileManager()
-        if !fileManager.fileExists(atPath: torDir.path) {
-            do {
-                try fileManager.createDirectory(at: torDir, withIntermediateDirectories: true)
-            } catch {
-                throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(torDir, error)
-            }
-        }
     }
 
     private init(runtimePtr: OpaquePointer, torDir: URL) {
@@ -37,7 +28,19 @@ public actor TorClient {
         
         zcashlc_free_tor_runtime(runtime)
     }
-    
+
+    func prepare() throws {
+        _ = try resolveRuntime()
+    }
+
+    func close() throws {
+        guard let runtime = underlyingRuntime else { return }
+        
+        zcashlc_free_tor_runtime(runtime)
+        
+        underlyingRuntime = nil
+    }
+
     public func updateCachedFiatCurrencyResult(_ result: FiatCurrencyResult?) async {
         cachedFiatCurrencyResult = result
     }
@@ -45,6 +48,16 @@ public actor TorClient {
     private func resolveRuntime() throws -> OpaquePointer {
         if let runtime = underlyingRuntime {
             return runtime
+        }
+
+        // Ensure that the directory exists.
+        let fileManager = FileManager()
+        if !fileManager.fileExists(atPath: torDir.path) {
+            do {
+                try fileManager.createDirectory(at: torDir, withIntermediateDirectories: true)
+            } catch {
+                throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(torDir, error)
+            }
         }
 
         let rawDir = torDir.osPathStr()

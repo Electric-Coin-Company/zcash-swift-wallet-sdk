@@ -2160,6 +2160,43 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - tor
+
+    var torEnabledThrowableError: Error?
+    var torEnabledCallsCount = 0
+    var torEnabledCalled: Bool {
+        return torEnabledCallsCount > 0
+    }
+    var torEnabledReceivedEnabled: Bool?
+    var torEnabledClosure: ((Bool) async throws -> Void)?
+
+    func tor(enabled: Bool) async throws {
+        if let error = torEnabledThrowableError {
+            throw error
+        }
+        torEnabledCallsCount += 1
+        torEnabledReceivedEnabled = enabled
+        try await torEnabledClosure!(enabled)
+    }
+
+    // MARK: - isTorSuccessfullyInitialized
+
+    var isTorSuccessfullyInitializedCallsCount = 0
+    var isTorSuccessfullyInitializedCalled: Bool {
+        return isTorSuccessfullyInitializedCallsCount > 0
+    }
+    var isTorSuccessfullyInitializedReturnValue: Bool?
+    var isTorSuccessfullyInitializedClosure: (() async -> Bool?)?
+
+    func isTorSuccessfullyInitialized() async -> Bool? {
+        isTorSuccessfullyInitializedCallsCount += 1
+        if let closure = isTorSuccessfullyInitializedClosure {
+            return await closure()
+        } else {
+            return isTorSuccessfullyInitializedReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 

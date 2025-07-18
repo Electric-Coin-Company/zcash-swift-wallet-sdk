@@ -11,11 +11,13 @@ final class ValidateServerAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let rustBackend: ZcashRustBackendWelding
     var service: LightWalletService
+    let sdkFlags: SDKFlags
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         service = container.resolve(LightWalletService.self)
+        sdkFlags = container.resolve(SDKFlags.self)
     }
 }
 
@@ -25,7 +27,7 @@ extension ValidateServerAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         let config = await configProvider.config
         // called each sync, an action in a state machine diagram
-        let info = try await service.getInfo(mode: await LwdConnectionOverTorFlag.shared.enabled ? .defaultTor : .direct)
+        let info = try await service.getInfo(mode: await sdkFlags.torEnabled ? .defaultTor : .direct)
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
 
