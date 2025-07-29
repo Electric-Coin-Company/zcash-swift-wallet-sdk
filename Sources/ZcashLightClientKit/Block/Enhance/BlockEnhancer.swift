@@ -96,7 +96,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         case .getStatus(let txId):
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: await sdkFlags.torEnabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
+                                mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data))
                             )
                             retry = false
 
@@ -107,7 +107,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         case .enhancement(let txId):
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: await sdkFlags.torEnabled ? ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data) : .direct
+                                mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data))
                             )
                             retry = false
 

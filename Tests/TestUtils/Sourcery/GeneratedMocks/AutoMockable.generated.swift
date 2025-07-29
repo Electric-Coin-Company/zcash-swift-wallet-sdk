@@ -459,19 +459,17 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
         }
     }
 
-    // MARK: - closeConnection
+    // MARK: - closeConnections
 
-    var closeConnectionModeCallsCount = 0
-    var closeConnectionModeCalled: Bool {
-        return closeConnectionModeCallsCount > 0
+    var closeConnectionsCallsCount = 0
+    var closeConnectionsCalled: Bool {
+        return closeConnectionsCallsCount > 0
     }
-    var closeConnectionModeReceivedMode: ServiceMode?
-    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
+    var closeConnectionsClosure: (() -> Void)?
 
-    func closeConnection(mode: ServiceMode) {
-        closeConnectionModeCallsCount += 1
-        closeConnectionModeReceivedMode = mode
-        closeConnectionModeClosure!(mode)
+    func closeConnections() {
+        closeConnectionsCallsCount += 1
+        closeConnectionsClosure!()
     }
 
 }
@@ -977,19 +975,17 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
-    // MARK: - closeConnection
+    // MARK: - closeConnections
 
-    var closeConnectionModeCallsCount = 0
-    var closeConnectionModeCalled: Bool {
-        return closeConnectionModeCallsCount > 0
+    var closeConnectionsCallsCount = 0
+    var closeConnectionsCalled: Bool {
+        return closeConnectionsCallsCount > 0
     }
-    var closeConnectionModeReceivedMode: ServiceMode?
-    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
+    var closeConnectionsClosure: (() async -> Void)?
 
-    func closeConnection(mode: ServiceMode) {
-        closeConnectionModeCallsCount += 1
-        closeConnectionModeReceivedMode = mode
-        closeConnectionModeClosure!(mode)
+    func closeConnections() async {
+        closeConnectionsCallsCount += 1
+        await closeConnectionsClosure!()
     }
 
     // MARK: - getSubtreeRoots

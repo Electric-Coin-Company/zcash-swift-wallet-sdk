@@ -61,6 +61,11 @@ actor ServiceConnections {
             groups.removeValue(forKey: groupName)
         }
     }
+    
+    func closeConnections() {
+        groups.removeAll()
+        defaultTorLwdConn = nil
+    }
 }
 
 class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
@@ -71,6 +76,15 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         self.init(
             endpoint: endpoint,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
+            tor: tor
+        )
+    }
+    
+    convenience init(endpoint: LightWalletEndpoint, tor: TorClient, singleCallTimeout: Int64) {
+        self.init(
+            endpoint: endpoint,
+            singleCallTimeout: singleCallTimeout,
             streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
             tor: tor
         )
@@ -165,5 +179,10 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             await serviceConnections.responseToTorFailure(mode)
             throw error
         }
+    }
+    
+    override func closeConnections() async {
+        await super.closeConnections()
+        await serviceConnections.closeConnections()
     }
 }

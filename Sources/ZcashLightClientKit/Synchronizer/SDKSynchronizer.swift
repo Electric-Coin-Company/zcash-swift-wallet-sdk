@@ -340,7 +340,7 @@ public class SDKSynchronizer: Synchronizer {
         // called when a new account is imported
         let chainTip = try? await UInt32(
             initializer.lightWalletService.latestBlockHeight(
-                mode: await sdkFlags.torEnabled ? .uniqueTor : .direct
+                mode: await sdkFlags.ifTor(.uniqueTor)
             )
         )
 
@@ -566,7 +566,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.latestHeight(mode: await sdkFlags.torEnabled ? .torInGroup("SDKSynchronizer.latestHeight") : .direct)
+        try await blockProcessor.latestHeight(mode: await sdkFlags.ifTor(.torInGroup("SDKSynchronizer.latestHeight")))
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -760,17 +760,13 @@ public class SDKSynchronizer: Synchronizer {
             var blockTime: TimeInterval
         }
         
+        let torClient = initializer.container.resolve(TorClient.self)
+        
         // Initialize services for the endpoints
         let services = endpoints.map {
             Service(
                 originalEndpoint: $0,
-                service: LightWalletGRPCService(
-                    host: $0.host,
-                    port: $0.port,
-                    secure: $0.secure,
-                    singleCallTimeout: 5000,
-                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000
-                ),
+                service: LightWalletGRPCServiceOverTor(endpoint: $0, tor: torClient),
                 url: "\($0.host):\($0.port)"
             )
         }
@@ -945,18 +941,23 @@ public class SDKSynchronizer: Synchronizer {
             
             await sdkFlags.torFlagUpdate(true)
         } else {
+            await sdkFlags.torFlagUpdate(false)
+            await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
+
             // case when previous was enabled and newly is required to be stopped
             let torClient = initializer.container.resolve(TorClient.self)
+            // close of the initial TorClient, it's used for creation of isolated clients
             try await torClient.close()
+            // deinit of isolated TorClient used for fetching exchange rates
             tor = nil
-
-            await sdkFlags.torFlagUpdate(false)
-            await sdkFlags.torClientInicializationSuccessfullyDoneFlagUpdate(nil)
+            // close all connections
+            let lwdService = initializer.container.resolve(LightWalletService.self)
+            await lwdService.closeConnections()
         }
     }
     
     public func isTorSuccessfullyInitialized() async -> Bool? {
-        await sdkFlags.torClientInicializationSuccessfullyDone
+        await sdkFlags.torClientInitializationSuccessfullyDone
     }
     
     // MARK: Server switch
@@ -968,16 +969,12 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.stop()
         }
 
+        let torClient = initializer.container.resolve(TorClient.self)
+        
         // Validation of the server is first because any custom endpoint can be passed here
-        // Extra instance of the service is created with lower timeout ofr a single call
+        // Extra instance of the service is created with lower timeout for a single call
         initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCService(
-                host: endpoint.host,
-                port: endpoint.port,
-                secure: endpoint.secure,
-                singleCallTimeout: 5000,
-                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
-            )
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: torClient, singleCallTimeout: 5000)
         }
 
         let validateSever = ValidateServerAction(
@@ -997,8 +994,8 @@ public class SDKSynchronizer: Synchronizer {
         // SWITCH TO NEW ENDPOINT
         
         // LightWalletService dependency update
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
-            LightWalletGRPCService(endpoint: endpoint, torURL: torURL)
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: torClient)
         }
 
         // DEPENDENCIES

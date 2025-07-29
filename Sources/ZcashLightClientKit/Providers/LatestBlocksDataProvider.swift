@@ -53,7 +53,7 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
 
     func updateBlockData() async {
         // called each time syn triggers but sync is still in progress, the goal it to jusst update the chain tip in the provider
-        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: await sdkFlags.torEnabled ? .defaultTor : .direct) {
+        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: await sdkFlags.ifTor(.defaultTor)) {
             await update(newLatestBlockHeight)
         }
     }

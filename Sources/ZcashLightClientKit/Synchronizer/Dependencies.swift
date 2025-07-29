@@ -89,9 +89,9 @@ enum Dependencies {
                 Task(priority: .high) {
                     do {
                         try await torClient.prepare()
-                        await sdkFlags.torClientInicializationSuccessfullyDoneFlagUpdate(true)
+                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(true)
                     } catch {
-                        await sdkFlags.torClientInicializationSuccessfullyDoneFlagUpdate(false)
+                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(false)
                     }
                 }
             }

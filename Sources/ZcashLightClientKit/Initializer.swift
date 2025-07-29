@@ -446,7 +446,7 @@ public class Initializer {
             
             // called when client starts and restore of the wallet is in progress
             if walletMode == .restoreWallet {
-                if let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: await sdkFlags.torEnabled ? .uniqueTor : .direct) {
+                if let latestBlockHeight = try? await lightWalletService.latestBlockHeight(mode: await sdkFlags.ifTor(.uniqueTor)) {
                     chainTip = UInt32(latestBlockHeight)
                 }
             }

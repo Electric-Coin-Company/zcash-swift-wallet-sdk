@@ -49,7 +49,7 @@ protocol BlockDownloaderService {
 
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
-    func closeConnection(mode: ServiceMode)
+    func closeConnections()
 }
 
 /**
@@ -71,8 +71,10 @@ class BlockDownloaderServiceImpl {
 }
 
 extension BlockDownloaderServiceImpl: BlockDownloaderService {
-    func closeConnection(mode: ServiceMode) {
-        lightwalletService.closeConnection(mode: mode)
+    func closeConnections() {
+        Task {
+            await lightwalletService.closeConnections()
+        }
     }
             
     func fetchUnspentTransactionOutputs(

@@ -27,7 +27,7 @@ extension ValidateServerAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         let config = await configProvider.config
         // called each sync, an action in a state machine diagram
-        let info = try await service.getInfo(mode: await sdkFlags.torEnabled ? .defaultTor : .direct)
+        let info = try await service.getInfo(mode: await sdkFlags.ifTor(.defaultTor))
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
 

@@ -206,7 +206,9 @@ protocol LightWalletService: AnyObject {
         mode: ServiceMode
     ) throws -> AsyncThrowingStream<ZcashCompactBlock, Error>
 
-    func closeConnection(mode: ServiceMode)
+    /// Used for potential closure of channels or connections.
+    /// Example:` LightWalletGRPCServiceOverTor` inherits `LightWalletService` and closes Tor connections.
+    func closeConnections() async
     
     /// Returns a stream of information about roots of subtrees of the Sapling and Orchard
     /// note commitment trees.
