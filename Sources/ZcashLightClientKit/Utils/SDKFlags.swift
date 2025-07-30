@@ -13,7 +13,7 @@ actor SDKFlags {
     /// Accessible only internally inside the SDK to control the connection
     var torEnabled: Bool
     
-    /// This flag communicates state of inicialization of `TorClient`
+    /// This flag communicates state of initialization of `TorClient`
     /// `nil` = the attempt to initialize `TorClient` hasn't been initiated
     /// `false` = initialization of `TorClient` failed
     /// `true` = initialization of `TorClient` succeeded
