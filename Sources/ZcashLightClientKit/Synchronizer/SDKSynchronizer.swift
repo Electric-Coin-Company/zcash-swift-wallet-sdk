@@ -737,7 +737,6 @@ public class SDKSynchronizer: Synchronizer {
     // swiftlint:disable:next cyclomatic_complexity
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThresholdMillis: Double = 300.0,
         fetchThresholdSeconds: Double = 60.0,
         nBlocksToFetch: UInt64 = 100,
         kServers: Int = 3,
@@ -781,10 +780,7 @@ public class SDKSynchronizer: Synchronizer {
                     let startTime = Date().timeIntervalSince1970
 
                     // called when performance of servers is evaluated
-                    let torEnabled = await sdkFlagsRef.torEnabled
-                    let mode = torEnabled
-                    ? ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
-                    : ServiceMode.direct
+                    let mode = await sdkFlagsRef.ifTor(ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))"))
 
                     let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
@@ -848,23 +844,14 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             // sort the server responses by mean
-            let sortedTmpResults = tmpResults.sorted {
+            let sortedCheckResults = tmpResults.sorted {
                 $0.value.mean < $1.value.mean
             }
 
-            // rule out all means above latencyThreshold
-            let underThreshold = sortedTmpResults.compactMap {
-                $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
-            }
-
             // retain k servers
-            var sortedUnderThresholdKOnly = underThreshold.prefix(kServers)
-            
-            if sortedUnderThresholdKOnly.count < 3 {
-                sortedUnderThresholdKOnly.append(contentsOf: sortedTmpResults.prefix(kServers - sortedUnderThresholdKOnly.count))
-            }
+            let sortedKOnly = sortedCheckResults.prefix(kServers)
 
-            sortedUnderThresholdKOnly.forEach {
+            sortedKOnly.forEach {
                 checkResults[$0.key] = $0.value
             }
         }

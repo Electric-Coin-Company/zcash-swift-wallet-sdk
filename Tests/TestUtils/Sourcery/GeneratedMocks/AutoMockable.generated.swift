@@ -2118,21 +2118,21 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - evaluateBestOf
 
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount = 0
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCalled: Bool {
-        return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount > 0
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount = 0
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCalled: Bool {
+        return evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount > 0
     }
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments: (endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType)?
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue: [LightWalletEndpoint]!
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure: (([LightWalletEndpoint], Double, Double, UInt64, Int, NetworkType) async -> [LightWalletEndpoint])?
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments: (endpoints: [LightWalletEndpoint], fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType)?
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue: [LightWalletEndpoint]!
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure: (([LightWalletEndpoint], Double, UInt64, Int, NetworkType) async -> [LightWalletEndpoint])?
 
-    func evaluateBestOf(endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType) async -> [LightWalletEndpoint] {
-        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount += 1
-        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments = (endpoints: endpoints, latencyThresholdMillis: latencyThresholdMillis, fetchThresholdSeconds: fetchThresholdSeconds, nBlocksToFetch: nBlocksToFetch, kServers: kServers, network: network)
-        if let closure = evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure {
-            return await closure(endpoints, latencyThresholdMillis, fetchThresholdSeconds, nBlocksToFetch, kServers, network)
+    func evaluateBestOf(endpoints: [LightWalletEndpoint], fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType) async -> [LightWalletEndpoint] {
+        evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount += 1
+        evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments = (endpoints: endpoints, fetchThresholdSeconds: fetchThresholdSeconds, nBlocksToFetch: nBlocksToFetch, kServers: kServers, network: network)
+        if let closure = evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure {
+            return await closure(endpoints, fetchThresholdSeconds, nBlocksToFetch, kServers, network)
         } else {
-            return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue
+            return evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue
         }
     }
 

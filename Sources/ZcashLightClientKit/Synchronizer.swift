@@ -427,7 +427,6 @@ public protocol Synchronizer: AnyObject {
     // swiftlint:disable:next function_parameter_count
     func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThresholdMillis: Double,
         fetchThresholdSeconds: Double,
         nBlocksToFetch: UInt64,
         kServers: Int,
