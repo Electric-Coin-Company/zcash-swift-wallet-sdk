@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Removed
+- `latencyThresholdMillis` parameter was removed from `Synchronizer.evaluateBestOf()` method. The algorithm of servers evaluation was changed to always require `kServers` to be returned.
+
 ## Updated
 - `Initializer.init(..., isTorEnabled: Bool)` The initializer has been updated to include a flag that controls whether the SDK opts in or out of Tor usage.
 
