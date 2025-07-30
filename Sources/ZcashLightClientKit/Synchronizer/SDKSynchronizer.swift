@@ -779,11 +779,13 @@ public class SDKSynchronizer: Synchronizer {
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
+
                     // called when performance of servers is evaluated
-                    let mode = await sdkFlagsRef.torEnabled
+                    let torEnabled = await sdkFlagsRef.torEnabled
+                    let mode = torEnabled
                     ? ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
                     : ServiceMode.direct
-                    
+
                     let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
                     // called when performance of servers is evaluated
@@ -845,18 +847,22 @@ public class SDKSynchronizer: Synchronizer {
                 tmpResults[result.id] = result
             }
 
-            // rule out all means above latencyThreshold
-            let underThreshold = tmpResults.compactMap {
-                $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
-            }
-
             // sort the server responses by mean
-            let sortedUnderThreshold = underThreshold.sorted {
+            let sortedTmpResults = tmpResults.sorted {
                 $0.value.mean < $1.value.mean
             }
 
-            // retain only k servers
-            let sortedUnderThresholdKOnly = sortedUnderThreshold.prefix(3)
+            // rule out all means above latencyThreshold
+            let underThreshold = sortedTmpResults.compactMap {
+                $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
+            }
+
+            // retain k servers
+            var sortedUnderThresholdKOnly = underThreshold.prefix(kServers)
+            
+            if sortedUnderThresholdKOnly.count < 3 {
+                sortedUnderThresholdKOnly.append(contentsOf: sortedTmpResults.prefix(kServers - sortedUnderThresholdKOnly.count))
+            }
 
             sortedUnderThresholdKOnly.forEach {
                 checkResults[$0.key] = $0.value
