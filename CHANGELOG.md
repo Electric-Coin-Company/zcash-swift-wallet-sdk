@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3 - 2025-07-30
+
 ## Removed
 - `latencyThresholdMillis` parameter was removed from `Synchronizer.evaluateBestOf()` method. The algorithm of servers evaluation was changed to always require `kServers` to be returned.
 
@@ -15,6 +17,24 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Added
 - `func tor(enabled: Bool)` A function that allows clients to configure Tor usage.
 - `func isTorSuccessfullyInitialized() async -> Bool?` A function that returns the result of the TorClient initialization. A nil value indicates that initialization has not been initiated. True/false represents success or failure, respectively.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2962500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3010000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3440000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3510000.json
+````
 
 # 2.2.17 - 2025-06-16
 
