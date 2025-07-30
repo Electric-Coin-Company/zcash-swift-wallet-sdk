@@ -6,6 +6,16 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Removed
+- `latencyThresholdMillis` parameter was removed from `Synchronizer.evaluateBestOf()` method. The algorithm of servers evaluation was changed to always require `kServers` to be returned.
+
+## Updated
+- `Initializer.init(..., isTorEnabled: Bool)` The initializer has been updated to include a flag that controls whether the SDK opts in or out of Tor usage.
+
+## Added
+- `func tor(enabled: Bool)` A function that allows clients to configure Tor usage.
+- `func isTorSuccessfullyInitialized() async -> Bool?` A function that returns the result of the TorClient initialization. A nil value indicates that initialization has not been initiated. True/false represents success or failure, respectively.
+
 # 2.2.17 - 2025-06-16
 
 ## Fixed

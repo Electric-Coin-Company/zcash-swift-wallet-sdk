@@ -10,7 +10,7 @@ import Foundation
 import Combine
 
 /// Synchronizer implementation for UIKit and iOS 13+
-// swiftlint:disable:next type_body_length file_length
+// swiftlint:disable type_body_length file_length
 public class SDKSynchronizer: Synchronizer {
     private enum Constants {
         static let fixWitnessesLastVersionCall = "ud_fixWitnessesLastVersionCall"
@@ -32,6 +32,7 @@ public class SDKSynchronizer: Synchronizer {
     let metrics: SDKMetrics
     public let logger: Logger
     var tor: TorClient?
+    let sdkFlags: SDKFlags
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -90,6 +91,7 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
+        self.sdkFlags = initializer.container.resolve(SDKFlags.self)
 
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -335,12 +337,12 @@ public class SDKSynchronizer: Synchronizer {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID {
-        // ServiceMode to resolve
         // called when a new account is imported
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .uniqueTor))
-        let chainTip = try? await UInt32(initializer.lightWalletService.latestBlockHeight(mode: .direct))
+        let chainTip = try? await UInt32(
+            initializer.lightWalletService.latestBlockHeight(
+                mode: await sdkFlags.ifTor(.uniqueTor)
+            )
+        )
 
         let checkpointSource = initializer.container.resolve(CheckpointSource.self)
 
@@ -488,13 +490,13 @@ public class SDKSynchronizer: Synchronizer {
         // TODO [#1724]: zcash_client_backend: Make Sapling parameters optional for extract_and_store_transaction
         // TODO [#1724]: https://github.com/zcash/librustzcash/issues/1724
 //        if await initializer.rustBackend.PCZTRequiresSaplingProofs(pczt: pczt) {
-            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
-                spendURL: initializer.spendParamsURL,
-                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
-                outputURL: initializer.outputParamsURL,
-                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
-                logger: logger
-            )
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: initializer.spendParamsURL,
+            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: initializer.outputParamsURL,
+            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
+        )
 //        }
 
         return try await initializer.rustBackend.addProofsToPCZT(
@@ -564,10 +566,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        try await blockProcessor.latestHeight(mode: .torInGroup("SDKSynchronizer.latestHeight"))
-        try await blockProcessor.latestHeight(mode: .direct)
+        try await blockProcessor.latestHeight(mode: await sdkFlags.ifTor(.torInGroup("SDKSynchronizer.latestHeight")))
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -582,6 +581,11 @@ public class SDKSynchronizer: Synchronizer {
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
         Task {
+            // ignore when Tor is not enabled
+            guard await sdkFlags.torEnabled else {
+                return
+            }
+            
             // ignore refresh request when one is already in flight
             if let latestState = await tor?.cachedFiatCurrencyResult?.state, latestState == .fetching {
                 return
@@ -599,9 +603,8 @@ public class SDKSynchronizer: Synchronizer {
             do {
                 if tor == nil {
                     logger.info("Bootstrapping Tor client for fetching exchange rates")
-                    if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
-                        tor = try await torService.tor?.isolatedClient()
-                    }
+                    let torClient = initializer.container.resolve(TorClient.self)
+                    tor = try await torClient.isolatedClient()
                 }
                 // broadcast new value in case of success
                 exchangeRateUSDSubject.send(try await tor?.getExchangeRateUSD())
@@ -734,7 +737,6 @@ public class SDKSynchronizer: Synchronizer {
     // swiftlint:disable:next cyclomatic_complexity
     public func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThresholdMillis: Double = 300.0,
         fetchThresholdSeconds: Double = 60.0,
         nBlocksToFetch: UInt64 = 100,
         kServers: Int = 3,
@@ -757,33 +759,29 @@ public class SDKSynchronizer: Synchronizer {
             var blockTime: TimeInterval
         }
         
+        let torClient = initializer.container.resolve(TorClient.self)
+        
         // Initialize services for the endpoints
         let services = endpoints.map {
             Service(
                 originalEndpoint: $0,
-                service: LightWalletGRPCService(
-                    host: $0.host,
-                    port: $0.port,
-                    secure: $0.secure,
-                    singleCallTimeout: 5000,
-                    streamingCallTimeout: Int64(fetchThresholdSeconds) * 1000
-                ),
+                service: LightWalletGRPCServiceOverTor(endpoint: $0, tor: torClient),
                 url: "\($0.host):\($0.port)"
             )
         }
 
         // Parallel part
         var checkResults: [String: CheckResult] = [:]
+        let sdkFlagsRef = sdkFlags
         
         await withTaskGroup(of: CheckResult.self) { group in
             for service in services {
                 group.addTask {
                     let startTime = Date().timeIntervalSince1970
+
                     // called when performance of servers is evaluated
-                    // TODO: [#1571] connection enforeced to .direct for the next SDK release
-                    // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//                    let mode = ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))")
-                    let mode = ServiceMode.direct
+                    let mode = await sdkFlagsRef.ifTor(ServiceMode.torInGroup("SDKSynchronizer.evaluateBestOf(\(service.originalEndpoint))"))
+
                     let info = try? await service.service.getInfo(mode: mode)
                     let markTime = Date().timeIntervalSince1970
                     // called when performance of servers is evaluated
@@ -845,20 +843,15 @@ public class SDKSynchronizer: Synchronizer {
                 tmpResults[result.id] = result
             }
 
-            // rule out all means above latencyThreshold
-            let underThreshold = tmpResults.compactMap {
-                $0.value.mean < (latencyThresholdMillis / 1000.0) ? $0 : nil
-            }
-
             // sort the server responses by mean
-            let sortedUnderThreshold = underThreshold.sorted {
+            let sortedCheckResults = tmpResults.sorted {
                 $0.value.mean < $1.value.mean
             }
 
-            // retain only k servers
-            let sortedUnderThresholdKOnly = sortedUnderThreshold.prefix(3)
+            // retain k servers
+            let sortedKOnly = sortedCheckResults.prefix(kServers)
 
-            sortedUnderThresholdKOnly.forEach {
+            sortedKOnly.forEach {
                 checkResults[$0.key] = $0.value
             }
         }
@@ -924,6 +917,42 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
     
+    public func tor(enabled: Bool) async throws {
+        // get the previous state of Tor
+        let isTorEnabled = await sdkFlags.torEnabled
+        
+        // ignore when previous was disabled and is expected to be disabled
+        // OR when previous is enabled and is expected to be enabled
+        if isTorEnabled == enabled {
+            return
+        }
+        
+        // case when previous was disabled and newly is required to be enabled
+        if !isTorEnabled && enabled {
+            let torClient = initializer.container.resolve(TorClient.self)
+            try await torClient.prepare()
+            
+            await sdkFlags.torFlagUpdate(true)
+        } else {
+            await sdkFlags.torFlagUpdate(false)
+            await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
+
+            // case when previous was enabled and newly is required to be stopped
+            let torClient = initializer.container.resolve(TorClient.self)
+            // close of the initial TorClient, it's used for creation of isolated clients
+            try await torClient.close()
+            // deinit of isolated TorClient used for fetching exchange rates
+            tor = nil
+            // close all connections
+            let lwdService = initializer.container.resolve(LightWalletService.self)
+            await lwdService.closeConnections()
+        }
+    }
+    
+    public func isTorSuccessfullyInitialized() async -> Bool? {
+        await sdkFlags.torClientInitializationSuccessfullyDone
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
@@ -933,16 +962,12 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.stop()
         }
 
+        let torClient = initializer.container.resolve(TorClient.self)
+        
         // Validation of the server is first because any custom endpoint can be passed here
-        // Extra instance of the service is created with lower timeout ofr a single call
+        // Extra instance of the service is created with lower timeout for a single call
         initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCService(
-                host: endpoint.host,
-                port: endpoint.port,
-                secure: endpoint.secure,
-                singleCallTimeout: 5000,
-                streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
-            )
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: torClient, singleCallTimeout: 5000)
         }
 
         let validateSever = ValidateServerAction(
@@ -962,8 +987,8 @@ public class SDKSynchronizer: Synchronizer {
         // SWITCH TO NEW ENDPOINT
         
         // LightWalletService dependency update
-        initializer.container.register(type: LightWalletService.self, isSingleton: true) { [torURL = initializer.torDirURL] _ in
-            LightWalletGRPCService(endpoint: endpoint, torURL: torURL)
+        initializer.container.register(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: torClient)
         }
 
         // DEPENDENCIES
@@ -980,8 +1005,9 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+            let sdkFlags = di.resolve(SDKFlags.self)
 
-            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend)
+            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend, sdkFlags: sdkFlags)
         }
         
         // CompactBlockProcessor dependency update

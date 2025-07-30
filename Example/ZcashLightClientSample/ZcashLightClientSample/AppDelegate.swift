@@ -55,7 +55,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
-                saplingParamsSourceURL: SaplingParamsSourceURL.default
+                saplingParamsSourceURL: SaplingParamsSourceURL.default,
+                isTorEnabled: false
             )
            
             self.wallet = wallet

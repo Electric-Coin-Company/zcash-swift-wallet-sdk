@@ -8,15 +8,20 @@
 import Foundation
 
 enum Dependencies {
-    // swiftlint:disable:next cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity function_parameter_count
     static func setup(
         in container: DIContainer,
         urls: Initializer.URLs,
         alias: ZcashSynchronizerAlias,
         networkType: NetworkType,
         endpoint: LightWalletEndpoint,
-        loggingPolicy: Initializer.LoggingPolicy = .default(.debug)
+        loggingPolicy: Initializer.LoggingPolicy = .default(.debug),
+        isTorEnabled: Bool
     ) {
+        container.register(type: SDKFlags.self, isSingleton: true) { _ in
+            SDKFlags(torEnabled: isTorEnabled)
+        }
+
         container.register(type: CheckpointSource.self, isSingleton: true) { _ in
             CheckpointSourceFactory.fromBundle(for: networkType)
         }
@@ -76,8 +81,28 @@ enum Dependencies {
             )
         }
 
-        container.register(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: try? TorClient(torDir: urls.torDirURL))
+        container.register(type: TorClient.self, isSingleton: true) { di in
+            let torClient = TorClient(torDir: urls.torDirURL)
+            let sdkFlags = di.resolve(SDKFlags.self)
+
+            if isTorEnabled {
+                Task(priority: .high) {
+                    do {
+                        try await torClient.prepare()
+                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(true)
+                    } catch {
+                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(false)
+                    }
+                }
+            }
+            
+            return torClient
+        }
+
+        container.register(type: LightWalletService.self, isSingleton: true) { di in
+            let torClient = di.resolve(TorClient.self)
+            
+            return LightWalletGRPCServiceOverTor(endpoint: endpoint, tor: torClient)
         }
 
         container.register(type: TransactionRepository.self, isSingleton: true) { _ in
@@ -115,8 +140,9 @@ enum Dependencies {
         container.register(type: LatestBlocksDataProvider.self, isSingleton: true) { di in
             let service = di.resolve(LightWalletService.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+            let sdkFlags = di.resolve(SDKFlags.self)
 
-            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend)
+            return LatestBlocksDataProviderImpl(service: service, rustBackend: rustBackend, sdkFlags: sdkFlags)
         }
 
         container.register(type: SyncSessionIDGenerator.self, isSingleton: false) { _ in
@@ -132,6 +158,7 @@ enum Dependencies {
             let logger = di.resolve(Logger.self)
             let transactionRepository = di.resolve(TransactionRepository.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
+            let sdkFlags = di.resolve(SDKFlags.self)
 
             return WalletTransactionEncoder(
                 rustBackend: rustBackend,
@@ -142,7 +169,8 @@ enum Dependencies {
                 outputParams: urls.outputParamsURL,
                 spendParams: urls.spendParamsURL,
                 networkType: networkType,
-                logger: logger
+                logger: logger,
+                sdkFlags: sdkFlags
             )
         }
     }
@@ -196,6 +224,7 @@ enum Dependencies {
             let metrics = di.resolve(SDKMetrics.self)
             let service = di.resolve(LightWalletService.self)
             let logger = di.resolve(Logger.self)
+            let sdkFlags = di.resolve(SDKFlags.self)
 
             return BlockEnhancerImpl(
                 blockDownloaderService: blockDownloaderService,
@@ -203,7 +232,8 @@ enum Dependencies {
                 transactionRepository: transactionRepository,
                 metrics: metrics,
                 service: service,
-                logger: logger
+                logger: logger,
+                sdkFlags: sdkFlags
             )
         }
         

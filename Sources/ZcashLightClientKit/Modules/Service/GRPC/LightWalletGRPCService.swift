@@ -401,7 +401,7 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func closeConnection(mode: ServiceMode) {
+    func closeConnections() async {
         _ = channel?.close()
     }
 }

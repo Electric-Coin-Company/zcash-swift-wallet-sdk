@@ -13,6 +13,7 @@ final class UpdateChainTipAction {
     var service: LightWalletService
     var latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
+    let sdkFlags: SDKFlags
     
     init(container: DIContainer) {
         service = container.resolve(LightWalletService.self)
@@ -20,16 +21,12 @@ final class UpdateChainTipAction {
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         logger = container.resolve(Logger.self)
+        sdkFlags = container.resolve(SDKFlags.self)
     }
     
     func updateChainTip(_ context: ActionContext, time: TimeInterval) async throws {
-        // ServiceMode to resolve
         // called each sync, right after getInfo in ValidateServerAction
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/blob/main/docs/images/cbp_state_machine.png
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-        //let latestBlockHeight = try await service.latestBlockHeight(mode: .defaultTor)
-        let latestBlockHeight = try await service.latestBlockHeight(mode: .direct)
+        let latestBlockHeight = try await service.latestBlockHeight(mode: await sdkFlags.ifTor(.defaultTor))
 
         logger.debug("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))

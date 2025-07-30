@@ -74,7 +74,7 @@ class DarksideWalletService: LightWalletService {
         throw "Not mocked"
     }
     
-    func closeConnection(mode: ServiceMode) {
+    func closeConnections() async {
     }
     
     func fetchUTXOs(for tAddress: String, height: BlockHeight, mode: ServiceMode) throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {

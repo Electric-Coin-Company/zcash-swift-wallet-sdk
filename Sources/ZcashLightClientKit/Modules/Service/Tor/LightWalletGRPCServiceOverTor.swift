@@ -8,12 +8,12 @@
 import Foundation
 
 actor ServiceConnections {
-    var tor: TorClient?
+    var tor: TorClient
     var endpointString: String?
     var groups: [String: TorLwdConn] = [:]
     var defaultTorLwdConn: TorLwdConn?
     
-    init(endpoint: LightWalletEndpoint, tor: TorClient?) {
+    init(endpoint: LightWalletEndpoint, tor: TorClient) {
         self.tor = tor
         endpointString = String(format: "%@://%@:%d", endpoint.secure ? "https" : "http", endpoint.host, endpoint.port)
     }
@@ -22,11 +22,7 @@ actor ServiceConnections {
         guard let endpointString else {
             throw ZcashError.torServiceMissingEndpoint
         }
-        
-        guard let tor else {
-            throw ZcashError.torServiceMissingTorClient
-        }
-        
+
         // uniqueTor
         if mode == .uniqueTor {
             return try await tor.connectToLightwalletd(endpoint: endpointString)
@@ -65,16 +61,30 @@ actor ServiceConnections {
             groups.removeValue(forKey: groupName)
         }
     }
+    
+    func closeConnections() {
+        groups.removeAll()
+        defaultTorLwdConn = nil
+    }
 }
 
 class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
-    var tor: TorClient?
+    var tor: TorClient
     let serviceConnections: ServiceConnections
 
-    convenience init(endpoint: LightWalletEndpoint, tor: TorClient?) {
+    convenience init(endpoint: LightWalletEndpoint, tor: TorClient) {
         self.init(
             endpoint: endpoint,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
+            tor: tor
+        )
+    }
+    
+    convenience init(endpoint: LightWalletEndpoint, tor: TorClient, singleCallTimeout: Int64) {
+        self.init(
+            endpoint: endpoint,
+            singleCallTimeout: singleCallTimeout,
             streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
             tor: tor
         )
@@ -84,7 +94,7 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         endpoint: LightWalletEndpoint,
         singleCallTimeout: Int64,
         streamingCallTimeout: Int64,
-        tor: TorClient?
+        tor: TorClient
     ) {
         self.tor = tor
         serviceConnections = ServiceConnections(endpoint: endpoint, tor: tor)
@@ -169,5 +179,10 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
             await serviceConnections.responseToTorFailure(mode)
             throw error
         }
+    }
+    
+    override func closeConnections() async {
+        await super.closeConnections()
+        await serviceConnections.closeConnections()
     }
 }

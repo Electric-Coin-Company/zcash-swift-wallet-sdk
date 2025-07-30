@@ -161,7 +161,7 @@ extension ZcashRustBackend {
     }
 }
 
-extension Zatoshi: CustomDebugStringConvertible {
+extension Zatoshi: @retroactive CustomDebugStringConvertible {
     public var debugDescription: String {
         "Zatoshi(\(self.amount))"
     }

@@ -31,6 +31,7 @@ struct BundleCheckpointSource: CheckpointSource {
         ) ?? saplingActivation
     }
     
+    // swiftlint:disable:next cyclomatic_complexity
     func estimateBirthdayHeight(for date: Date) -> BlockHeight {
         // the average time between 2500 blocks during last 10 checkpoints (estimated March 31, 2025) is 52.33 hours for mainnet
         // the average time between 10,000 blocks during last 10 checkpoints (estimated March 31, 2025) is 134.93 hours for testnet

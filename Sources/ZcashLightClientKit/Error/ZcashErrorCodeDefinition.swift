@@ -84,19 +84,16 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZSRVC0010"
     case serviceGetTaddressTxidsFailed(_ error: LightWalletServiceError)
 
-    // MARK: - LightWalletServiceOverTor
+    // MARK: - Tor
 
     /// Endpoint is not provided
     // sourcery: code="ZTSRV0001"
     case torServiceMissingEndpoint
-    /// Tor client is not available
-    // sourcery: code="ZTSRV0002"
-    case torServiceMissingTorClient
     /// Tor client fails to resolve ServiceMode
-    // sourcery: code="ZTSRV0003"
+    // sourcery: code="ZTSRV0002"
     case torServiceUnresolvedMode
     /// GRPC Service is called with a Tor mode instead of direct one
-    // sourcery: code="ZTSRV0004"
+    // sourcery: code="ZTSRV0003"
     case grpcServiceCalledWithTorMode
 
     // MARK: SQLite connection

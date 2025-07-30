@@ -62,6 +62,7 @@ struct BlockEnhancerImpl {
     let metrics: SDKMetrics
     let service: LightWalletService
     let logger: Logger
+    let sdkFlags: SDKFlags
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
@@ -93,15 +94,9 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         switch transactionDataRequest {
                         case .getStatus(let txId):
-                            // TODO: [#1571] connection enforeced to .direct for the next SDK release
-                            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//                            let response = try await blockDownloaderService.fetchTransaction(
-//                                txId: txId.data,
-//                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
-//                            )
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: .direct
+                                mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data))
                             )
                             retry = false
 
@@ -110,15 +105,9 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             }
                             
                         case .enhancement(let txId):
-                            // TODO: [#1571] connection enforeced to .direct for the next SDK release
-                            // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//                            let response = try await blockDownloaderService.fetchTransaction(
-//                                txId: txId.data,
-//                                mode: ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data)
-//                            )
                             let response = try await blockDownloaderService.fetchTransaction(
                                 txId: txId.data,
-                                mode: .direct
+                                mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txId.data))
                             )
                             retry = false
 
@@ -133,7 +122,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
 
                         case .transactionsInvolvingAddress(let tia):
                             // TODO: [#1554] Remove this guard once lightwalletd servers support open-ended ranges.
-                            guard let blockRangeEnd = tia.blockRangeEnd else {
+                            guard tia.blockRangeEnd != nil else {
                                 logger.error("transactionsInvolvingAddress \(tia) is missing blockRangeEnd, ignoring the request.")
                                 retry = false
                                 continue

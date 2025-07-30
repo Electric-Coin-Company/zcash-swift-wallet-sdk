@@ -55,11 +55,11 @@ enum FakeChainBuilder {
             try TreeState(jsonString:
                 """
                 {
-                  "network": "main",
-                  "height": "663150",
-                  "hash": "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc",
-                  "time": 1576821833,
-                  "saplingTree": "01ec6278a1bed9e1b080fd60ef50eb17411645e3746ff129283712bc4757ecc833001001b4e1d4a26ac4a2810b57a14f4ffb69395f55dde5674ecd2462af96f9126e054701a36afb68534f640938bdffd80dfcb3f4d5e232488abbf67d049b33a761e7ed6901a16e35205fb7fe626a9b13fc43e1d2b98a9c241f99f93d5e93a735454073025401f5b9bcbf3d0e3c83f95ee79299e8aeadf30af07717bda15ffb7a3d00243b58570001fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
+                    "network": "main",
+                    "height": "663150",
+                    "hash": "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc",
+                    "time": 1576821833,
+                    "saplingTree": "01ec6278a1bed9e1b080fd60ef50eb17411645e3746ff129283712bc4757ecc833001001b4e1d4a26ac4a2810b57a14f4ffb69395f55dde5674ecd2462af96f9126e054701a36afb68534f640938bdffd80dfcb3f4d5e232488abbf67d049b33a761e7ed6901a16e35205fb7fe626a9b13fc43e1d2b98a9c241f99f93d5e93a735454073025401f5b9bcbf3d0e3c83f95ee79299e8aeadf30af07717bda15ffb7a3d00243b58570001fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
                 }
                 """)
         )
@@ -69,11 +69,11 @@ enum FakeChainBuilder {
             try TreeState(jsonString:
                 """
                 {
-                  "network": "main",
-                  "height": "663187",
-                  "hash": "00000000027fa4bfd6c012325a44eef7211a6162b5979507f07603333e9b3068",
-                  "time": 1576824317,
-                  "saplingTree": "018d5b2b12a89cabbeb6c98bde09fbea143d49ea8e4dbf1d612e4906e73e1af96b001000018b01c7e7b2b183d022fc35e351e6423aee8885debc899036d0bc3b389c9f161501dba0595ce728b41452a9c595341074cf01e1152abe401db2b30a9ab007ad006e0001989561014441f9f9043e11c01e220730df2219c090fa02f58d278fb7f447271601fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
+                    "network": "main",
+                    "height": "663187",
+                    "hash": "00000000027fa4bfd6c012325a44eef7211a6162b5979507f07603333e9b3068",
+                    "time": 1576824317,
+                    "saplingTree": "018d5b2b12a89cabbeb6c98bde09fbea143d49ea8e4dbf1d612e4906e73e1af96b001000018b01c7e7b2b183d022fc35e351e6423aee8885debc899036d0bc3b389c9f161501dba0595ce728b41452a9c595341074cf01e1152abe401db2b30a9ab007ad006e0001989561014441f9f9043e11c01e220730df2219c090fa02f58d278fb7f447271601fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
                 }
                 """)
         )
@@ -83,11 +83,11 @@ enum FakeChainBuilder {
             try TreeState(jsonString:
                 """
                 {
-                  "network": "main",
-                  "height": "663188",
-                  "hash": "0000000001ada1001f457eb76f2547912d3c4f35fa7ecf5061c7cede683467ff",
-                  "time": 1576824544,
-                  "saplingTree": "01f1c5f08a96b8e0befe04ff061dd51ed96ffcc7fcd96d011dc06255692989731c001001ea6dbe4e95ec503600ee3260105ffcc2ceb63eb34ec323c794eebfc49b7beb2c018b01c7e7b2b183d022fc35e351e6423aee8885debc899036d0bc3b389c9f161501dba0595ce728b41452a9c595341074cf01e1152abe401db2b30a9ab007ad006e0001989561014441f9f9043e11c01e220730df2219c090fa02f58d278fb7f447271601fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
+                    "network": "main",
+                    "height": "663188",
+                    "hash": "0000000001ada1001f457eb76f2547912d3c4f35fa7ecf5061c7cede683467ff",
+                    "time": 1576824544,
+                    "saplingTree": "01f1c5f08a96b8e0befe04ff061dd51ed96ffcc7fcd96d011dc06255692989731c001001ea6dbe4e95ec503600ee3260105ffcc2ceb63eb34ec323c794eebfc49b7beb2c018b01c7e7b2b183d022fc35e351e6423aee8885debc899036d0bc3b389c9f161501dba0595ce728b41452a9c595341074cf01e1152abe401db2b30a9ab007ad006e0001989561014441f9f9043e11c01e220730df2219c090fa02f58d278fb7f447271601fa6d4c2390e205f81d86b85ace0b48f3ce0afb78eeef3e14c70bcfd7c5f0191c0000011bc9521263584de20822f9483e7edb5af54150c4823c775b2efc6a1eded9625501a6030f8d4b588681eddb66cad63f09c5c7519db49500fc56ebd481ce5e903c22000163f4eec5a2fe00a5f45e71e1542ff01e937d2210c99f03addcce5314a5278b2d0163ab01f46a3bb6ea46f5a19d5bdd59eb3f81e19cfa6d10ab0fd5566c7a16992601fa6980c053d84f809b6abcf35690f03a11f87b28e3240828e32e3f57af41e54e01319312241b0031e3a255b0d708750b4cb3f3fe79e3503fe488cc8db1dd00753801754bb593ea42d231a7ddf367640f09bbf59dc00f2c1d2003cc340e0c016b5b13"
                 }
                 """)
         )
@@ -296,23 +296,23 @@ enum FakeChainBuilder {
             subtreeRoots.subtreeRoots = [
                 try .init(
                     jsonString:
-                              """
-                              {
-                                "rootHash": "dUu1k+pC0jGn3fNnZA8Ju/WdwA8sHSADzDQODAFrWxM=",
-                                "completingBlockHash": "AAAAAACPmsBjbYHceVyw9Ulab9B06BWhnhmfDaSRUf4=",
-                                "completingBlockHeight": "558822"
-                              }
-                              """
+                        """
+                        {
+                            "rootHash": "dUu1k+pC0jGn3fNnZA8Ju/WdwA8sHSADzDQODAFrWxM=",
+                            "completingBlockHash": "AAAAAACPmsBjbYHceVyw9Ulab9B06BWhnhmfDaSRUf4=",
+                            "completingBlockHeight": "558822"
+                        }
+                        """
                 ),
                 try .init(
                     jsonString:
-                                    """
-                                    {
-                                      "rootHash": "A2VMPqy7m5PhIs9td7YG6uKWEPTzikd5hTaBl/1o4C0=",
-                                      "completingBlockHash": "AAAAAAIFzQaAI1LPzYkhgVvQqdc+ta/D7AnzXHGARqk=",
-                                      "completingBlockHeight": "670209"
-                                    }
-                                    """
+                        """
+                        {
+                            "rootHash": "A2VMPqy7m5PhIs9td7YG6uKWEPTzikd5hTaBl/1o4C0=",
+                            "completingBlockHash": "AAAAAAIFzQaAI1LPzYkhgVvQqdc+ta/D7AnzXHGARqk=",
+                            "completingBlockHeight": "670209"
+                        }
+                        """
                 )
             ]
         }

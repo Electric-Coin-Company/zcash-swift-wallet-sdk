@@ -150,7 +150,11 @@ class DerivationToolMainnetTests: XCTestCase {
         let contextString = [UInt8]("Zcash test vectors".utf8)
         let seed = Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!.bytes
         let expectedKey = Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!.bytes
-        let key = try DerivationTool(networkType: .mainnet).deriveArbitraryAccountKey(contextString: contextString, seed: seed, accountIndex: Zip32AccountIndex(0))
+        let key = try DerivationTool(networkType: .mainnet).deriveArbitraryAccountKey(
+            contextString: contextString,
+            seed: seed,
+            accountIndex: Zip32AccountIndex(0)
+        )
         XCTAssertEqual(key, expectedKey)
     }
 }

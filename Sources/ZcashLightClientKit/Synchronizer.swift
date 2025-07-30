@@ -419,14 +419,13 @@ public protocol Synchronizer: AnyObject {
     /// Takes the list of endpoints and runs it through a series of checks to evaluate its performance.
     /// - Parameters:
     ///    - endpoints: Array of endpoints to evaluate.
-    ///    - latencyThresholdMillis: The mean latency of `getInfo` and `getTheLatestHeight` calls must be below this threshold. The default is 300 ms.
     ///    - fetchThresholdSeconds: The time to download `nBlocksToFetch` blocks from the stream must be below this threshold. The default is 60 seconds.
     ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
-    ///    - kServers: The expected number of endpoints in the output. The default is 3.
+    ///    - kServers: The required number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
+    // swiftlint:disable:next function_parameter_count
     func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
-        latencyThresholdMillis: Double,
         fetchThresholdSeconds: Double,
         nBlocksToFetch: UInt64,
         kServers: Int,
@@ -436,6 +435,17 @@ public protocol Synchronizer: AnyObject {
     /// Takes a given date and finds out the closes checkpoint's height for it.
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
+    
+    /// Allows to setup the Tor opt-in/out runtime.
+    /// - Parameters:
+    ///    - enabled: When true, the SDK ensures `TorClient` is ready. When false, the SDk ensures previous TorClients are properly disabled and deinitialized.
+    /// - Throws: ZcashError when failures of the `TorClient` occur
+    func tor(enabled: Bool) async throws
+    
+    /// Init of the SDK must always happen but initialization of `TorClient` can fail. This failure is designed to not block SDK initialization.
+    /// Instead, a result of the initialization is stored in the `SDKFLags`
+    /// - Returns: nil, the initialization hasn't been initiated, true/false = initialization succeeded/failed
+    func isTorSuccessfullyInitialized() async -> Bool?
 }
 
 public enum SyncStatus: Equatable {

@@ -45,12 +45,10 @@ public enum ZcashErrorCode: String {
     case serviceGetTaddressTxidsFailed = "ZSRVC0010"
     /// Endpoint is not provided
     case torServiceMissingEndpoint = "ZTSRV0001"
-    /// Tor client is not available
-    case torServiceMissingTorClient = "ZTSRV0002"
     /// Tor client fails to resolve ServiceMode
-    case torServiceUnresolvedMode = "ZTSRV0003"
+    case torServiceUnresolvedMode = "ZTSRV0002"
     /// GRPC Service is called with a Tor mode instead of direct one
-    case grpcServiceCalledWithTorMode = "ZTSRV0004"
+    case grpcServiceCalledWithTorMode = "ZTSRV0003"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.

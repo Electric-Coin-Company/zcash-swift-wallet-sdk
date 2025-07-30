@@ -1063,8 +1063,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         return branchId
     }
     
-    @DBActor
-    func transactionDataRequests() async throws -> [TransactionDataRequest] {
+    // swiftlint:disable:next cyclomatic_complexity
+    @DBActor func transactionDataRequests() async throws -> [TransactionDataRequest] {
         let tDataRequestsPtr = zcashlc_transaction_data_requests(
             dbData.0,
             dbData.1,
@@ -1391,7 +1391,7 @@ extension FfiScanProgress {
     }
 }
 
-// swiftlint:disable large_tuple line_length
+// swiftlint:disable large_tuple line_length file_length
 struct FfiTxId {
     var tuple: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
     var array: [UInt8] {

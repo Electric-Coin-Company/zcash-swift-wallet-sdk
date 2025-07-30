@@ -259,7 +259,8 @@ final class SynchronizerTests: ZcashTestCase {
 
         try coordinator.applyStaged(blockheight: 663200)
         let accountUUID = TestsData.mockedAccountUUID
-        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue ?? .zero
+        let spendableValue = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.spendableValue
+        let initialVerifiedBalance: Zatoshi = spendableValue ?? .zero
         let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getAccountsBalances()[accountUUID]?.saplingBalance.total() ?? .zero
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")

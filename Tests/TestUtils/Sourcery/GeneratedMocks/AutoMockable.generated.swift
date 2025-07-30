@@ -459,19 +459,17 @@ class BlockDownloaderServiceMock: BlockDownloaderService {
         }
     }
 
-    // MARK: - closeConnection
+    // MARK: - closeConnections
 
-    var closeConnectionModeCallsCount = 0
-    var closeConnectionModeCalled: Bool {
-        return closeConnectionModeCallsCount > 0
+    var closeConnectionsCallsCount = 0
+    var closeConnectionsCalled: Bool {
+        return closeConnectionsCallsCount > 0
     }
-    var closeConnectionModeReceivedMode: ServiceMode?
-    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
+    var closeConnectionsClosure: (() -> Void)?
 
-    func closeConnection(mode: ServiceMode) {
-        closeConnectionModeCallsCount += 1
-        closeConnectionModeReceivedMode = mode
-        closeConnectionModeClosure!(mode)
+    func closeConnections() {
+        closeConnectionsCallsCount += 1
+        closeConnectionsClosure!()
     }
 
 }
@@ -977,19 +975,17 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
-    // MARK: - closeConnection
+    // MARK: - closeConnections
 
-    var closeConnectionModeCallsCount = 0
-    var closeConnectionModeCalled: Bool {
-        return closeConnectionModeCallsCount > 0
+    var closeConnectionsCallsCount = 0
+    var closeConnectionsCalled: Bool {
+        return closeConnectionsCallsCount > 0
     }
-    var closeConnectionModeReceivedMode: ServiceMode?
-    var closeConnectionModeClosure: ((ServiceMode) -> Void)?
+    var closeConnectionsClosure: (() async -> Void)?
 
-    func closeConnection(mode: ServiceMode) {
-        closeConnectionModeCallsCount += 1
-        closeConnectionModeReceivedMode = mode
-        closeConnectionModeClosure!(mode)
+    func closeConnections() async {
+        closeConnectionsCallsCount += 1
+        await closeConnectionsClosure!()
     }
 
     // MARK: - getSubtreeRoots
@@ -2122,21 +2118,21 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - evaluateBestOf
 
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount = 0
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCalled: Bool {
-        return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount > 0
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount = 0
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCalled: Bool {
+        return evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount > 0
     }
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments: (endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType)?
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue: [LightWalletEndpoint]!
-    var evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure: (([LightWalletEndpoint], Double, Double, UInt64, Int, NetworkType) async -> [LightWalletEndpoint])?
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments: (endpoints: [LightWalletEndpoint], fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType)?
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue: [LightWalletEndpoint]!
+    var evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure: (([LightWalletEndpoint], Double, UInt64, Int, NetworkType) async -> [LightWalletEndpoint])?
 
-    func evaluateBestOf(endpoints: [LightWalletEndpoint], latencyThresholdMillis: Double, fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType) async -> [LightWalletEndpoint] {
-        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount += 1
-        evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments = (endpoints: endpoints, latencyThresholdMillis: latencyThresholdMillis, fetchThresholdSeconds: fetchThresholdSeconds, nBlocksToFetch: nBlocksToFetch, kServers: kServers, network: network)
-        if let closure = evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure {
-            return await closure(endpoints, latencyThresholdMillis, fetchThresholdSeconds, nBlocksToFetch, kServers, network)
+    func evaluateBestOf(endpoints: [LightWalletEndpoint], fetchThresholdSeconds: Double, nBlocksToFetch: UInt64, kServers: Int, network: NetworkType) async -> [LightWalletEndpoint] {
+        evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkCallsCount += 1
+        evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReceivedArguments = (endpoints: endpoints, fetchThresholdSeconds: fetchThresholdSeconds, nBlocksToFetch: nBlocksToFetch, kServers: kServers, network: network)
+        if let closure = evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkClosure {
+            return await closure(endpoints, fetchThresholdSeconds, nBlocksToFetch, kServers, network)
         } else {
-            return evaluateBestOfEndpointsLatencyThresholdMillisFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue
+            return evaluateBestOfEndpointsFetchThresholdSecondsNBlocksToFetchKServersNetworkReturnValue
         }
     }
 
@@ -2157,6 +2153,43 @@ class SynchronizerMock: Synchronizer {
             return closure(date)
         } else {
             return estimateBirthdayHeightForReturnValue
+        }
+    }
+
+    // MARK: - tor
+
+    var torEnabledThrowableError: Error?
+    var torEnabledCallsCount = 0
+    var torEnabledCalled: Bool {
+        return torEnabledCallsCount > 0
+    }
+    var torEnabledReceivedEnabled: Bool?
+    var torEnabledClosure: ((Bool) async throws -> Void)?
+
+    func tor(enabled: Bool) async throws {
+        if let error = torEnabledThrowableError {
+            throw error
+        }
+        torEnabledCallsCount += 1
+        torEnabledReceivedEnabled = enabled
+        try await torEnabledClosure!(enabled)
+    }
+
+    // MARK: - isTorSuccessfullyInitialized
+
+    var isTorSuccessfullyInitializedCallsCount = 0
+    var isTorSuccessfullyInitializedCalled: Bool {
+        return isTorSuccessfullyInitializedCallsCount > 0
+    }
+    var isTorSuccessfullyInitializedReturnValue: Bool?
+    var isTorSuccessfullyInitializedClosure: (() async -> Bool?)?
+
+    func isTorSuccessfullyInitialized() async -> Bool? {
+        isTorSuccessfullyInitializedCallsCount += 1
+        if let closure = isTorSuccessfullyInitializedClosure {
+            return await closure()
+        } else {
+            return isTorSuccessfullyInitializedReturnValue
         }
     }
 

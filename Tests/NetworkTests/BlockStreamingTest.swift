@@ -39,7 +39,8 @@ class BlockStreamingTest: ZcashTestCase {
             alias: .default,
             networkType: .testnet,
             endpoint: LightWalletEndpointBuilder.default,
-            loggingPolicy: .default(.debug)
+            loggingPolicy: .default(.debug),
+            isTorEnabled: false
         )
         
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }

@@ -23,6 +23,7 @@ protocol LatestBlocksDataProvider {
 actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     let service: LightWalletService
     let rustBackend: ZcashRustBackendWelding
+    let sdkFlags: SDKFlags
     
     // Valid values are stored here after Synchronizer's `prepare` is called.
     private(set) var fullyScannedHeight: BlockHeight = .zero
@@ -32,9 +33,10 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     // Valid values are stored here after Synchronizer's `prepare` is called.
     private(set) var walletBirthday: BlockHeight = .zero
 
-    init(service: LightWalletService, rustBackend: ZcashRustBackendWelding) {
+    init(service: LightWalletService, rustBackend: ZcashRustBackendWelding, sdkFlags: SDKFlags) {
         self.service = service
         self.rustBackend = rustBackend
+        self.sdkFlags = sdkFlags
     }
     
     func reset() async {
@@ -51,10 +53,7 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
 
     func updateBlockData() async {
         // called each time syn triggers but sync is still in progress, the goal it to jusst update the chain tip in the provider
-        // TODO: [#1571] connection enforeced to .direct for the next SDK release
-        // https://github.com/Electric-Coin-Company/zcash-swift-wallet-sdk/issues/1571
-//        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: .defaultTor) {
-        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: .direct) {
+        if let newLatestBlockHeight = try? await service.latestBlockHeight(mode: await sdkFlags.ifTor(.defaultTor)) {
             await update(newLatestBlockHeight)
         }
     }
