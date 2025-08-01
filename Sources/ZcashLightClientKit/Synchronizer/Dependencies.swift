@@ -82,21 +82,7 @@ enum Dependencies {
         }
 
         container.register(type: TorClient.self, isSingleton: true) { di in
-            let torClient = TorClient(torDir: urls.torDirURL)
-            let sdkFlags = di.resolve(SDKFlags.self)
-
-            if isTorEnabled {
-                Task(priority: .high) {
-                    do {
-                        try await torClient.prepare()
-                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(true)
-                    } catch {
-                        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(false)
-                    }
-                }
-            }
-            
-            return torClient
+            TorClient(torDir: urls.torDirURL)
         }
 
         container.register(type: LightWalletService.self, isSingleton: true) { di in

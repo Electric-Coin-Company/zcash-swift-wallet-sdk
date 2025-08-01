@@ -88,7 +88,7 @@ public enum ZcashSDK {
     // MARK: Defaults
 
     /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
-    public static let DefaultBatchSize = 100
+    public static let DefaultBatchSize = 1000
     
     /// Default batch size for enhancing transactions for the compact block processor
     public static let DefaultEnhanceBatch = 1000
