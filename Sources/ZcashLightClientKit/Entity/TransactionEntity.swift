@@ -16,10 +16,9 @@ public enum ZcashTransaction {
             /// transaction has a `minedHeight` that's greater or equal than
             /// `ZcashSDK.defaultStaleTolerance` confirmations.
             case confirmed
-            /// transaction has no `minedHeight` but current known height is less than
-            /// `expiryHeight`.
+            /// transaction has no `minedHeight` but current known height is less than `expiryHeight`.
             case pending
-            /// transaction has no
+            /// transaction has no `minedHeight` and current known height is greater or equal than `expiryHeight`.
             case expired
 
             init(
@@ -64,6 +63,7 @@ public enum ZcashTransaction {
         public let isExpiredUmined: Bool?
         public let totalSpent: Zatoshi?
         public let totalReceived: Zatoshi?
+        public var state: State?
     }
 
     public struct Output: Equatable, Identifiable {

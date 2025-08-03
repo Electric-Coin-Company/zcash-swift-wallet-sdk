@@ -530,19 +530,42 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
-        try await transactionRepository.findReceived(offset: 0, limit: Int.max)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.findReceived(offset: 0, limit: Int.max)
+        )
     }
 
     public func allTransactions() async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        )
     }
 
     public func allSentTransactions() async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.findSent(offset: 0, limit: Int.max)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.findSent(offset: 0, limit: Int.max)
+        )
     }
 
     public func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.find(from: transaction, limit: limit, kind: .all)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.find(from: transaction, limit: limit, kind: .all)
+        )
+    }
+    
+    private func enhanceRawTransactionsWithState(rawTransactions: [ZcashTransaction.Overview]) async throws -> [ZcashTransaction.Overview] {
+        var latestKnownBlockHeight = await latestBlocksDataProvider.latestBlockHeight
+        if latestKnownBlockHeight == 0 {
+            latestKnownBlockHeight = try await initializer.rustBackend.maxScannedHeight() ?? .zero
+        }
+        
+        return rawTransactions.map { rawTransaction in
+            var copyOfRawTransaction = rawTransaction
+            
+            copyOfRawTransaction.state = rawTransaction.getState(for: latestKnownBlockHeight)
+            
+            return copyOfRawTransaction
+        }
     }
 
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -931,7 +954,7 @@ public class SDKSynchronizer: Synchronizer {
         if !isTorEnabled && enabled {
             let torClient = initializer.container.resolve(TorClient.self)
             try await torClient.prepare()
-            
+
             await sdkFlags.torFlagUpdate(true)
         } else {
             await sdkFlags.torFlagUpdate(false)
