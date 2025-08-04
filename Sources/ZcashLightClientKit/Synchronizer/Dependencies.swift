@@ -16,10 +16,13 @@ enum Dependencies {
         networkType: NetworkType,
         endpoint: LightWalletEndpoint,
         loggingPolicy: Initializer.LoggingPolicy = .default(.debug),
-        isTorEnabled: Bool
+        torMode: SDKFlagTorMode
     ) {
         container.register(type: SDKFlags.self, isSingleton: true) { _ in
-            SDKFlags(torEnabled: isTorEnabled)
+            SDKFlags(
+                torEnabled: torMode == .all,
+                exchangeRateEnabled: torMode != .none
+            )
         }
 
         container.register(type: CheckpointSource.self, isSingleton: true) { _ in

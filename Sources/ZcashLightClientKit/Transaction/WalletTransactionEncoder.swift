@@ -137,9 +137,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     ) async throws {
         let response = try await self.lightWalletService.submit(
             spendTransaction: transaction.raw,
-            mode: await sdkFlags.torEnabled
-            ? ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId)
-            : ServiceMode.direct
+            mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "submit", txId: transaction.transactionId))
         )
 
         guard response.errorCode >= 0 else {

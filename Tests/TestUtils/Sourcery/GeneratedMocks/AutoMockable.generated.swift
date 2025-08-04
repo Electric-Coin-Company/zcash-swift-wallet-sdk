@@ -2158,21 +2158,21 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - tor
 
-    var torEnabledThrowableError: Error?
-    var torEnabledCallsCount = 0
-    var torEnabledCalled: Bool {
-        return torEnabledCallsCount > 0
+    var torModeThrowableError: Error?
+    var torModeCallsCount = 0
+    var torModeCalled: Bool {
+        return torModeCallsCount > 0
     }
-    var torEnabledReceivedEnabled: Bool?
-    var torEnabledClosure: ((Bool) async throws -> Void)?
+    var torModeReceivedMode: SDKFlagTorMode?
+    var torModeClosure: ((SDKFlagTorMode) async throws -> Void)?
 
-    func tor(enabled: Bool) async throws {
-        if let error = torEnabledThrowableError {
+    func tor(mode: SDKFlagTorMode) async throws {
+        if let error = torModeThrowableError {
             throw error
         }
-        torEnabledCallsCount += 1
-        torEnabledReceivedEnabled = enabled
-        try await torEnabledClosure!(enabled)
+        torModeCallsCount += 1
+        torModeReceivedMode = mode
+        try await torModeClosure!(mode)
     }
 
     // MARK: - isTorSuccessfullyInitialized

@@ -139,7 +139,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         mockContainer.mock(type: BlockDownloader.self, isSingleton: true) { _ in blockDownloaderMock }
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in latestBlocksDataProvider }
-        mockContainer.mock(type: SDKFlags.self, isSingleton: true) { _ in SDKFlags(torEnabled: false) }
+        mockContainer.mock(type: SDKFlags.self, isSingleton: true) { _ in SDKFlags(torEnabled: false, exchangeRateEnabled: false) }
 
         return UpdateChainTipAction(container: mockContainer)
     }
