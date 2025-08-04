@@ -23,7 +23,7 @@ class TestsData {
             spendParamsURL: URL(fileURLWithPath: "/"),
             outputParamsURL: URL(fileURLWithPath: "/"),
             saplingParamsSourceURL: .default,
-            torMode: .none
+            isTorEnabled: false
         )
     }()
     lazy var derivationTools: DerivationTool = { DerivationTool(networkType: networkType) }()

@@ -56,7 +56,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.default,
-                torMode: .none
+                isTorEnabled: false
             )
            
             self.wallet = wallet

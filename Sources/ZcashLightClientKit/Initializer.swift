@@ -172,7 +172,7 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
         loggingPolicy: LoggingPolicy = .default(.debug),
-        torMode: SDKFlagTorMode
+        isTorEnabled: Bool
     ) {
         let container = DIContainer()
         
@@ -192,7 +192,7 @@ public class Initializer {
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
             loggingPolicy: loggingPolicy,
-            torMode: torMode
+            isTorEnabled: isTorEnabled
         )
         
         self.init(
@@ -205,7 +205,7 @@ public class Initializer {
             alias: alias,
             urlsParsingError: parsingError,
             loggingPolicy: loggingPolicy,
-            torMode: torMode
+            isTorEnabled: isTorEnabled
         )
     }
 
@@ -224,7 +224,7 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
         loggingPolicy: LoggingPolicy = .default(.debug),
-        torMode: SDKFlagTorMode
+        isTorEnabled: Bool
     ) {
         // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
@@ -242,7 +242,7 @@ public class Initializer {
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
             loggingPolicy: loggingPolicy,
-            torMode: torMode
+            isTorEnabled: isTorEnabled
         )
 
         self.init(
@@ -255,7 +255,7 @@ public class Initializer {
             alias: alias,
             urlsParsingError: parsingError,
             loggingPolicy: loggingPolicy,
-            torMode: torMode
+            isTorEnabled: isTorEnabled
         )
     }
     
@@ -269,7 +269,7 @@ public class Initializer {
         alias: ZcashSynchronizerAlias,
         urlsParsingError: ZcashError?,
         loggingPolicy: LoggingPolicy = .default(.debug),
-        torMode: SDKFlagTorMode
+        isTorEnabled: Bool
     ) {
         self.container = container
         self.cacheDbURL = cacheDbURL
@@ -308,7 +308,7 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
         loggingPolicy: LoggingPolicy = .default(.debug),
-        torMode: SDKFlagTorMode
+        isTorEnabled: Bool
     ) -> (URLs, ZcashError?) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
@@ -330,7 +330,7 @@ public class Initializer {
             networkType: network.networkType,
             endpoint: endpoint,
             loggingPolicy: loggingPolicy,
-            torMode: torMode
+            isTorEnabled: isTorEnabled
         )
         
         return (updatedURLs, parsingError)

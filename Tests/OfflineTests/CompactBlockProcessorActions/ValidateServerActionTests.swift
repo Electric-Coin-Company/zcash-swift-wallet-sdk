@@ -152,7 +152,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
-        mockContainer.mock(type: SDKFlags.self, isSingleton: true) { _ in SDKFlags(torEnabled: false, exchangeRateEnabled: false) }
+        mockContainer.mock(type: SDKFlags.self, isSingleton: true) { _ in SDKFlags(torEnabled: false) }
 
         return ValidateServerAction(
             container: mockContainer,

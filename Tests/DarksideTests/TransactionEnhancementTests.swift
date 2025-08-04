@@ -36,7 +36,7 @@ class TransactionEnhancementTests: ZcashTestCase {
     var afterReorgIdleNotification: XCTestExpectation!
     var txFoundNotificationExpectation: XCTestExpectation!
     var waitExpectation: XCTestExpectation!
-    let sdkFlags = SDKFlags(torEnabled: false, exchangeRateEnabled: false)
+    let sdkFlags = SDKFlags(torEnabled: false)
 
     override func setUp() async throws {
         try await super.setUp()
@@ -130,7 +130,7 @@ class TransactionEnhancementTests: ZcashTestCase {
             networkType: .testnet,
             endpoint: LightWalletEndpointBuilder.default,
             loggingPolicy: .default(.debug),
-            torMode: .none
+            isTorEnabled: false
         )
         
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in

@@ -80,7 +80,7 @@ class TestCoordinator {
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             alias: alias,
             loggingPolicy: .default(.debug),
-            torMode: .none
+            isTorEnabled: false
         )
 
         let derivationTool = DerivationTool(networkType: network.networkType)

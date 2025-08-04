@@ -51,7 +51,7 @@ class WalletTests: ZcashTestCase {
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            torMode: .none
+            isTorEnabled: false
         )
         
         let synchronizer = SDKSynchronizer(initializer: wallet)

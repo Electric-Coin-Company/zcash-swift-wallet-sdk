@@ -604,8 +604,8 @@ public class SDKSynchronizer: Synchronizer {
     /// Fetches the latest ZEC-USD exchange rate.
     public func refreshExchangeRateUSD() {
         Task {
-            // ignore when rate is not enabled
-            guard await sdkFlags.exchangeRateEnabled else {
+            // ignore when Tor is not enabled
+            guard await sdkFlags.torEnabled else {
                 return
             }
             
@@ -940,10 +940,24 @@ public class SDKSynchronizer: Synchronizer {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
     
-    public func tor(mode: SDKFlagTorMode) async throws {
-        if mode == .none {
+    public func tor(enabled: Bool) async throws {
+        // get the previous state of Tor
+        let isTorEnabled = await sdkFlags.torEnabled
+        
+        // ignore when previous was disabled and is expected to be disabled
+        // OR when previous is enabled and is expected to be enabled
+        if isTorEnabled == enabled {
+            return
+        }
+        
+        // case when previous was disabled and newly is required to be enabled
+        if !isTorEnabled && enabled {
+            let torClient = initializer.container.resolve(TorClient.self)
+            try await torClient.prepare()
+
+            await sdkFlags.torFlagUpdate(true)
+        } else {
             await sdkFlags.torFlagUpdate(false)
-            await sdkFlags.exchangeRateFlagUpdate(false)
             await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
 
             // case when previous was enabled and newly is required to be stopped
@@ -955,12 +969,6 @@ public class SDKSynchronizer: Synchronizer {
             // close all connections
             let lwdService = initializer.container.resolve(LightWalletService.self)
             await lwdService.closeConnections()
-        } else {
-            let torClient = initializer.container.resolve(TorClient.self)
-            try await torClient.prepare()
-
-            await sdkFlags.torFlagUpdate(mode == .all)
-            await sdkFlags.exchangeRateFlagUpdate(mode == .exchangeRate)
         }
     }
     

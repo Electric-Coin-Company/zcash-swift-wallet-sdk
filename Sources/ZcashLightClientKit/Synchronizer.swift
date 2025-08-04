@@ -423,6 +423,7 @@ public protocol Synchronizer: AnyObject {
     ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
     ///    - kServers: The required number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
+    // swiftlint:disable:next function_parameter_count
     func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         fetchThresholdSeconds: Double,
@@ -437,9 +438,9 @@ public protocol Synchronizer: AnyObject {
     
     /// Allows to setup the Tor opt-in/out runtime.
     /// - Parameters:
-    ///    - mode: When not `.none`, the SDK ensures `TorClient` is ready. When `.none`, the SDK ensures previous TorClients are properly disabled and deinitialized.
+    ///    - enabled: When true, the SDK ensures `TorClient` is ready. When false, the SDk ensures previous TorClients are properly disabled and deinitialized.
     /// - Throws: ZcashError when failures of the `TorClient` occur
-    func tor(mode: SDKFlagTorMode) async throws
+    func tor(enabled: Bool) async throws
     
     /// Init of the SDK must always happen but initialization of `TorClient` can fail. This failure is designed to not block SDK initialization.
     /// Instead, a result of the initialization is stored in the `SDKFLags`
