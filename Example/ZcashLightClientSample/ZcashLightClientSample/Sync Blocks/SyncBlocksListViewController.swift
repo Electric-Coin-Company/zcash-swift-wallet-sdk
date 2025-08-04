@@ -112,7 +112,8 @@ class SyncBlocksListViewController: UIViewController {
             saplingParamsSourceURL: SaplingParamsSourceURL.default,
             alias: data.alias,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
 
         return SDKSynchronizer(initializer: initializer)

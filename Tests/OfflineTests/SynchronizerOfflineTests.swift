@@ -267,7 +267,8 @@ class SynchronizerOfflineTests: ZcashTestCase {
             saplingParamsSourceURL: .default,
             alias: .default,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
 
         XCTAssertNotNil(initializer.urlsParsingError)
@@ -304,7 +305,8 @@ class SynchronizerOfflineTests: ZcashTestCase {
             saplingParamsSourceURL: .default,
             alias: .default,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
 
         XCTAssertNotNil(initializer.urlsParsingError)

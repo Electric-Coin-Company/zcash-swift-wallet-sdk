@@ -39,7 +39,8 @@ class InitializerOfflineTests: XCTestCase {
             saplingParamsSourceURL: .default,
             alias: alias,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
     }
 

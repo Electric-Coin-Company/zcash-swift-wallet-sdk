@@ -605,7 +605,7 @@ public class SDKSynchronizer: Synchronizer {
     public func refreshExchangeRateUSD() {
         Task {
             // ignore when Tor is not enabled
-            guard await sdkFlags.torEnabled else {
+            guard await sdkFlags.exchangeRateEnabled else {
                 return
             }
             
@@ -941,35 +941,54 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func tor(enabled: Bool) async throws {
-        // get the previous state of Tor
+        let isExchangeRateEnabled = await sdkFlags.exchangeRateEnabled
+
+        // turn Tor on
+        if enabled && !isExchangeRateEnabled {
+            try await enableAndStartupTorClient()
+        }
+
+        // turn Tor off
+        if !enabled && !isExchangeRateEnabled {
+            try await disableAndCleaupTorClients()
+        }
+
+        await sdkFlags.torFlagUpdate(enabled)
+    }
+
+    public func exchangeRateOverTor(enabled: Bool) async throws {
         let isTorEnabled = await sdkFlags.torEnabled
-        
-        // ignore when previous was disabled and is expected to be disabled
-        // OR when previous is enabled and is expected to be enabled
-        if isTorEnabled == enabled {
-            return
-        }
-        
-        // case when previous was disabled and newly is required to be enabled
-        if !isTorEnabled && enabled {
-            let torClient = initializer.container.resolve(TorClient.self)
-            try await torClient.prepare()
 
-            await sdkFlags.torFlagUpdate(true)
-        } else {
-            await sdkFlags.torFlagUpdate(false)
-            await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
-
-            // case when previous was enabled and newly is required to be stopped
-            let torClient = initializer.container.resolve(TorClient.self)
-            // close of the initial TorClient, it's used for creation of isolated clients
-            try await torClient.close()
-            // deinit of isolated TorClient used for fetching exchange rates
-            tor = nil
-            // close all connections
-            let lwdService = initializer.container.resolve(LightWalletService.self)
-            await lwdService.closeConnections()
+        // turn Tor on
+        if enabled && !isTorEnabled {
+            try await enableAndStartupTorClient()
         }
+
+        // turn Tor off
+        if !enabled && !isTorEnabled {
+            try await disableAndCleaupTorClients()
+        }
+
+        await sdkFlags.exchangeRateFlagUpdate(enabled)
+    }
+    
+    private func enableAndStartupTorClient() async throws {
+        let torClient = initializer.container.resolve(TorClient.self)
+        try await torClient.prepare()
+    }
+    
+    private func disableAndCleaupTorClients() async throws {
+        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
+
+        // case when previous was enabled and newly is required to be stopped
+        let torClient = initializer.container.resolve(TorClient.self)
+        // close of the initial TorClient, it's used for creation of isolated clients
+        try await torClient.close()
+        // deinit of isolated TorClient used for fetching exchange rates
+        tor = nil
+        // close all connections
+        let lwdService = initializer.container.resolve(LightWalletService.self)
+        await lwdService.closeConnections()
     }
     
     public func isTorSuccessfullyInitialized() async -> Bool? {

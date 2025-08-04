@@ -13,6 +13,10 @@ actor SDKFlags {
     /// Accessible only internally inside the SDK to control the connection
     var torEnabled: Bool
     
+    /// `exchangeRateEnabled` controls whether fetch of exnchage rate is enabled or disabled.
+    /// When enabled, the `TorClient` is initialized but is not used for lwdService calls.
+    var exchangeRateEnabled: Bool
+    
     /// This flag communicates state of initialization of `TorClient`
     /// `nil` = the attempt to initialize `TorClient` hasn't been initiated
     /// `false` = initialization of `TorClient` failed
@@ -20,9 +24,11 @@ actor SDKFlags {
     var torClientInitializationSuccessfullyDone: Bool?
     
     init(
-        torEnabled: Bool
+        torEnabled: Bool,
+        exchangeRateEnabled: Bool
     ) {
         self.torEnabled = torEnabled
+        self.exchangeRateEnabled = exchangeRateEnabled
     }
     
     /// Helper method that wraps the decision logic for `ServiceMode`.
@@ -34,6 +40,11 @@ actor SDKFlags {
     /// Use to update the `torEnabled` flag
     func torFlagUpdate(_ newFlag: Bool) {
         torEnabled = newFlag
+    }
+    
+    // Use to update the `exchangeRateEnabled` flag
+    func exchangeRateFlagUpdate(_ newFlag: Bool) {
+        exchangeRateEnabled = newFlag
     }
     
     /// Use to update the `torClientInitializationSuccessfullyDone` flag
