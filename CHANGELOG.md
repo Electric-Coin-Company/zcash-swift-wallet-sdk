@@ -10,11 +10,13 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `latencyThresholdMillis` parameter was removed from `Synchronizer.evaluateBestOf()` method. The algorithm of servers evaluation was changed to always require `kServers` to be returned.
 
 ## Updated
-- `Initializer.init(..., isTorEnabled: Bool)` The initializer has been updated to include a flag that controls whether the SDK opts in or out of Tor usage.
+- `Initializer.init(..., isTorEnabled: Bool, isExchangeRateEnabled: Bool)` The initializer has been updated to include flags that control Tor setup.
 
 ## Added
-- `func tor(enabled: Bool)` A function that allows clients to configure Tor usage.
+- `func tor(enabled: Bool)` A function that allows clients to configure Tor usage for lwd and http calls.
+- `func exchangeRateOverTor(enabled: Bool)` A function that allows clients to configure Tor usage for exchange rate.
 - `func isTorSuccessfullyInitialized() async -> Bool?` A function that returns the result of the TorClient initialization. A nil value indicates that initialization has not been initiated. True/false represents success or failure, respectively.
+- `ZcashTransaction.Overview state` that holds information whether the transaction has been confirmed or expired or is still pending.
 
 # 2.2.17 - 2025-06-16
 
