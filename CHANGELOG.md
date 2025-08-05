@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.httpRequestOverTor(for request: URLRequest, retryLimit: UInt8)` New public API for http requests done via Tor.
+
 # 2.3 - 2025-08-05
 
 ## Removed
