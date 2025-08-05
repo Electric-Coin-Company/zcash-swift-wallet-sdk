@@ -1000,7 +1000,7 @@ public class SDKSynchronizer: Synchronizer {
         if tor == nil {
             logger.info("Bootstrapping Tor client for making http requests")
             if let torService = initializer.container.resolve(LightWalletService.self) as? LightWalletGRPCServiceOverTor {
-                tor = try await torService.tor?.isolatedClient()
+                tor = try await torService.tor.isolatedClient()
             }
         }
         
