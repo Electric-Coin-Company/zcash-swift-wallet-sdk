@@ -23,7 +23,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
     var finishedNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    let sdkFlags = SDKFlags(torEnabled: false)
+    let sdkFlags = SDKFlags(torEnabled: false, exchangeRateEnabled: false)
 
     let testFileManager = FileManager()
 
@@ -82,7 +82,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
             networkType: .testnet,
             endpoint: LightWalletEndpointBuilder.default,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
         
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in

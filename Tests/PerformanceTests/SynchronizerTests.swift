@@ -73,7 +73,8 @@ class SynchronizerTests: ZcashTestCase {
                 saplingParamsSourceURL: SaplingParamsSourceURL.tests,
                 alias: .default,
                 loggingPolicy: .default(.debug),
-                isTorEnabled: false
+                isTorEnabled: false,
+                isExchangeRateEnabled: false
             )
             
             try? FileManager.default.removeItem(at: databases.fsCacheDbRoot)

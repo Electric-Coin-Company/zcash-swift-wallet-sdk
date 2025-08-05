@@ -26,7 +26,7 @@ class CompactBlockReorgTests: ZcashTestCase {
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    let sdkFlags = SDKFlags(torEnabled: false)
+    let sdkFlags = SDKFlags(torEnabled: false, exchangeRateEnabled: false)
 
     override func setUp() async throws {
         try await super.setUp()
@@ -105,7 +105,8 @@ class CompactBlockReorgTests: ZcashTestCase {
             networkType: .testnet,
             endpoint: LightWalletEndpointBuilder.default,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
         
         self.rustBackendMockHelper.rustBackendMock.putSaplingSubtreeRootsStartIndexRootsClosure = { _, _ in }

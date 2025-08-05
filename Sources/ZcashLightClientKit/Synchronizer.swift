@@ -438,10 +438,16 @@ public protocol Synchronizer: AnyObject {
     
     /// Allows to setup the Tor opt-in/out runtime.
     /// - Parameters:
-    ///    - enabled: When true, the SDK ensures `TorClient` is ready. When false, the SDk ensures previous TorClients are properly disabled and deinitialized.
+    ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls http and lwd service calls.
     /// - Throws: ZcashError when failures of the `TorClient` occur
     func tor(enabled: Bool) async throws
-    
+
+    /// Allows to setup exchange rate over Tor.
+    /// - Parameters:
+    ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls whether exchange rate feature is possible to use or not.
+    /// - Throws: ZcashError when failures of the `TorClient` occur
+    func exchangeRateOverTor(enabled: Bool) async throws
+
     /// Init of the SDK must always happen but initialization of `TorClient` can fail. This failure is designed to not block SDK initialization.
     /// Instead, a result of the initialization is stored in the `SDKFLags`
     /// - Returns: nil, the initialization hasn't been initiated, true/false = initialization succeeded/failed

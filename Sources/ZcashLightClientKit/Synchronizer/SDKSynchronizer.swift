@@ -530,19 +530,42 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
-        try await transactionRepository.findReceived(offset: 0, limit: Int.max)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.findReceived(offset: 0, limit: Int.max)
+        )
     }
 
     public func allTransactions() async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        )
     }
 
     public func allSentTransactions() async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.findSent(offset: 0, limit: Int.max)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.findSent(offset: 0, limit: Int.max)
+        )
     }
 
     public func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
-        return try await transactionRepository.find(from: transaction, limit: limit, kind: .all)
+        try await enhanceRawTransactionsWithState(
+            rawTransactions: try await transactionRepository.find(from: transaction, limit: limit, kind: .all)
+        )
+    }
+    
+    private func enhanceRawTransactionsWithState(rawTransactions: [ZcashTransaction.Overview]) async throws -> [ZcashTransaction.Overview] {
+        var latestKnownBlockHeight = await latestBlocksDataProvider.latestBlockHeight
+        if latestKnownBlockHeight == 0 {
+            latestKnownBlockHeight = try await initializer.rustBackend.maxScannedHeight() ?? .zero
+        }
+        
+        return rawTransactions.map { rawTransaction in
+            var copyOfRawTransaction = rawTransaction
+            
+            copyOfRawTransaction.state = rawTransaction.getState(for: latestKnownBlockHeight)
+            
+            return copyOfRawTransaction
+        }
     }
 
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -582,7 +605,7 @@ public class SDKSynchronizer: Synchronizer {
     public func refreshExchangeRateUSD() {
         Task {
             // ignore when Tor is not enabled
-            guard await sdkFlags.torEnabled else {
+            guard await sdkFlags.exchangeRateEnabled else {
                 return
             }
             
@@ -918,35 +941,54 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func tor(enabled: Bool) async throws {
-        // get the previous state of Tor
-        let isTorEnabled = await sdkFlags.torEnabled
-        
-        // ignore when previous was disabled and is expected to be disabled
-        // OR when previous is enabled and is expected to be enabled
-        if isTorEnabled == enabled {
-            return
-        }
-        
-        // case when previous was disabled and newly is required to be enabled
-        if !isTorEnabled && enabled {
-            let torClient = initializer.container.resolve(TorClient.self)
-            try await torClient.prepare()
-            
-            await sdkFlags.torFlagUpdate(true)
-        } else {
-            await sdkFlags.torFlagUpdate(false)
-            await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
+        let isExchangeRateEnabled = await sdkFlags.exchangeRateEnabled
 
-            // case when previous was enabled and newly is required to be stopped
-            let torClient = initializer.container.resolve(TorClient.self)
-            // close of the initial TorClient, it's used for creation of isolated clients
-            try await torClient.close()
-            // deinit of isolated TorClient used for fetching exchange rates
-            tor = nil
-            // close all connections
-            let lwdService = initializer.container.resolve(LightWalletService.self)
-            await lwdService.closeConnections()
+        // turn Tor on
+        if enabled && !isExchangeRateEnabled {
+            try await enableAndStartupTorClient()
         }
+
+        // turn Tor off
+        if !enabled && !isExchangeRateEnabled {
+            try await disableAndCleaupTorClients()
+        }
+
+        await sdkFlags.torFlagUpdate(enabled)
+    }
+
+    public func exchangeRateOverTor(enabled: Bool) async throws {
+        let isTorEnabled = await sdkFlags.torEnabled
+
+        // turn Tor on
+        if enabled && !isTorEnabled {
+            try await enableAndStartupTorClient()
+        }
+
+        // turn Tor off
+        if !enabled && !isTorEnabled {
+            try await disableAndCleaupTorClients()
+        }
+
+        await sdkFlags.exchangeRateFlagUpdate(enabled)
+    }
+    
+    private func enableAndStartupTorClient() async throws {
+        let torClient = initializer.container.resolve(TorClient.self)
+        try await torClient.prepare()
+    }
+    
+    private func disableAndCleaupTorClients() async throws {
+        await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
+
+        // case when previous was enabled and newly is required to be stopped
+        let torClient = initializer.container.resolve(TorClient.self)
+        // close of the initial TorClient, it's used for creation of isolated clients
+        try await torClient.close()
+        // deinit of isolated TorClient used for fetching exchange rates
+        tor = nil
+        // close all connections
+        let lwdService = initializer.container.resolve(LightWalletService.self)
+        await lwdService.closeConnections()
     }
     
     public func isTorSuccessfullyInitialized() async -> Bool? {

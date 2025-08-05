@@ -68,7 +68,7 @@ public actor TorClient {
         }
         
         underlyingRuntime = runtimePtr
-        
+
         return runtimePtr
     }
 

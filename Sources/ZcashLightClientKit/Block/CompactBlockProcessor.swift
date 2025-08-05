@@ -67,7 +67,7 @@ actor CompactBlockProcessor {
         let rewindDistance: Int
         let walletBirthdayProvider: () -> BlockHeight
         var walletBirthday: BlockHeight { walletBirthdayProvider() }
-        let downloadBufferSize: Int = 10
+        let downloadBufferSize: Int = 100
         let network: ZcashNetwork
         let saplingActivation: BlockHeight
         let cacheDbURL: URL?

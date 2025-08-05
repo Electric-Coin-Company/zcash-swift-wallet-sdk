@@ -2175,6 +2175,25 @@ class SynchronizerMock: Synchronizer {
         try await torEnabledClosure!(enabled)
     }
 
+    // MARK: - exchangeRateOverTor
+
+    var exchangeRateOverTorEnabledThrowableError: Error?
+    var exchangeRateOverTorEnabledCallsCount = 0
+    var exchangeRateOverTorEnabledCalled: Bool {
+        return exchangeRateOverTorEnabledCallsCount > 0
+    }
+    var exchangeRateOverTorEnabledReceivedEnabled: Bool?
+    var exchangeRateOverTorEnabledClosure: ((Bool) async throws -> Void)?
+
+    func exchangeRateOverTor(enabled: Bool) async throws {
+        if let error = exchangeRateOverTorEnabledThrowableError {
+            throw error
+        }
+        exchangeRateOverTorEnabledCallsCount += 1
+        exchangeRateOverTorEnabledReceivedEnabled = enabled
+        try await exchangeRateOverTorEnabledClosure!(enabled)
+    }
+
     // MARK: - isTorSuccessfullyInitialized
 
     var isTorSuccessfullyInitializedCallsCount = 0

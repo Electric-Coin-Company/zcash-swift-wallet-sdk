@@ -32,7 +32,8 @@ class DownloadTests: ZcashTestCase {
             networkType: .testnet,
             endpoint: LightWalletEndpointBuilder.default,
             loggingPolicy: .default(.debug),
-            isTorEnabled: false
+            isTorEnabled: false,
+            isExchangeRateEnabled: false
         )
         
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
