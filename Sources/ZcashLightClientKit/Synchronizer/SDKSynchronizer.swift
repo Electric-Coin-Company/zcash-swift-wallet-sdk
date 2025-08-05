@@ -950,7 +950,7 @@ public class SDKSynchronizer: Synchronizer {
 
         // turn Tor off
         if !enabled && !isExchangeRateEnabled {
-            try await disableAndCleaupTorClients()
+            try await disableAndCleanupTorClients()
         }
 
         await sdkFlags.torFlagUpdate(enabled)
@@ -966,7 +966,7 @@ public class SDKSynchronizer: Synchronizer {
 
         // turn Tor off
         if !enabled && !isTorEnabled {
-            try await disableAndCleaupTorClients()
+            try await disableAndCleanupTorClients()
         }
 
         await sdkFlags.exchangeRateFlagUpdate(enabled)
@@ -977,7 +977,7 @@ public class SDKSynchronizer: Synchronizer {
         try await torClient.prepare()
     }
     
-    private func disableAndCleaupTorClients() async throws {
+    private func disableAndCleanupTorClients() async throws {
         await sdkFlags.torClientInitializationSuccessfullyDoneFlagUpdate(nil)
 
         // case when previous was enabled and newly is required to be stopped
