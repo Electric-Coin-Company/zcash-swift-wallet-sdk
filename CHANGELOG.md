@@ -6,7 +6,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-# 2.3 - 2025-07-30
+# 2.3 - 2025-08-05
 
 ## Removed
 - `latencyThresholdMillis` parameter was removed from `Synchronizer.evaluateBestOf()` method. The algorithm of servers evaluation was changed to always require `kServers` to be returned.
@@ -27,7 +27,7 @@ Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2962500.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3010000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3017500.json
 ````
 
 Testnet
@@ -35,7 +35,7 @@ Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3440000.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3510000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3520000.json
 ````
 
 # 2.2.17 - 2025-06-16
