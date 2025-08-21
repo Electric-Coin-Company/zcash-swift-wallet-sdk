@@ -118,7 +118,7 @@ public actor TorClient {
     ///
     /// - Parameter retryLimit: the maximum number of times that a failed request should be retried.
     ///             Set this to 0 to disable retries.
-    public func httpRequest(for request: URLRequest, retryLimit: UInt8) throws -> (Data, HTTPURLResponse) {
+    public func httpRequest(for request: URLRequest, retryLimit: UInt8) throws -> (data: Data, response: HTTPURLResponse) {
         let runtime = try resolveRuntime()
 
         let url = request.url
@@ -398,7 +398,7 @@ public class TorLwdConn {
 }
 
 extension FfiHttpResponseBytes {
-    func unsafeToResponse(url: URL) -> (Data, HTTPURLResponse)? {
+    func unsafeToResponse(url: URL) -> (data: Data, response: HTTPURLResponse)? {
         var headerFields: [String: String] = [:]
 
         for i in (0 ..< Int(headers_len)) {
@@ -432,11 +432,11 @@ extension FfiHttpResponseBytes {
         }
 
         return (
-            Data(
+            data: Data(
                 bytes: body_ptr,
                 count: Int(body_len)
             ),
-            response
+            response: response
         )
     }
 }

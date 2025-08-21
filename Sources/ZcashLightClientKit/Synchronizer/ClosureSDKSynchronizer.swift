@@ -268,6 +268,12 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         completion(height)
     }
 
+    public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8, completion: @escaping (Result<(data: Data, response: HTTPURLResponse), Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
+            try await self.synchronizer.httpRequestOverTor(for: request, retryLimit: retryLimit)
+        }
+    }
+    
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.
