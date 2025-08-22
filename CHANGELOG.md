@@ -6,8 +6,28 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.1 - 2025-08-22
+
 ## Added
 - `SDKSynchronizer.httpRequestOverTor(for request: URLRequest, retryLimit: UInt8)` New public API for http requests done via Tor.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3020000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3037500.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3530000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3550000.json
+````
 
 # 2.3 - 2025-08-05
 
