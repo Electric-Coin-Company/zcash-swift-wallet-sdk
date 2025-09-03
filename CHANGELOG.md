@@ -6,6 +6,27 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.2 - 2025-09-03
+
+## Fixed
+- This release fixes a potential false-positive in the `expired_unmined` column of the `v_transactions` view.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3040000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3050000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3560000.json
+````
+
 # 2.3.1 - 2025-08-22
 
 ## Added
