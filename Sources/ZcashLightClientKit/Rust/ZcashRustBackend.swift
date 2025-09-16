@@ -60,7 +60,7 @@ public struct ConfirmationsPolicy {
 
 struct ZcashRustBackend: ZcashRustBackendWelding {
     let confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
-    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy(trusted: 1, untrusted: 1, allowZeroConfShielding: false)
+    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
