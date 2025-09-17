@@ -50,11 +50,11 @@ public struct ConfirmationsPolicy {
     }
     
     public func toBackend() -> libzcashlc.ConfirmationsPolicy {
-        var libzcashlc_confirmations_policy = libzcashlc.ConfirmationsPolicy()
-        libzcashlc_confirmations_policy.trusted = self.trusted
-        libzcashlc_confirmations_policy.untrusted = self.untrusted
-        libzcashlc_confirmations_policy.allow_zero_conf_shielding = self.allowZeroConfShielding
-        return libzcashlc_confirmations_policy
+        var libzcashlcConfirmationsPolicy = libzcashlc.ConfirmationsPolicy()
+        libzcashlcConfirmationsPolicy.trusted = self.trusted
+        libzcashlcConfirmationsPolicy.untrusted = self.untrusted
+        libzcashlcConfirmationsPolicy.allow_zero_conf_shielding = self.allowZeroConfShielding
+        return libzcashlcConfirmationsPolicy
     }
 }
 
