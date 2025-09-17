@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.7 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -3001,28 +3001,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getVerifiedTransparentBalance
 
-    var getVerifiedTransparentBalanceAccountUUIDThrowableError: Error?
-    var getVerifiedTransparentBalanceAccountUUIDCallsCount = 0
-    var getVerifiedTransparentBalanceAccountUUIDCalled: Bool {
-        return getVerifiedTransparentBalanceAccountUUIDCallsCount > 0
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyThrowableError: Error?
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyCallsCount = 0
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyCalled: Bool {
+        return getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyCallsCount > 0
     }
-    var getVerifiedTransparentBalanceAccountUUIDReceivedAccountUUID: AccountUUID?
-    var getVerifiedTransparentBalanceAccountUUIDReturnValue: Int64!
-    var getVerifiedTransparentBalanceAccountUUIDClosure: ((AccountUUID) async throws -> Int64)?
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyReceivedArguments: (accountUUID: AccountUUID, shieldingConfirmationsPolicy: ConfirmationsPolicy)?
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyReturnValue: Int64!
+    var getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyClosure: ((AccountUUID, ConfirmationsPolicy) async throws -> Int64)?
 
-    func getVerifiedTransparentBalance(
-        accountUUID: AccountUUID,
-        shieldingConfirmationsPolicy: ConfirmationsPolicy
-    ) async throws -> Int64 {
-        if let error = getVerifiedTransparentBalanceAccountUUIDThrowableError {
+    func getVerifiedTransparentBalance(accountUUID: AccountUUID, shieldingConfirmationsPolicy: ConfirmationsPolicy) async throws -> Int64 {
+        if let error = getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyThrowableError {
             throw error
         }
-        getVerifiedTransparentBalanceAccountUUIDCallsCount += 1
-        getVerifiedTransparentBalanceAccountUUIDReceivedAccountUUID = accountUUID
-        if let closure = getVerifiedTransparentBalanceAccountUUIDClosure {
-            return try await closure(accountUUID)
+        getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyCallsCount += 1
+        getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyReceivedArguments = (accountUUID: accountUUID, shieldingConfirmationsPolicy: shieldingConfirmationsPolicy)
+        if let closure = getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyClosure {
+            return try await closure(accountUUID, shieldingConfirmationsPolicy)
         } else {
-            return getVerifiedTransparentBalanceAccountUUIDReturnValue
+            return getVerifiedTransparentBalanceAccountUUIDShieldingConfirmationsPolicyReturnValue
         }
     }
 
@@ -3172,23 +3169,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getWalletSummary
 
-    var getWalletSummaryThrowableError: Error?
-    var getWalletSummaryCallsCount = 0
-    var getWalletSummaryCalled: Bool {
-        return getWalletSummaryCallsCount > 0
+    var getWalletSummaryConfirmationsPolicyThrowableError: Error?
+    var getWalletSummaryConfirmationsPolicyCallsCount = 0
+    var getWalletSummaryConfirmationsPolicyCalled: Bool {
+        return getWalletSummaryConfirmationsPolicyCallsCount > 0
     }
-    var getWalletSummaryReturnValue: WalletSummary?
-    var getWalletSummaryClosure: (() async throws -> WalletSummary?)?
+    var getWalletSummaryConfirmationsPolicyReceivedConfirmationsPolicy: ConfirmationsPolicy?
+    var getWalletSummaryConfirmationsPolicyReturnValue: WalletSummary?
+    var getWalletSummaryConfirmationsPolicyClosure: ((ConfirmationsPolicy) async throws -> WalletSummary?)?
 
-    func getWalletSummary() async throws -> WalletSummary? {
-        if let error = getWalletSummaryThrowableError {
+    func getWalletSummary(confirmationsPolicy: ConfirmationsPolicy) async throws -> WalletSummary? {
+        if let error = getWalletSummaryConfirmationsPolicyThrowableError {
             throw error
         }
-        getWalletSummaryCallsCount += 1
-        if let closure = getWalletSummaryClosure {
-            return try await closure()
+        getWalletSummaryConfirmationsPolicyCallsCount += 1
+        getWalletSummaryConfirmationsPolicyReceivedConfirmationsPolicy = confirmationsPolicy
+        if let closure = getWalletSummaryConfirmationsPolicyClosure {
+            return try await closure(confirmationsPolicy)
         } else {
-            return getWalletSummaryReturnValue
+            return getWalletSummaryConfirmationsPolicyReturnValue
         }
     }
 
@@ -3259,73 +3258,73 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - proposeTransfer
 
-    var proposeTransferAccountUUIDToValueMemoThrowableError: Error?
-    var proposeTransferAccountUUIDToValueMemoCallsCount = 0
-    var proposeTransferAccountUUIDToValueMemoCalled: Bool {
-        return proposeTransferAccountUUIDToValueMemoCallsCount > 0
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyThrowableError: Error?
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyCallsCount = 0
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyCalled: Bool {
+        return proposeTransferAccountUUIDToValueMemoConfirmationsPolicyCallsCount > 0
     }
-    var proposeTransferAccountUUIDToValueMemoReceivedArguments: (accountUUID: AccountUUID, address: String, value: Int64, memo: MemoBytes?)?
-    var proposeTransferAccountUUIDToValueMemoReturnValue: FfiProposal!
-    var proposeTransferAccountUUIDToValueMemoClosure: ((AccountUUID, String, Int64, MemoBytes?) async throws -> FfiProposal)?
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyReceivedArguments: (accountUUID: AccountUUID, address: String, value: Int64, memo: MemoBytes?, confirmationsPolicy: ConfirmationsPolicy)?
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyReturnValue: FfiProposal!
+    var proposeTransferAccountUUIDToValueMemoConfirmationsPolicyClosure: ((AccountUUID, String, Int64, MemoBytes?, ConfirmationsPolicy) async throws -> FfiProposal)?
 
-    func proposeTransfer(accountUUID: AccountUUID, to address: String, value: Int64, memo: MemoBytes?) async throws -> FfiProposal {
-        if let error = proposeTransferAccountUUIDToValueMemoThrowableError {
+    func proposeTransfer(accountUUID: AccountUUID, to address: String, value: Int64, memo: MemoBytes?, confirmationsPolicy: ConfirmationsPolicy) async throws -> FfiProposal {
+        if let error = proposeTransferAccountUUIDToValueMemoConfirmationsPolicyThrowableError {
             throw error
         }
-        proposeTransferAccountUUIDToValueMemoCallsCount += 1
-        proposeTransferAccountUUIDToValueMemoReceivedArguments = (accountUUID: accountUUID, address: address, value: value, memo: memo)
-        if let closure = proposeTransferAccountUUIDToValueMemoClosure {
-            return try await closure(accountUUID, address, value, memo)
+        proposeTransferAccountUUIDToValueMemoConfirmationsPolicyCallsCount += 1
+        proposeTransferAccountUUIDToValueMemoConfirmationsPolicyReceivedArguments = (accountUUID: accountUUID, address: address, value: value, memo: memo, confirmationsPolicy: confirmationsPolicy)
+        if let closure = proposeTransferAccountUUIDToValueMemoConfirmationsPolicyClosure {
+            return try await closure(accountUUID, address, value, memo, confirmationsPolicy)
         } else {
-            return proposeTransferAccountUUIDToValueMemoReturnValue
+            return proposeTransferAccountUUIDToValueMemoConfirmationsPolicyReturnValue
         }
     }
 
     // MARK: - proposeTransferFromURI
 
-    var proposeTransferFromURIAccountUUIDThrowableError: Error?
-    var proposeTransferFromURIAccountUUIDCallsCount = 0
-    var proposeTransferFromURIAccountUUIDCalled: Bool {
-        return proposeTransferFromURIAccountUUIDCallsCount > 0
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyThrowableError: Error?
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyCallsCount = 0
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyCalled: Bool {
+        return proposeTransferFromURIAccountUUIDConfirmationsPolicyCallsCount > 0
     }
-    var proposeTransferFromURIAccountUUIDReceivedArguments: (uri: String, accountUUID: AccountUUID)?
-    var proposeTransferFromURIAccountUUIDReturnValue: FfiProposal!
-    var proposeTransferFromURIAccountUUIDClosure: ((String, AccountUUID) async throws -> FfiProposal)?
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyReceivedArguments: (uri: String, accountUUID: AccountUUID, confirmationsPolicy: ConfirmationsPolicy)?
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyReturnValue: FfiProposal!
+    var proposeTransferFromURIAccountUUIDConfirmationsPolicyClosure: ((String, AccountUUID, ConfirmationsPolicy) async throws -> FfiProposal)?
 
-    func proposeTransferFromURI(_ uri: String, accountUUID: AccountUUID) async throws -> FfiProposal {
-        if let error = proposeTransferFromURIAccountUUIDThrowableError {
+    func proposeTransferFromURI(_ uri: String, accountUUID: AccountUUID, confirmationsPolicy: ConfirmationsPolicy) async throws -> FfiProposal {
+        if let error = proposeTransferFromURIAccountUUIDConfirmationsPolicyThrowableError {
             throw error
         }
-        proposeTransferFromURIAccountUUIDCallsCount += 1
-        proposeTransferFromURIAccountUUIDReceivedArguments = (uri: uri, accountUUID: accountUUID)
-        if let closure = proposeTransferFromURIAccountUUIDClosure {
-            return try await closure(uri, accountUUID)
+        proposeTransferFromURIAccountUUIDConfirmationsPolicyCallsCount += 1
+        proposeTransferFromURIAccountUUIDConfirmationsPolicyReceivedArguments = (uri: uri, accountUUID: accountUUID, confirmationsPolicy: confirmationsPolicy)
+        if let closure = proposeTransferFromURIAccountUUIDConfirmationsPolicyClosure {
+            return try await closure(uri, accountUUID, confirmationsPolicy)
         } else {
-            return proposeTransferFromURIAccountUUIDReturnValue
+            return proposeTransferFromURIAccountUUIDConfirmationsPolicyReturnValue
         }
     }
 
     // MARK: - proposeShielding
 
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError: Error?
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount = 0
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCalled: Bool {
-        return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount > 0
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyThrowableError: Error?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyCallsCount = 0
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyCalled: Bool {
+        return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyCallsCount > 0
     }
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReceivedArguments: (accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?)?
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReturnValue: FfiProposal?
-    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverClosure: ((AccountUUID, MemoBytes?, Zatoshi, String?) async throws -> FfiProposal?)?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyReceivedArguments: (accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?, shieldingConfirmationsPolicy: ConfirmationsPolicy)?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyReturnValue: FfiProposal?
+    var proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyClosure: ((AccountUUID, MemoBytes?, Zatoshi, String?, ConfirmationsPolicy) async throws -> FfiProposal?)?
 
-    func proposeShielding(accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?) async throws -> FfiProposal? {
-        if let error = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverThrowableError {
+    func proposeShielding(accountUUID: AccountUUID, memo: MemoBytes?, shieldingThreshold: Zatoshi, transparentReceiver: String?, shieldingConfirmationsPolicy: ConfirmationsPolicy) async throws -> FfiProposal? {
+        if let error = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyThrowableError {
             throw error
         }
-        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverCallsCount += 1
-        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReceivedArguments = (accountUUID: accountUUID, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver)
-        if let closure = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverClosure {
-            return try await closure(accountUUID, memo, shieldingThreshold, transparentReceiver)
+        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyCallsCount += 1
+        proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyReceivedArguments = (accountUUID: accountUUID, memo: memo, shieldingThreshold: shieldingThreshold, transparentReceiver: transparentReceiver, shieldingConfirmationsPolicy: shieldingConfirmationsPolicy)
+        if let closure = proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyClosure {
+            return try await closure(accountUUID, memo, shieldingThreshold, transparentReceiver, shieldingConfirmationsPolicy)
         } else {
-            return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverReturnValue
+            return proposeShieldingAccountUUIDMemoShieldingThresholdTransparentReceiverShieldingConfirmationsPolicyReturnValue
         }
     }
 
