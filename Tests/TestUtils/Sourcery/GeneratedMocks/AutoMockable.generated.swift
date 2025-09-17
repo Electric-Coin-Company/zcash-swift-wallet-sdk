@@ -3010,7 +3010,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var getVerifiedTransparentBalanceAccountUUIDReturnValue: Int64!
     var getVerifiedTransparentBalanceAccountUUIDClosure: ((AccountUUID) async throws -> Int64)?
 
-    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
+    func getVerifiedTransparentBalance(
+        accountUUID: AccountUUID,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy
+    ) async throws -> Int64 {
         if let error = getVerifiedTransparentBalanceAccountUUIDThrowableError {
             throw error
         }

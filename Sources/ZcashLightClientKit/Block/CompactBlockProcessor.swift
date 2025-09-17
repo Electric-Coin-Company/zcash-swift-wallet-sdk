@@ -721,7 +721,7 @@ extension CompactBlockProcessor {
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 
-        let walletSummary = try? await rustBackend.getWalletSummary()
+        let walletSummary = try? await rustBackend.getWalletSummary(confirmationsPolicy: ConfirmationsPolicy())
         await metrics.logCBPOverviewReport(logger, walletSummary: walletSummary)
 
         // If new blocks were mined during previous sync run the sync process again

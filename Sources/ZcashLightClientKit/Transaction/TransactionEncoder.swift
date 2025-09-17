@@ -25,6 +25,7 @@ protocol TransactionEncoder {
     /// - Parameter recipient: string containing the recipient's address.
     /// - Parameter amount: the amount to send in Zatoshi.
     /// - Parameter memoBytes: an optional memo to include as part of the proposal's transactions. Use `nil` when sending to transparent receivers otherwise the function will throw an error.
+    /// - Parameter confirmationsPolicy: the number of block confirmations before considering a note spendable from a trusted or untrusted source
     ///
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
@@ -32,7 +33,8 @@ protocol TransactionEncoder {
         accountUUID: AccountUUID,
         recipient: String,
         amount: Zatoshi,
-        memoBytes: MemoBytes?
+        memoBytes: MemoBytes?,
+        confirmationsPolicy: ConfirmationsPolicy
     ) async throws -> Proposal
 
     /// Creates a proposal for shielding any transparent funds received by the given account.
@@ -44,6 +46,7 @@ protocol TransactionEncoder {
     ///             that should be the source of transparent funds. Default is `nil` which
     ///             will select whichever of the account's transparent receivers has funds
     ///             to shield.
+    /// - Parameter shieldingConfirmationsPolicy: the number of block confirmations before considering a note spendable from a trusted or untrusted source
     ///
     /// Returns the proposal, or `nil` if the transparent balance that would be shielded
     /// is zero or below `shieldingThreshold`.
@@ -54,7 +57,8 @@ protocol TransactionEncoder {
         accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
-        transparentReceiver: String?
+        transparentReceiver: String?,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy
     ) async throws -> Proposal?
 
     /// Creates the transactions in the given proposal.
@@ -79,12 +83,14 @@ protocol TransactionEncoder {
     /// - Parameters:
     /// - Parameter uri: a valid ZIP-321 payment URI.
     /// - Parameter accountUUID: the account the proposal should be made from.
+    /// - Parameter confirmationsPolicy: the number of block confirmations before considering a note spendable from a trusted or untrusted source
     /// - Throws:
     ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
     ///     - Some `ZcashError.rust*` if the creation of transaction fails.
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountUUID: AccountUUID
+        accountUUID: AccountUUID,
+        confirmationsPolicy: ConfirmationsPolicy
     ) async throws -> Proposal
 
     /// submits a transaction to the Zcash peer-to-peer network.

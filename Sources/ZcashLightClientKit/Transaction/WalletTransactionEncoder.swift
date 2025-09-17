@@ -65,13 +65,15 @@ class WalletTransactionEncoder: TransactionEncoder {
         accountUUID: AccountUUID,
         recipient: String,
         amount: Zatoshi,
-        memoBytes: MemoBytes?
+        memoBytes: MemoBytes?,
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransfer(
             accountUUID: accountUUID,
             to: recipient,
             value: amount.amount,
-            memo: memoBytes
+            memo: memoBytes,
+            confirmationsPolicy: confirmationsPolicy
         )
 
         return Proposal(inner: proposal)
@@ -81,13 +83,15 @@ class WalletTransactionEncoder: TransactionEncoder {
         accountUUID: AccountUUID,
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
-        transparentReceiver: String? = nil
+        transparentReceiver: String? = nil,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
     ) async throws -> Proposal? {
         guard let proposal = try await rustBackend.proposeShielding(
             accountUUID: accountUUID,
             memo: memoBytes,
             shieldingThreshold: shieldingThreshold,
-            transparentReceiver: transparentReceiver
+            transparentReceiver: transparentReceiver,
+            shieldingConfirmationsPolicy: shieldingConfirmationsPolicy
         ) else { return nil }
 
         return Proposal(inner: proposal)
@@ -95,11 +99,13 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
-        accountUUID: AccountUUID
+        accountUUID: AccountUUID,
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransferFromURI(
             uri,
-            accountUUID: accountUUID
+            accountUUID: accountUUID,
+            confirmationsPolicy: confirmationsPolicy
         )
         return Proposal(inner: proposal)
     }

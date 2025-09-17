@@ -144,10 +144,14 @@ protocol ZcashRustBackendWelding {
 
     /// Get the verified cached transparent balance for the given account
     /// - parameter account: account index to query the balance for.
+    /// - parameter shieldingConfirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
     /// - Throws:
     ///     - `rustGetVerifiedTransparentBalanceNegativeAccount` if `account` is < 0.
     ///     - `rustGetVerifiedTransparentBalance` if rust layer returns error.
-    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64
+    func getVerifiedTransparentBalance(
+        accountUUID: AccountUUID,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy
+    ) async throws -> Int64
 
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter height: height to rewind to.
@@ -187,7 +191,8 @@ protocol ZcashRustBackendWelding {
     func maxScannedHeight() async throws -> BlockHeight?
 
     /// Returns the account balances and sync status of the wallet.
-    func getWalletSummary() async throws -> WalletSummary?
+    /// - parameter confirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
+    func getWalletSummary(confirmationsPolicy: ConfirmationsPolicy) async throws -> WalletSummary?
 
     /// Returns a list of suggested scan ranges based upon the current wallet state.
     ///
@@ -243,12 +248,14 @@ protocol ZcashRustBackendWelding {
     /// - Parameter to: recipient address
     /// - Parameter value: transaction amount in Zatoshi
     /// - Parameter memo: the `MemoBytes` for this transaction. pass `nil` when sending to transparent receivers
+    /// - Parameter confirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
     /// - Throws: `rustCreateToAddress`.
     func proposeTransfer(
         accountUUID: AccountUUID,
         to address: String,
         value: Int64,
-        memo: MemoBytes?
+        memo: MemoBytes?,
+        confirmationsPolicy: ConfirmationsPolicy
     ) async throws -> FfiProposal
 
     /// Select transaction inputs, compute fees, and construct a proposal for a transaction
@@ -257,10 +264,12 @@ protocol ZcashRustBackendWelding {
     ///
     /// - parameter uri: the URI String that the proposal will be made from.
     /// - parameter account: index of the given account
+    /// - Parameter confirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
     /// - Throws: `rustCreateToAddress`.
     func proposeTransferFromURI(
         _ uri: String,
-        accountUUID: AccountUUID
+        accountUUID: AccountUUID,
+        confirmationsPolicy: ConfirmationsPolicy
     ) async throws -> FfiProposal
 
     /// Constructs a transaction proposal to shield all found UTXOs in data db for the given account,
@@ -276,12 +285,14 @@ protocol ZcashRustBackendWelding {
     ///             that should be the source of transparent funds. Default is `nil` which
     ///             will select whichever of the account's transparent receivers has funds
     ///             to shield.
+    /// - Parameter shieldingConfirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
     /// - Throws: `rustShieldFunds` if rust layer returns error.
     func proposeShielding(
         accountUUID: AccountUUID,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
-        transparentReceiver: String?
+        transparentReceiver: String?,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy
     ) async throws -> FfiProposal?
 
     /// Creates a transaction from the given proposal.
