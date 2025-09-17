@@ -139,8 +139,8 @@ class DerivationToolMainnetTests: XCTestCase {
     func testDeriveArbitraryWalletKeyTestVector() throws {
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
         let contextString = [UInt8]("Zcash test vectors".utf8)
-        let seed = Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!.bytes
-        let expectedKey = Data(fromHexEncodedString: "e9da8806409dc3c3ebd1fc2a71c879c13dd7aa93ede803bf1a83414b9d3b158a")!.bytes
+        let seed: [UInt8] = Array(Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)
+        let expectedKey: [UInt8] = Array(Data(fromHexEncodedString: "e9da8806409dc3c3ebd1fc2a71c879c13dd7aa93ede803bf1a83414b9d3b158a")!)
         let key = try DerivationTool.deriveArbitraryWalletKey(contextString: contextString, seed: seed)
         XCTAssertEqual(key, expectedKey)
     }
@@ -148,8 +148,8 @@ class DerivationToolMainnetTests: XCTestCase {
     func testDeriveArbitraryAccountKeyTestVector() throws {
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
         let contextString = [UInt8]("Zcash test vectors".utf8)
-        let seed = Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!.bytes
-        let expectedKey = Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!.bytes
+        let seed: [UInt8] = Array(Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)
+        let expectedKey = Array(Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!)
         let key = try DerivationTool(networkType: .mainnet).deriveArbitraryAccountKey(
             contextString: contextString,
             seed: seed,
