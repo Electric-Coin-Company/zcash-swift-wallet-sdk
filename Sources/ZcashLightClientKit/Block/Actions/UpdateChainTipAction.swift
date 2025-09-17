@@ -46,6 +46,7 @@ extension UpdateChainTipAction: Action {
         if await context.prevState == .updateSubtreeRoots || now - lastChainTipUpdateTime > 600 {
             await downloader.stopDownload()
             try await updateChainTip(context, time: now)
+            await sdkFlags.markChainTipAsUpdated()
             await context.update(state: .clearCache)
         } else if await context.prevState == .txResubmission {
             await context.update(state: .download)
