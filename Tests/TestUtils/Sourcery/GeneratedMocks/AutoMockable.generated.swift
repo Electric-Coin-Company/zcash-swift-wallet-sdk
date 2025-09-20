@@ -1060,6 +1060,28 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - getMempoolStream
+
+    var getMempoolStreamThrowableError: Error?
+    var getMempoolStreamCallsCount = 0
+    var getMempoolStreamCalled: Bool {
+        return getMempoolStreamCallsCount > 0
+    }
+    var getMempoolStreamReturnValue: AsyncThrowingStream<RawTransaction, Error>!
+    var getMempoolStreamClosure: (() throws -> AsyncThrowingStream<RawTransaction, Error>)?
+
+    func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, Error> {
+        if let error = getMempoolStreamThrowableError {
+            throw error
+        }
+        getMempoolStreamCallsCount += 1
+        if let closure = getMempoolStreamClosure {
+            return try closure()
+        } else {
+            return getMempoolStreamReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 

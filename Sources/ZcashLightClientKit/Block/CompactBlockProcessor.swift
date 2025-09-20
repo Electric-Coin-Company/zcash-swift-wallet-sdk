@@ -20,6 +20,7 @@ actor CompactBlockProcessor {
     private var eventClosures: [String: EventClosure] = [:]
 
     private var syncTask: Task<Void, Error>?
+    private var mempoolDetectionTask: Task<Void, Error>?
 
     private let actions: [CBPState: Action]
     var context: ActionContext
@@ -201,6 +202,8 @@ actor CompactBlockProcessor {
     deinit {
         syncTask?.cancel()
         syncTask = nil
+        mempoolDetectionTask?.cancel()
+        mempoolDetectionTask = nil
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -278,10 +281,15 @@ extension CompactBlockProcessor {
         syncTask = Task(priority: .userInitiated) {
             await run()
         }
+        
+        mempoolDetectionTask = Task {
+            await watchMempool()
+        }
     }
 
     func stop() async {
         syncTask?.cancel()
+        mempoolDetectionTask?.cancel()
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         await stopAllActions()
@@ -364,6 +372,59 @@ private extension CompactBlockProcessor {
         } else {
             throw ZcashError.compactBlockProcessorDownloadBlockActionRewind
         }
+    }
+}
+
+// MARK: - Mempool Detection
+
+extension CompactBlockProcessor {
+    func watchMempool() async {
+        while !Task.isCancelled {
+            do {
+                try await consumeMempoolStream()
+                
+                try await Task.sleep(nanoseconds: 500_000_000)
+            } catch {
+            }
+        }
+    }
+    
+    func consumeMempoolStream() async throws {
+        let stream = try service.getMempoolStream()
+
+        do {
+            for try await rawTransaction in stream {
+                let mempoolTransactions = try await resolveMempools(rawTransaction: rawTransaction)
+                
+                if !mempoolTransactions.isEmpty {
+                    let height = BlockHeight(rawTransaction.height)
+                    await send(event: .foundTransactions(mempoolTransactions, .init(uncheckedBounds: (lower: height, upper: height))))
+                }
+            }
+        } catch {
+        }
+    }
+    
+    @DBActor
+    func resolveMempools(rawTransaction: RawTransaction) async throws -> [ZcashTransaction.Overview] {
+        let allBefore = try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        
+        let minedHeight = (rawTransaction.height == 0 || rawTransaction.height > UInt32.max)
+        ? nil : UInt32(rawTransaction.height)
+
+        try await rustBackend.decryptAndStoreTransaction(
+            txBytes: rawTransaction.data.bytes,
+            minedHeight: minedHeight
+        )
+        
+        let allAfter = try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
+        
+        if allBefore.count != allAfter.count {
+            let aIDs = Set(allBefore.map { $0.id })
+            return allAfter.filter { !aIDs.contains($0.id) }
+        }
+        
+        return []
     }
 }
 
