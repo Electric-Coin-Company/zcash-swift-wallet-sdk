@@ -286,7 +286,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?,
-        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
@@ -315,7 +315,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     func proposeTransferFromURI(
         _ uri: String,
         accountUUID: AccountUUID,
-        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
@@ -932,7 +932,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getWalletSummary(confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()) async throws -> WalletSummary? {
+    func getWalletSummary(
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
+    ) async throws -> WalletSummary? {
         let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, confirmationsPolicy.toBackend())
 
         guard let summaryPtr else {

@@ -144,7 +144,8 @@ protocol ZcashRustBackendWelding {
 
     /// Get the verified cached transparent balance for the given account
     /// - parameter account: account index to query the balance for.
-    /// - parameter shieldingConfirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
+    /// - parameter shieldingConfirmationsPolicy: the number of block confirmations to require
+    ///             to shield UTXOs from trusted and untrusted sources
     /// - Throws:
     ///     - `rustGetVerifiedTransparentBalanceNegativeAccount` if `account` is < 0.
     ///     - `rustGetVerifiedTransparentBalance` if rust layer returns error.
@@ -285,7 +286,8 @@ protocol ZcashRustBackendWelding {
     ///             that should be the source of transparent funds. Default is `nil` which
     ///             will select whichever of the account's transparent receivers has funds
     ///             to shield.
-    /// - Parameter shieldingConfirmationsPolicy: the number of block confirmations to require to spend notes from trusted and untrusted sources
+    /// - Parameter shieldingConfirmationsPolicy: the number of block confirmations to require
+    ///             to shield UTXOs from trusted and untrusted sources
     /// - Throws: `rustShieldFunds` if rust layer returns error.
     func proposeShielding(
         accountUUID: AccountUUID,

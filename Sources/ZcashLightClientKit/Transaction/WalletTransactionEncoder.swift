@@ -66,7 +66,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         recipient: String,
         amount: Zatoshi,
         memoBytes: MemoBytes?,
-        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransfer(
             accountUUID: accountUUID,
@@ -84,7 +84,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         transparentReceiver: String? = nil,
-        shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
+        shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
     ) async throws -> Proposal? {
         guard let proposal = try await rustBackend.proposeShielding(
             accountUUID: accountUUID,
@@ -100,7 +100,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     func proposeFulfillingPaymentFromURI(
         _ uri: String,
         accountUUID: AccountUUID,
-        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> Proposal {
         let proposal = try await rustBackend.proposeTransferFromURI(
             uri,
