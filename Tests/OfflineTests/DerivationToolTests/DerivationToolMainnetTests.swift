@@ -149,7 +149,7 @@ class DerivationToolMainnetTests: XCTestCase {
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
         let contextString = [UInt8]("Zcash test vectors".utf8)
         let seed: [UInt8] = Array(Data(fromHexEncodedString: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)
-        let expectedKey = Array(Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!)
+        let expectedKey: [UInt8] = Array(Data(fromHexEncodedString: "bf60078362a09234fcbc6bf6c8a87bde9fc73776bf93f37adbcc439a85574a9a")!)
         let key = try DerivationTool(networkType: .mainnet).deriveArbitraryAccountKey(
             contextString: contextString,
             seed: seed,

@@ -39,7 +39,7 @@ enum RustLogging: String {
 public struct ConfirmationsPolicy {
     /// NonZero, zero for default
     let trusted: UInt32
-    /// NonZero, zero for default, zero must match `trusted`
+    /// NonZero, zero for default; if this is set to zero, `trusted` must also be set to zero
     let untrusted: UInt32
     let allowZeroConfShielding: Bool
     
@@ -47,6 +47,14 @@ public struct ConfirmationsPolicy {
         self.trusted = trusted
         self.untrusted = untrusted
         self.allowZeroConfShielding = allowZeroConfShielding
+    }
+    
+    public static func defaultTransferPolicy() -> Self {
+        ConfirmationsPolicy.init()
+    }
+    
+    public static func defaultShieldingPolicy() -> Self {
+        ConfirmationsPolicy.init(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
     }
     
     public func toBackend() -> libzcashlc.ConfirmationsPolicy {
@@ -59,8 +67,8 @@ public struct ConfirmationsPolicy {
 }
 
 struct ZcashRustBackend: ZcashRustBackendWelding {
-    let confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy()
-    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
+    let confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
+    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
