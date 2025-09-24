@@ -6,6 +6,31 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+
+- `ConfirmationsPolicy` 
+
+## Updated
+
+- `ZcashRustBackend.proposeTransfer` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackend.proposeTransferFromURI` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackend.getVerifiedTransparentBalance` now takes `shieldingConfsirmationPolicy: ConfirmationsPolicy`
+- `ZcashRustBackend.getWalletSummary` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackend.proposeShielding` now takes `shieldingConfsirmationPolicy: ConfirmationsPolicy`
+
+- `ZcashRustBackendWelding.getVerifiedTransparentBalance` now takes `shieldingConfsirmationPolicy: ConfirmationsPolicy`
+- `ZcashRustBackendWelding.getWalletSummary` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackendWelding.proposeTransfer` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackendWelding.proposeTransferFromURI` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `ZcashRustBackendWelding.proposeShielding` now takes `shieldingConfsirmationPolicy: ConfirmationsPolicy`
+
+- `TransactionEncoder.proposeTransfer` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `TransactionEncoder.proposeFulfillingPaymentFromURI` now takes `confirmatinsPolicy: ConfirmationsPolicy`
+
+- `WalletTransactionEncoder.proposeTransfer` now takes `confirmationsPolicy: ConfirmationsPolicy`
+- `WalletTransactionEncoder.proposeShielding` now takes `shieldingConfsirmationPolicy: ConfirmationsPolicy`
+- `WalletTransactionEncoder.proposeFulfillingPaymentFromURI` now takes `confirmatinsPolicy: ConfirmationsPolicy`
+
 # 2.3.2 - 2025-09-03
 
 ## Fixed

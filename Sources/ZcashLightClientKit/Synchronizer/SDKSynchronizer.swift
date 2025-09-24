@@ -178,7 +178,9 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            let walletSummary = try? await initializer.rustBackend.getWalletSummary()
+            let walletSummary = try? await initializer.rustBackend.getWalletSummary(
+                confirmationsPolicy: ConfirmationsPolicy.defaultTransferPolicy()
+            )
             let recoveryProgress = walletSummary?.recoveryProgress
             
             var syncProgress: Float = 0.0
@@ -379,7 +381,8 @@ public class SDKSynchronizer: Synchronizer {
             accountUUID: accountUUID,
             recipient: recipient.stringEncoded,
             amount: amount,
-            memoBytes: memo?.asMemoBytes()
+            memoBytes: memo?.asMemoBytes(),
+            confirmationsPolicy: ConfirmationsPolicy.defaultTransferPolicy()
         )
 
         return proposal
@@ -397,7 +400,8 @@ public class SDKSynchronizer: Synchronizer {
             accountUUID: accountUUID,
             shieldingThreshold: shieldingThreshold,
             memoBytes: memo.asMemoBytes(),
-            transparentReceiver: transparentReceiver?.stringEncoded
+            transparentReceiver: transparentReceiver?.stringEncoded,
+            shieldingConfirmationsPolicy: ConfirmationsPolicy.defaultShieldingPolicy()
         )
     }
 
@@ -409,7 +413,8 @@ public class SDKSynchronizer: Synchronizer {
             try throwIfUnprepared()
             return try await transactionEncoder.proposeFulfillingPaymentFromURI(
                 uri,
-                accountUUID: accountUUID
+                accountUUID: accountUUID,
+                confirmationsPolicy: ConfirmationsPolicy.defaultTransferPolicy()
             )
         } catch ZcashError.rustCreateToAddress(let error) {
             throw ZcashError.rustProposeTransferFromURI(error)
@@ -602,7 +607,9 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func getAccountsBalances() async throws -> [AccountUUID: AccountBalance] {
-        try await initializer.rustBackend.getWalletSummary()?.accountBalances ?? [:]
+        try await initializer.rustBackend.getWalletSummary(
+            confirmationsPolicy: ConfirmationsPolicy.defaultTransferPolicy()
+        )?.accountBalances ?? [:]
     }
 
     /// Fetches the latest ZEC-USD exchange rate.

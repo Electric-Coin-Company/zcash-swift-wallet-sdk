@@ -53,8 +53,10 @@ public struct ConfirmationsPolicy {
         ConfirmationsPolicy.init()
     }
     
+
+    /// Returns a default ConfirmationPolicy suitable for shielding transactions.
     public static func defaultShieldingPolicy() -> Self {
-        ConfirmationsPolicy.init(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
+        .init(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
     }
     
     public func toBackend() -> libzcashlc.ConfirmationsPolicy {
@@ -67,9 +69,6 @@ public struct ConfirmationsPolicy {
 }
 
 struct ZcashRustBackend: ZcashRustBackendWelding {
-    let confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
-    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
-
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
     let spendParamsPath: (String, UInt)
@@ -286,7 +285,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         accountUUID: AccountUUID,
         to address: String,
         value: Int64,
-        memo: MemoBytes?
+        memo: MemoBytes?,
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer(
             dbData.0,
@@ -314,7 +314,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func proposeTransferFromURI(
         _ uri: String,
-        accountUUID: AccountUUID
+        accountUUID: AccountUUID,
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
     ) async throws -> FfiProposal {
         let proposal = zcashlc_propose_transfer_from_uri(
             dbData.0,
@@ -582,7 +583,10 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getVerifiedTransparentBalance(accountUUID: AccountUUID) async throws -> Int64 {
+    func getVerifiedTransparentBalance(
+        accountUUID: AccountUUID,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
+    ) async throws -> Int64 {
         let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
@@ -928,7 +932,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func getWalletSummary() async throws -> WalletSummary? {
+    func getWalletSummary(
+        confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
+    ) async throws -> WalletSummary? {
         let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, confirmationsPolicy.toBackend())
 
         guard let summaryPtr else {
@@ -1025,7 +1031,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         accountUUID: AccountUUID,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi,
-        transparentReceiver: String?
+        transparentReceiver: String?,
+        shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
     ) async throws -> FfiProposal? {
         let proposal = zcashlc_propose_shielding(
             dbData.0,
