@@ -484,19 +484,26 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
-        let result = zcashlc_decrypt_and_store_transaction(
-            dbData.0,
-            dbData.1,
-            txBytes,
-            UInt(txBytes.count),
-            Int64(minedHeight ?? 0),
-            networkType.networkId
-        )
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws -> Data {
+        var contiguousTxidBytes = ContiguousArray<UInt8>(Data(count: 32))
+
+        let result = contiguousTxidBytes.withUnsafeMutableBufferPointer { txidBytePtr in
+            zcashlc_decrypt_and_store_transaction(
+                dbData.0,
+                dbData.1,
+                txBytes,
+                UInt(txBytes.count),
+                Int64(minedHeight ?? 0),
+                networkType.networkId,
+                txidBytePtr.baseAddress
+            )
+        }
 
         guard result != 0 else {
             throw ZcashError.rustDecryptAndStoreTransaction(lastErrorMessage(fallback: "`decryptAndStoreTransaction` failed with unknown error"))
         }
+
+        return Data(contiguousTxidBytes)
     }
 
     @DBActor
