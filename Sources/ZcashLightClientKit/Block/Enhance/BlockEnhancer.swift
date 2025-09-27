@@ -114,7 +114,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             if response.status == .txidNotRecognized {
                                 try await rustBackend.setTransactionStatus(txId: txId.data, status: .txidNotRecognized)
                             } else if let fetchedTransaction = response.tx {
-                                try await rustBackend.decryptAndStoreTransaction(
+                                _ = try await rustBackend.decryptAndStoreTransaction(
                                     txBytes: fetchedTransaction.raw.bytes,
                                     minedHeight: fetchedTransaction.minedHeight
                                 )
@@ -161,7 +161,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                                     continue
                                 }
 
-                                try await rustBackend.decryptAndStoreTransaction(
+                                _ = try await rustBackend.decryptAndStoreTransaction(
                                     txBytes: rawTransaction.data.bytes,
                                     minedHeight: minedHeight
                                 )

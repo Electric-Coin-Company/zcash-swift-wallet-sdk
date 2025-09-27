@@ -90,4 +90,8 @@ class MockLightWalletService: LightWalletService {
     func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState {
         try await service.getTreeState(id, mode: mode)
     }
+    
+    func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, any Error> {
+        try service.getMempoolStream()
+    }
 }
