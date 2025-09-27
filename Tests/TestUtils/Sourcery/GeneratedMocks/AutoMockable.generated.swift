@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -2844,15 +2844,20 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return decryptAndStoreTransactionTxBytesMinedHeightCallsCount > 0
     }
     var decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments: (txBytes: [UInt8], minedHeight: UInt32?)?
-    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], UInt32?) async throws -> Void)?
+    var decryptAndStoreTransactionTxBytesMinedHeightReturnValue: Data!
+    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], UInt32?) async throws -> Data)?
 
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws -> Data {
         if let error = decryptAndStoreTransactionTxBytesMinedHeightThrowableError {
             throw error
         }
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
-        try await decryptAndStoreTransactionTxBytesMinedHeightClosure!(txBytes, minedHeight)
+        if let closure = decryptAndStoreTransactionTxBytesMinedHeightClosure {
+            return try await closure(txBytes, minedHeight)
+        } else {
+            return decryptAndStoreTransactionTxBytesMinedHeightReturnValue
+        }
     }
 
     // MARK: - getCurrentAddress

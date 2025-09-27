@@ -24,9 +24,51 @@ enum RustLogging: String {
     case trace
 }
 
+/// A description of the policy that is used to determine what notes are available for spending,
+/// based upon the number of confirmations (the number of blocks in the chain since and including
+/// the block in which a note was produced.)
+///
+/// See [`ZIP 315`] for details including the definitions of "trusted" and "untrusted" notes.
+///
+/// # Note
+///
+/// `trusted` and `untrusted` are both meant to be non-zero values.
+/// `0` will be treated as a request for a default value.
+///
+/// [`ZIP 315`]: https://zips.z.cash/zip-0315
+public struct ConfirmationsPolicy {
+    /// NonZero, zero for default
+    let trusted: UInt32
+    /// NonZero, zero for default; if this is set to zero, `trusted` must also be set to zero
+    let untrusted: UInt32
+    let allowZeroConfShielding: Bool
+    
+    init(trusted: UInt32 = 3, untrusted: UInt32 = 10, allowZeroConfShielding: Bool = true) {
+        self.trusted = trusted
+        self.untrusted = untrusted
+        self.allowZeroConfShielding = allowZeroConfShielding
+    }
+    
+    public static func defaultTransferPolicy() -> Self {
+        ConfirmationsPolicy.init()
+    }
+    
+    public static func defaultShieldingPolicy() -> Self {
+        ConfirmationsPolicy.init(trusted: 1, untrusted: 1, allowZeroConfShielding: true)
+    }
+    
+    public func toBackend() -> libzcashlc.ConfirmationsPolicy {
+        var libzcashlcConfirmationsPolicy = libzcashlc.ConfirmationsPolicy()
+        libzcashlcConfirmationsPolicy.trusted = self.trusted
+        libzcashlcConfirmationsPolicy.untrusted = self.untrusted
+        libzcashlcConfirmationsPolicy.allow_zero_conf_shielding = self.allowZeroConfShielding
+        return libzcashlcConfirmationsPolicy
+    }
+}
+
 struct ZcashRustBackend: ZcashRustBackendWelding {
-    let minimumConfirmations: UInt32 = 10
-    let minimumShieldingConfirmations: UInt32 = 1
+    let confirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultTransferPolicy()
+    let shieldingConfirmationsPolicy: ConfirmationsPolicy = ConfirmationsPolicy.defaultShieldingPolicy()
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
@@ -254,7 +296,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             value,
             memo?.bytes,
             networkType.networkId,
-            minimumConfirmations
+            confirmationsPolicy.toBackend()
         )
 
         guard let proposal else {
@@ -280,7 +322,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             accountUUID.id,
             [CChar](uri.utf8CString),
             networkType.networkId,
-            minimumConfirmations
+            confirmationsPolicy.toBackend()
         )
 
         guard let proposal else {
@@ -442,19 +484,26 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     @DBActor
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws {
-        let result = zcashlc_decrypt_and_store_transaction(
-            dbData.0,
-            dbData.1,
-            txBytes,
-            UInt(txBytes.count),
-            Int64(minedHeight ?? 0),
-            networkType.networkId
-        )
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: UInt32?) async throws -> Data {
+        var contiguousTxidBytes = ContiguousArray<UInt8>(Data(count: 32))
+
+        let result = contiguousTxidBytes.withUnsafeMutableBufferPointer { txidBytePtr in
+            zcashlc_decrypt_and_store_transaction(
+                dbData.0,
+                dbData.1,
+                txBytes,
+                UInt(txBytes.count),
+                Int64(minedHeight ?? 0),
+                networkType.networkId,
+                txidBytePtr.baseAddress
+            )
+        }
 
         guard result != 0 else {
             throw ZcashError.rustDecryptAndStoreTransaction(lastErrorMessage(fallback: "`decryptAndStoreTransaction` failed with unknown error"))
         }
+
+        return Data(contiguousTxidBytes)
     }
 
     @DBActor
@@ -546,7 +595,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             dbData.1,
             networkType.networkId,
             accountUUID.id,
-            minimumShieldingConfirmations
+            shieldingConfirmationsPolicy.toBackend()
         )
 
         guard balance >= 0 else {
@@ -887,7 +936,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
 
     @DBActor
     func getWalletSummary() async throws -> WalletSummary? {
-        let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, minimumConfirmations)
+        let summaryPtr = zcashlc_get_wallet_summary(dbData.0, dbData.1, networkType.networkId, confirmationsPolicy.toBackend())
 
         guard let summaryPtr else {
             throw ZcashError.rustGetWalletSummary(lastErrorMessage(fallback: "`getWalletSummary` failed with unknown error"))
@@ -993,7 +1042,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             UInt64(shieldingThreshold.amount),
             transparentReceiver.map { [CChar]($0.utf8CString) },
             networkType.networkId,
-            minimumShieldingConfirmations
+            shieldingConfirmationsPolicy.toBackend()
         )
 
         guard let proposal else {
