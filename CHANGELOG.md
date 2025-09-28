@@ -6,9 +6,29 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.3 - 2025-09-28
+
 ## Added
 - Mempool detection support: see
   `CompactBlockProcessor.{watchMempool,consumeMempoolStream,resolveMempools}`.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3052500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3080000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3570000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3590000.json
+````
 
 # 2.3.2 - 2025-09-03
 
