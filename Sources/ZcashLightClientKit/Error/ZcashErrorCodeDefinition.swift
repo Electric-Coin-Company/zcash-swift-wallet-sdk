@@ -83,6 +83,9 @@ enum ZcashErrorDefinition {
     /// LightWalletService.getTaddressTxids failed.
     // sourcery: code="ZSRVC0010"
     case serviceGetTaddressTxidsFailed(_ error: LightWalletServiceError)
+    /// LightWalletService.getMempoolStream failed.
+    // sourcery: code="ZSRVC0011"
+    case serviceGetMempoolStreamFailed(_ error: LightWalletServiceError)
 
     // MARK: - Tor
 

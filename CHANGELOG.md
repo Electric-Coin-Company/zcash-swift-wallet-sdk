@@ -7,7 +7,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 ## Added
-- Mempool detection
+- Mempool detection support: see
+  `CompactBlockProcessor.{watchMempool,consumeMempoolStream,resolveMempools}`.
 
 # 2.3.2 - 2025-09-03
 

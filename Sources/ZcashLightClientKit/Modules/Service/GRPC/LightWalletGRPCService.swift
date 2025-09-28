@@ -365,7 +365,7 @@ class LightWalletGRPCService: LightWalletService {
                 return rawTransaction
             } catch {
                 let serviceError = error.mapToServiceError()
-                throw ZcashError.serviceGetTaddressTxidsFailed(serviceError)
+                throw ZcashError.serviceGetMempoolStreamFailed(serviceError)
             }
         }
     }
