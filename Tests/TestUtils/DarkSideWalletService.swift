@@ -206,6 +206,10 @@ class DarksideWalletService: LightWalletService {
     func setSubtreeRoots(_ request: DarksideSubtreeRoots) {
         _ = darksideService.setSubtreeRoots(request)
     }
+    
+    func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, any Error> {
+        try service.getMempoolStream()
+    }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {

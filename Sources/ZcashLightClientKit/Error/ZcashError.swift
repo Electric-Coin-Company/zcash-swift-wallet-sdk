@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -64,6 +64,9 @@ public enum ZcashError: Equatable, Error {
     /// LightWalletService.getTaddressTxids failed.
     /// ZSRVC0010
     case serviceGetTaddressTxidsFailed(_ error: LightWalletServiceError)
+    /// LightWalletService.getMempoolStream failed.
+    /// ZSRVC0011
+    case serviceGetMempoolStreamFailed(_ error: LightWalletServiceError)
     /// Endpoint is not provided
     /// ZTSRV0001
     case torServiceMissingEndpoint
@@ -743,6 +746,7 @@ public enum ZcashError: Equatable, Error {
         case .serviceBlockStreamFailed: return "LightWalletService.blockStream failed."
         case .serviceSubtreeRootsStreamFailed: return "LightWalletService.getSubtreeRoots failed."
         case .serviceGetTaddressTxidsFailed: return "LightWalletService.getTaddressTxids failed."
+        case .serviceGetMempoolStreamFailed: return "LightWalletService.getMempoolStream failed."
         case .torServiceMissingEndpoint: return "Endpoint is not provided"
         case .torServiceUnresolvedMode: return "Tor client fails to resolve ServiceMode"
         case .grpcServiceCalledWithTorMode: return "GRPC Service is called with a Tor mode instead of direct one"
@@ -951,6 +955,7 @@ public enum ZcashError: Equatable, Error {
         case .serviceBlockStreamFailed: return .serviceBlockStreamFailed
         case .serviceSubtreeRootsStreamFailed: return .serviceSubtreeRootsStreamFailed
         case .serviceGetTaddressTxidsFailed: return .serviceGetTaddressTxidsFailed
+        case .serviceGetMempoolStreamFailed: return .serviceGetMempoolStreamFailed
         case .torServiceMissingEndpoint: return .torServiceMissingEndpoint
         case .torServiceUnresolvedMode: return .torServiceUnresolvedMode
         case .grpcServiceCalledWithTorMode: return .grpcServiceCalledWithTorMode

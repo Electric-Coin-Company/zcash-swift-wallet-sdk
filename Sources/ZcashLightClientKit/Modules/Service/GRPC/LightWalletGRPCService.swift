@@ -355,6 +355,21 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
+    func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, Error> {
+        let stream = compactTxStreamer.getMempoolStream(Empty())
+        var iterator = stream.makeAsyncIterator()
+        
+        return AsyncThrowingStream() {
+            do {
+                guard let rawTransaction = try await iterator.next() else { return nil }
+                return rawTransaction
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceGetMempoolStreamFailed(serviceError)
+            }
+        }
+    }
+    
     func getSubtreeRoots(_ request: GetSubtreeRootsArg, mode: ServiceMode) throws -> AsyncThrowingStream<SubtreeRoot, Error> {
         guard mode == .direct else {
             throw ZcashError.grpcServiceCalledWithTorMode

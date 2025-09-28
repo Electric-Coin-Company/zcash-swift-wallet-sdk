@@ -220,4 +220,6 @@ protocol LightWalletService: AnyObject {
     func getTreeState(_ id: BlockID, mode: ServiceMode) async throws -> TreeState
 
     func getTaddressTxids(_ request: TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error>
+    
+    func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, Error>
 }

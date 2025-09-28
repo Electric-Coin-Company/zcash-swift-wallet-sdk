@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.3.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -43,6 +43,8 @@ public enum ZcashErrorCode: String {
     case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
     /// LightWalletService.getTaddressTxids failed.
     case serviceGetTaddressTxidsFailed = "ZSRVC0010"
+    /// LightWalletService.getMempoolStream failed.
+    case serviceGetMempoolStreamFailed = "ZSRVC0011"
     /// Endpoint is not provided
     case torServiceMissingEndpoint = "ZTSRV0001"
     /// Tor client fails to resolve ServiceMode
