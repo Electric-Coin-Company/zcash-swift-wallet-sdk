@@ -6,6 +6,11 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.4 - 2025-09-29
+
+## Fixed
+- Zero confirmation shielding error. With mempool detection a new scenario appeared - clients could make an attempt to shield while the transparents funds haven't been confirmed (it's associated receiving transaction).
+
 # 2.3.3 - 2025-09-28
 
 ## Added
