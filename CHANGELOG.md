@@ -6,6 +6,27 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.5 - 2025-10-06
+
+## Fixed
+- Zero confirmation shielding error. With mempool detection a new scenario appeared - clients could make an attempt to shield while the transparents funds haven't been confirmed (it's associated receiving transaction). [2nd fix for this issue alongside 2.3.4]
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3082500.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3087500.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3600000.json
+````
+
 # 2.3.4 - 2025-09-29
 
 ## Fixed
