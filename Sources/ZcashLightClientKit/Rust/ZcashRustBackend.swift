@@ -962,23 +962,19 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         if await !sdkFlags.chainTipUpdated {
             accountBalances.forEach { key, _ in
                 if let accountBalance = accountBalances[key] {
-                    let zeroedOutBalances = accountBalance.saplingBalance.spendableValue
-                    + accountBalance.orchardBalance.spendableValue
-                    + accountBalance.unshielded
-                    
                     accountBalances[key] = AccountBalance(
                         saplingBalance: PoolBalance(
                             spendableValue: .zero,
                             changePendingConfirmation: accountBalance.saplingBalance.changePendingConfirmation,
-                            valuePendingSpendability: accountBalance.saplingBalance.valuePendingSpendability
+                            valuePendingSpendability: accountBalance.saplingBalance.valuePendingSpendability + accountBalance.saplingBalance.spendableValue
                         ),
                         orchardBalance: PoolBalance(
                             spendableValue: .zero,
                             changePendingConfirmation: accountBalance.orchardBalance.changePendingConfirmation,
-                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability
+                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability + accountBalance.orchardBalance.spendableValue
                         ),
                         unshielded: .zero,
-                        awaitingResolution: zeroedOutBalances
+                        awaitingResolution: accountBalance.unshielded
                     )
                 }
             }
