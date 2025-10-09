@@ -975,9 +975,10 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
                         orchardBalance: PoolBalance(
                             spendableValue: .zero,
                             changePendingConfirmation: accountBalance.orchardBalance.changePendingConfirmation,
-                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability + zeroedOutBalances
+                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability
                         ),
-                        unshielded: .zero
+                        unshielded: .zero,
+                        awaitingResolution: zeroedOutBalances
                     )
                 }
             }
