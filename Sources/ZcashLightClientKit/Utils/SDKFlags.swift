@@ -23,6 +23,9 @@ actor SDKFlags {
     /// `true` = initialization of `TorClient` succeeded
     var torClientInitializationSuccessfullyDone: Bool?
     
+    /// Runtime helper flag used to mark whether chainTip CBP action has been done.
+    var chainTipUpdated = false
+    
     init(
         torEnabled: Bool,
         exchangeRateEnabled: Bool
@@ -50,5 +53,10 @@ actor SDKFlags {
     /// Use to update the `torClientInitializationSuccessfullyDone` flag
     func torClientInitializationSuccessfullyDoneFlagUpdate(_ newFlag: Bool?) {
         torClientInitializationSuccessfullyDone = newFlag
+    }
+    
+    /// Use to update the `chainTipUpdated` flag
+    func markChainTipAsUpdated() {
+        chainTipUpdated = true
     }
 }

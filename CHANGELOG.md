@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Changed
+- Transparent funds are now reported after `UpdateChainTipAction` is processed. Attempt to shield before this action has been failing otherwise. 
+
 # 2.3.5 - 2025-10-06
 
 ## Fixed

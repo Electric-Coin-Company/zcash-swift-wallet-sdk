@@ -74,18 +74,21 @@ enum Dependencies {
             rustLogging = RustLogging.off
         }
 
-        container.register(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in
-            ZcashRustBackend(
+        container.register(type: ZcashRustBackendWelding.self, isSingleton: true) { di in
+            let sdkFlags = di.resolve(SDKFlags.self)
+
+            return ZcashRustBackend(
                 dbData: urls.dataDbURL,
                 fsBlockDbRoot: urls.fsBlockDbRoot,
                 spendParamsPath: urls.spendParamsURL,
                 outputParamsPath: urls.outputParamsURL,
                 networkType: networkType,
-                logLevel: rustLogging
+                logLevel: rustLogging,
+                sdkFlags: sdkFlags
             )
         }
 
-        container.register(type: TorClient.self, isSingleton: true) { di in
+        container.register(type: TorClient.self, isSingleton: true) { _ in
             TorClient(torDir: urls.torDirURL)
         }
 

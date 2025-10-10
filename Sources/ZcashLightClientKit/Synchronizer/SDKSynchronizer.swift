@@ -999,7 +999,6 @@ public class SDKSynchronizer: Synchronizer {
     
     public func isTorSuccessfullyInitialized() async -> Bool? {
         await sdkFlags.torClientInitializationSuccessfullyDone
-
     }
 
     public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {

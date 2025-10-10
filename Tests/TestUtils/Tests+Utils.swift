@@ -156,7 +156,8 @@ extension ZcashRustBackend {
             fsBlockDbRoot: fsBlockDbRoot,
             spendParamsPath: spendParamsPath,
             outputParamsPath: outputParamsPath,
-            networkType: networkType
+            networkType: networkType,
+            sdkFlags: SDKFlags(torEnabled: false, exchangeRateEnabled: false)
         )
     }
 }

@@ -77,6 +77,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     let keyDeriving: ZcashKeyDerivationBackendWelding
 
     let networkType: NetworkType
+    let sdkFlags: SDKFlags
 
     static var rustInitialized = false
 
@@ -98,7 +99,8 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         spendParamsPath: URL,
         outputParamsPath: URL,
         networkType: NetworkType,
-        logLevel: RustLogging = RustLogging.off
+        logLevel: RustLogging = RustLogging.off,
+        sdkFlags: SDKFlags
     ) {
         self.dbData = dbData.osStr()
         self.fsBlockDbRoot = fsBlockDbRoot.osPathStr()
@@ -106,6 +108,7 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         self.outputParamsPath = outputParamsPath.osPathStr()
         self.networkType = networkType
         self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
+        self.sdkFlags = sdkFlags
 
         if !Self.rustInitialized {
             Self.rustInitialized = true
@@ -953,6 +956,28 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         for i in (0 ..< Int(summaryPtr.pointee.account_balances_len)) {
             let accountBalance = summaryPtr.pointee.account_balances.advanced(by: i).pointee
             accountBalances[AccountUUID(id: accountBalance.uuidArray)] = accountBalance.toAccountBalance()
+        }
+        
+        // Modify spendable `accountBalances` if chainTip hasn't been updated yet
+        if await !sdkFlags.chainTipUpdated {
+            accountBalances.forEach { key, _ in
+                if let accountBalance = accountBalances[key] {
+                    accountBalances[key] = AccountBalance(
+                        saplingBalance: PoolBalance(
+                            spendableValue: .zero,
+                            changePendingConfirmation: accountBalance.saplingBalance.changePendingConfirmation,
+                            valuePendingSpendability: accountBalance.saplingBalance.valuePendingSpendability + accountBalance.saplingBalance.spendableValue
+                        ),
+                        orchardBalance: PoolBalance(
+                            spendableValue: .zero,
+                            changePendingConfirmation: accountBalance.orchardBalance.changePendingConfirmation,
+                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability + accountBalance.orchardBalance.spendableValue
+                        ),
+                        unshielded: .zero,
+                        awaitingResolution: accountBalance.unshielded
+                    )
+                }
+            }
         }
 
         return WalletSummary(

@@ -423,7 +423,6 @@ public protocol Synchronizer: AnyObject {
     ///    - nBlocksToFetch: The number of blocks expected to be downloaded from the stream, with the time compared to `fetchThresholdSeconds`. The default is 100.
     ///    - kServers: The required number of endpoints in the output. The default is 3.
     ///    - network: Mainnet or testnet. The default is mainnet.
-    // swiftlint:disable:next function_parameter_count
     func evaluateBestOf(
         endpoints: [LightWalletEndpoint],
         fetchThresholdSeconds: Double,
