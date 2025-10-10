@@ -6,8 +6,29 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.6 - 2025-10-10
+
 ## Changed
 - Transparent funds are now reported after `UpdateChainTipAction` is processed. Attempt to shield before this action has been failing otherwise. 
+
+## Fixed
+- FFI bumped to 0.18.3 with sqp fixes for balances.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3090000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3092500.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3610000.json
+````
 
 # 2.3.5 - 2025-10-06
 
