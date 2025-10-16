@@ -99,7 +99,9 @@ extension BlockEnhancerImpl: BlockEnhancer {
                             )
                             retry = false
 
-                            if let fetchedTransaction = response.tx {
+                            if response.status == .txidNotRecognized {
+                                try await rustBackend.setTransactionStatus(txId: txId.data, status: response.status)
+                            } else if let fetchedTransaction = response.tx {
                                 try await rustBackend.setTransactionStatus(txId: fetchedTransaction.rawID, status: response.status)
                             }
                             

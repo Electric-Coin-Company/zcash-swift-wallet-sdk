@@ -296,9 +296,15 @@ public class TorLwdConn {
         let txPtr = zcashlc_tor_lwd_conn_fetch_transaction(conn, txId.bytes, &height)
 
         guard let txPtr else {
-            throw ZcashError.rustTorLwdFetchTransaction(
-                lastErrorMessage(fallback: "`TorLwdConn.fetchTransaction` failed with unknown error")
-            )
+            let lastErrorMessage = lastErrorMessage(fallback: "`TorLwdConn.fetchTransaction` failed with unknown error")
+            
+            if lastErrorMessage.contains("No such mempool or main chain transaction") {
+                return (tx: nil, status: .txidNotRecognized)
+            } else {
+                throw ZcashError.rustTorLwdFetchTransaction(
+                    lastErrorMessage
+                )
+            }
         }
 
         defer { zcashlc_free_boxed_slice(txPtr) }
