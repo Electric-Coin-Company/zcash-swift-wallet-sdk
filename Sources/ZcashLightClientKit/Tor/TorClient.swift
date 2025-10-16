@@ -300,6 +300,10 @@ public class TorLwdConn {
             
             if lastErrorMessage.contains("No such mempool or main chain transaction") {
                 return (tx: nil, status: .txidNotRecognized)
+            } else if lastErrorMessage.contains("Transaction not found") {
+                return (tx: nil, status: .txidNotRecognized)
+            } else if lastErrorMessage.contains("No such mempool or blockchain transaction. Use gettransaction for wallet transactions.") {
+                return (tx: nil, status: .txidNotRecognized)
             } else {
                 throw ZcashError.rustTorLwdFetchTransaction(
                     lastErrorMessage
