@@ -72,9 +72,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
         
         logger.debug("Started Enhancing range: \(range)")
 
-        var retries = 0
-        let maxRetries = 5
-        
         // fetch transactions
         do {
             let transactionDataRequests = try await rustBackend.transactionDataRequests()
@@ -88,6 +85,8 @@ extension BlockEnhancerImpl: BlockEnhancer {
             for index in 0 ..< transactionDataRequests.count {
                 let transactionDataRequest = transactionDataRequests[index]
                 var retry = true
+                var retries = 0
+                let maxRetries = 5
 
                 while retry && retries < maxRetries {
                     try Task.checkCancellation()
@@ -171,9 +170,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     } catch {
                         retries += 1
                         logger.error("could not enhance transactionDataRequest \(transactionDataRequest) - Error: \(error)")
-                        if retries > maxRetries {
-                            throw error
-                        }
                     }
                 }
             }
