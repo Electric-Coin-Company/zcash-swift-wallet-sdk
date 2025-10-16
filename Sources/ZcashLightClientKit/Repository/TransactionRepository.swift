@@ -27,4 +27,5 @@ protocol TransactionRepository {
     func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo]
     func getRecipients(for rawID: Data) async throws -> [TransactionRecipient]
     func getTransactionOutputs(for rawID: Data) async throws -> [ZcashTransaction.Output]
+    func debugDatabase(sql: String) -> String
 }

@@ -8,6 +8,31 @@
 import Foundation
 import SQLite
 
+extension Connection {
+    func debugQuery(_ sql: String) -> String {
+        do {
+            let rows = try self.prepare(sql)
+            var result = ""
+            
+            for row in rows {
+                let stringRow = row.map { value -> String in
+                    if let value {
+                        return "\(value)"
+                    }
+                    return "NULL"
+                }
+                .joined(separator: " | ")
+                
+                result = "\(result)\n\(stringRow)"
+            }
+            
+            return result.isEmpty ? "No results" : result
+        } catch {
+            return "Error: \(error)"
+        }
+    }
+}
+
 class TransactionSQLDAO: TransactionRepository {
     enum NotesTableStructure {
         static let transactionID = SQLite.Expression<Int>("tx")
@@ -248,6 +273,14 @@ class TransactionSQLDAO: TransactionRepository {
                 throw ZcashError.transactionRepositoryQueryExecute(error)
             }
         }
+    }
+    
+    func debugDatabase(sql: String) -> String {
+        guard let connection = try? connection() else {
+            return "Connection failed"
+        }
+        
+        return connection.debugQuery(sql)
     }
 }
 

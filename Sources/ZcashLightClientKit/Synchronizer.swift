@@ -464,6 +464,9 @@ public protocol Synchronizer: AnyObject {
     ///    - for: URLRequest
     ///    - retryLimit: How many times the request will be retried in case of failure
     func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
+    
+    ///
+    func debugDatabase(sql: String) -> String
 }
 
 public enum SyncStatus: Equatable {
