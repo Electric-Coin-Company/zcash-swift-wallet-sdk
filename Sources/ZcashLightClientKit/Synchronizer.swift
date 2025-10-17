@@ -465,7 +465,8 @@ public protocol Synchronizer: AnyObject {
     ///    - retryLimit: How many times the request will be retried in case of failure
     func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
     
-    ///
+    /// Performs an `sql` query on a database and returns some output as a string
+    /// Use cautiously! 
     func debugDatabase(sql: String) -> String
 }
 
