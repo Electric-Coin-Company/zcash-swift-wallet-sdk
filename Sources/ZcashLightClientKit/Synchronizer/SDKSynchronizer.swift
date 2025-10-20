@@ -1020,6 +1020,10 @@ public class SDKSynchronizer: Synchronizer {
         return try await httpTor.isolatedClient().httpRequest(for: request, retryLimit: retryLimit)
     }
     
+    public func debugDatabase(sql: String) -> String {
+        transactionRepository.debugDatabase(sql: sql)
+    }
+    
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {

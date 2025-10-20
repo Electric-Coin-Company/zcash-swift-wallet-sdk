@@ -263,10 +263,12 @@ class LightWalletGRPCService: LightWalletService {
             )
         } catch let error as GRPCStatus {
             let noMempoolMsg = "No such mempool or blockchain transaction. Use gettransaction for wallet transactions."
-            
+
             if error.makeGRPCStatus().code == .notFound {
                 return (tx: nil, .txidNotRecognized)
             } else if let notFound = error.message?.contains("Transaction not found"), notFound {
+                return (tx: nil, .txidNotRecognized)
+            } else if let notFound = error.message?.contains("No such mempool or main chain transaction"), notFound {
                 return (tx: nil, .txidNotRecognized)
             } else if let notFound = error.message?.contains(noMempoolMsg), notFound {
                 return (tx: nil, .txidNotRecognized)

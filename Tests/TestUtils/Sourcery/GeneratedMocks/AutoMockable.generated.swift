@@ -2258,6 +2258,26 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - debugDatabase
+
+    var debugDatabaseSqlCallsCount = 0
+    var debugDatabaseSqlCalled: Bool {
+        return debugDatabaseSqlCallsCount > 0
+    }
+    var debugDatabaseSqlReceivedSql: String?
+    var debugDatabaseSqlReturnValue: String!
+    var debugDatabaseSqlClosure: ((String) -> String)?
+
+    func debugDatabase(sql: String) -> String {
+        debugDatabaseSqlCallsCount += 1
+        debugDatabaseSqlReceivedSql = sql
+        if let closure = debugDatabaseSqlClosure {
+            return closure(sql)
+        } else {
+            return debugDatabaseSqlReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
@@ -2654,6 +2674,26 @@ class TransactionRepositoryMock: TransactionRepository {
             return try await closure(rawID)
         } else {
             return getTransactionOutputsForReturnValue
+        }
+    }
+
+    // MARK: - debugDatabase
+
+    var debugDatabaseSqlCallsCount = 0
+    var debugDatabaseSqlCalled: Bool {
+        return debugDatabaseSqlCallsCount > 0
+    }
+    var debugDatabaseSqlReceivedSql: String?
+    var debugDatabaseSqlReturnValue: String!
+    var debugDatabaseSqlClosure: ((String) -> String)?
+
+    func debugDatabase(sql: String) -> String {
+        debugDatabaseSqlCallsCount += 1
+        debugDatabaseSqlReceivedSql = sql
+        if let closure = debugDatabaseSqlClosure {
+            return closure(sql)
+        } else {
+            return debugDatabaseSqlReturnValue
         }
     }
 
