@@ -99,6 +99,9 @@ enum Dependencies {
         }
 
         container.register(type: TransactionRepository.self, isSingleton: true) { _ in
+            /// The direct queries to the database in the SDK should be scarse. Better approach is to use FFI/rust instead.
+            /// However direct connection is not blocked or denied but a hard requirement is to have such connection in a read-only mode.
+            /// Never update this dependency to `readonly: false`.
             TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))
         }
 

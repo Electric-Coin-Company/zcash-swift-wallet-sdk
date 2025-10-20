@@ -466,7 +466,9 @@ public protocol Synchronizer: AnyObject {
     func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
     
     /// Performs an `sql` query on a database and returns some output as a string
-    /// Use cautiously! 
+    /// Use cautiously!
+    /// The connection to the database is created in a read-only mode. it's a hard requirement.
+    /// Details: `TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))`
     func debugDatabase(sql: String) -> String
 }
 
