@@ -6,11 +6,31 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.3.7 - 2025-10-20
+
 ## Added
 - New public API `func debugDatabase(sql: String) -> String` for querying the database from the client. Usa cautiously, ideally for debugging purposes only. A However note, the connection to the database is created in a read-only mode.
 
 ## Fixed
 - Updated FFI 0.18.4 with fixes for the transaction states alongside changes in the enhancement logic for handling not found transactions.
+
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3095000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3105000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3620000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3630000.json
+````
 
 # 2.3.6 - 2025-10-10
 
