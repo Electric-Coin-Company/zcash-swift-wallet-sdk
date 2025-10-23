@@ -470,6 +470,13 @@ public protocol Synchronizer: AnyObject {
     /// The connection to the database is created in a read-only mode. it's a hard requirement.
     /// Details: `TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))`
     func debugDatabase(sql: String) -> String
+    
+    /// Get an ephemeral single use transparent address
+    /// - Parameter accountUUID: The account for which the proposal was created.
+    /// - Returns The ephemeral transparent address
+    ///
+    /// - Throws rustGetSingleUseTransparentAddress as a common indicator of the operation failure
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String
 }
 
 public enum SyncStatus: Equatable {

@@ -1243,6 +1243,28 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     func fixWitnesses() async {
         zcashlc_fix_witnesses(dbData.0, dbData.1, networkType.networkId)
     }
+    
+    @DBActor
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+        let tAddrCStr = zcashlc_get_single_use_taddr(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+
+        guard let tAddrCStr else {
+            throw ZcashError.rustGetSingleUseTransparentAddress(lastErrorMessage(fallback: "`getSingleUseTransparentAddress` failed with unknown error"))
+        }
+
+        defer { zcashlc_string_free(tAddrCStr) }
+
+        guard let address = String(validatingUTF8: tAddrCStr) else {
+            throw ZcashError.rustGetSingleUseTransparentAddressInvalidAddress
+        }
+
+        return address
+    }
 }
 
 private extension ZcashRustBackend {

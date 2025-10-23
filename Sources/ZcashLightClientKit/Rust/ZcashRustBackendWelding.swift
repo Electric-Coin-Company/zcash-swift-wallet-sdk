@@ -385,4 +385,7 @@ protocol ZcashRustBackendWelding {
     /// Fix witnesses - addressing note commitment tree bug.
     /// This function is supposed to be called occasionaly. It's handled by the SDK Synchronizer and called only once per version.
     func fixWitnesses() async
+    
+    /// Get an ephemeral single use transparent address
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String
 }

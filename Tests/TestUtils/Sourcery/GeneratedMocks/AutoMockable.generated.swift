@@ -3669,4 +3669,24 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         await fixWitnessesClosure!()
     }
 
+    // MARK: - getSingleUseTransparentAddress
+
+    var getSingleUseTransparentAddressAccountUUIDCallsCount = 0
+    var getSingleUseTransparentAddressAccountUUIDCalled: Bool {
+        return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    }
+    var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: String!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async -> String)?
+
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async -> String {
+        getSingleUseTransparentAddressAccountUUIDCallsCount += 1
+        getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getSingleUseTransparentAddressAccountUUIDClosure {
+            return await closure(accountUUID)
+        } else {
+            return getSingleUseTransparentAddressAccountUUIDReturnValue
+        }
+    }
+
 }
