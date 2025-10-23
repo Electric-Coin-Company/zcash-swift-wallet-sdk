@@ -6,6 +6,10 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Fixed
+- [2.3.6 change] Transparent funds are now reported after `UpdateChainTipAction` is processed. Attempt to shield before this action has been failing otherwise. Update: the solution handled only cold start of a client, now it resets the logic with each stop() call of the SDK.
+- Updated to zcash_client_sqlite-0.18.9 to fix problems in transparent UTXO selection for shielding, including incorrect handling of outputs received at ephemeral addresses and selection of dust transparent outputs for shielding.
+
 # 2.3.7 - 2025-10-20
 
 ## Added

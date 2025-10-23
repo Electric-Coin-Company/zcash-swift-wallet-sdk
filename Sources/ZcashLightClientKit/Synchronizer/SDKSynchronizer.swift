@@ -217,6 +217,8 @@ public class SDKSynchronizer: Synchronizer {
         // downloading is really done. Which could block execution of the code on the client side. So it's better strategy to spin up new task and
         // exit fast on client side.
         Task(priority: .high) {
+            await sdkFlags.sdkStopped()
+            
             let status = await self.status
             guard status != .stopped, status != .disconnected else {
                 logger.info("attempted to stop when status was: \(status)")
