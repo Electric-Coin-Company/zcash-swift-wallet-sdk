@@ -2278,6 +2278,54 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - getSingleUseTransparentAddress
+
+    var getSingleUseTransparentAddressAccountUUIDThrowableError: Error?
+    var getSingleUseTransparentAddressAccountUUIDCallsCount = 0
+    var getSingleUseTransparentAddressAccountUUIDCalled: Bool {
+        return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    }
+    var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: String!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> String)?
+
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+        if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
+            throw error
+        }
+        getSingleUseTransparentAddressAccountUUIDCallsCount += 1
+        getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getSingleUseTransparentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
+        } else {
+            return getSingleUseTransparentAddressAccountUUIDReturnValue
+        }
+    }
+
+    // MARK: - checkSingleUseTransparentAddress
+
+    var checkSingleUseTransparentAddressAccountUUIDThrowableError: Error?
+    var checkSingleUseTransparentAddressAccountUUIDCallsCount = 0
+    var checkSingleUseTransparentAddressAccountUUIDCalled: Bool {
+        return checkSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    }
+    var checkSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var checkSingleUseTransparentAddressAccountUUIDReturnValue: Bool!
+    var checkSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> Bool)?
+
+    func checkSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> Bool {
+        if let error = checkSingleUseTransparentAddressAccountUUIDThrowableError {
+            throw error
+        }
+        checkSingleUseTransparentAddressAccountUUIDCallsCount += 1
+        checkSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = checkSingleUseTransparentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
+        } else {
+            return checkSingleUseTransparentAddressAccountUUIDReturnValue
+        }
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
@@ -3671,21 +3719,49 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - getSingleUseTransparentAddress
 
+    var getSingleUseTransparentAddressAccountUUIDThrowableError: Error?
     var getSingleUseTransparentAddressAccountUUIDCallsCount = 0
     var getSingleUseTransparentAddressAccountUUIDCalled: Bool {
         return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
     }
     var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
     var getSingleUseTransparentAddressAccountUUIDReturnValue: String!
-    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async -> String)?
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> String)?
 
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async -> String {
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+        if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
+            throw error
+        }
         getSingleUseTransparentAddressAccountUUIDCallsCount += 1
         getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
         if let closure = getSingleUseTransparentAddressAccountUUIDClosure {
-            return await closure(accountUUID)
+            return try await closure(accountUUID)
         } else {
             return getSingleUseTransparentAddressAccountUUIDReturnValue
+        }
+    }
+
+    // MARK: - checkSingleUseTransparentAddressOver
+
+    var checkSingleUseTransparentAddressOverTorAccountUUIDThrowableError: Error?
+    var checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount = 0
+    var checkSingleUseTransparentAddressOverTorAccountUUIDCalled: Bool {
+        return checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount > 0
+    }
+    var checkSingleUseTransparentAddressOverTorAccountUUIDReceivedArguments: (tor: TorClient, accountUUID: AccountUUID)?
+    var checkSingleUseTransparentAddressOverTorAccountUUIDReturnValue: Bool!
+    var checkSingleUseTransparentAddressOverTorAccountUUIDClosure: ((TorClient, AccountUUID) async throws -> Bool)?
+
+    func checkSingleUseTransparentAddressOver(tor: TorClient, accountUUID: AccountUUID) async throws -> Bool {
+        if let error = checkSingleUseTransparentAddressOverTorAccountUUIDThrowableError {
+            throw error
+        }
+        checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount += 1
+        checkSingleUseTransparentAddressOverTorAccountUUIDReceivedArguments = (tor: tor, accountUUID: accountUUID)
+        if let closure = checkSingleUseTransparentAddressOverTorAccountUUIDClosure {
+            return try await closure(tor, accountUUID)
+        } else {
+            return checkSingleUseTransparentAddressOverTorAccountUUIDReturnValue
         }
     }
 

@@ -177,7 +177,7 @@
       "location" : "https://github.com/Electric-Coin-Company/zcash-light-client-ffi",
       "state" : {
         "branch" : "preview/feature/single_use_addresses",
-        "revision" : "fb3b0e2fdf98e5925ca6e339ecd09023af56614f"
+        "revision" : "f256f69d74f0deffc7a679f91184ec8e40f92fa2"
       }
     }
   ],

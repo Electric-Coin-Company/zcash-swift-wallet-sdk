@@ -1029,7 +1029,12 @@ public class SDKSynchronizer: Synchronizer {
     public func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
         try await initializer.rustBackend.getSingleUseTransparentAddress(accountUUID: accountUUID)
     }
-    
+
+    public func checkSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> Bool {
+        //try await initializer.rustBackend.checkSingleUseTransparentAddressOver(tor: tor, accountUUID: accountUUID)
+        false
+    }
+
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {
