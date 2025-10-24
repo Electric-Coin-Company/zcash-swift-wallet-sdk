@@ -418,6 +418,15 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> Bool {
+        false
+    }
+    
     func closeConnections() async {
         _ = channel?.close()
     }

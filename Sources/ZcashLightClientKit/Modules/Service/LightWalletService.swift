@@ -222,4 +222,11 @@ protocol LightWalletService: AnyObject {
     func getTaddressTxids(_ request: TransparentAddressBlockFilter, mode: ServiceMode) throws -> AsyncThrowingStream<RawTransaction, Error>
     
     func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, Error>
+    
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> Bool
 }

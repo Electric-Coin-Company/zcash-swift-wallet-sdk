@@ -388,11 +388,4 @@ protocol ZcashRustBackendWelding {
     
     /// Get an ephemeral single use transparent address
     func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String
-    
-    /// Checks to find any single-use ephemeral addresses exposed in the past day that have not yet
-    /// received funds, excluding any whose next check time is in the future. This will then choose the
-    /// address that is most overdue for checking, retrieve any UTXOs for that address over Tor, and
-    /// add them to the wallet database. If no such UTXOs are found, the check will be rescheduled
-    /// following an expoential-backoff-with-jitter algorithm.
-    func checkSingleUseTransparentAddressOver(tor: TorClient, accountUUID: AccountUUID) async throws -> Bool
 }

@@ -1082,6 +1082,30 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - checkSingleUseTransparentAddresses
+
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError: Error?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount = 0
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCalled: Bool {
+        return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount > 0
+    }
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments: (dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode)?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: Bool!
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> Bool)?
+
+    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> Bool {
+        if let error = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError {
+            throw error
+        }
+        checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount += 1
+        checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments = (dbData: dbData, networkType: networkType, accountUUID: accountUUID, mode: mode)
+        if let closure = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure {
+            return try await closure(dbData, networkType, accountUUID, mode)
+        } else {
+            return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -2302,27 +2326,27 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - checkSingleUseTransparentAddress
+    // MARK: - checkSingleUseTransparentAddresses
 
-    var checkSingleUseTransparentAddressAccountUUIDThrowableError: Error?
-    var checkSingleUseTransparentAddressAccountUUIDCallsCount = 0
-    var checkSingleUseTransparentAddressAccountUUIDCalled: Bool {
-        return checkSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    var checkSingleUseTransparentAddressesAccountUUIDThrowableError: Error?
+    var checkSingleUseTransparentAddressesAccountUUIDCallsCount = 0
+    var checkSingleUseTransparentAddressesAccountUUIDCalled: Bool {
+        return checkSingleUseTransparentAddressesAccountUUIDCallsCount > 0
     }
-    var checkSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
-    var checkSingleUseTransparentAddressAccountUUIDReturnValue: Bool!
-    var checkSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> Bool)?
+    var checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID: AccountUUID?
+    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: Bool!
+    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> Bool)?
 
-    func checkSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> Bool {
-        if let error = checkSingleUseTransparentAddressAccountUUIDThrowableError {
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool {
+        if let error = checkSingleUseTransparentAddressesAccountUUIDThrowableError {
             throw error
         }
-        checkSingleUseTransparentAddressAccountUUIDCallsCount += 1
-        checkSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
-        if let closure = checkSingleUseTransparentAddressAccountUUIDClosure {
+        checkSingleUseTransparentAddressesAccountUUIDCallsCount += 1
+        checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = checkSingleUseTransparentAddressesAccountUUIDClosure {
             return try await closure(accountUUID)
         } else {
-            return checkSingleUseTransparentAddressAccountUUIDReturnValue
+            return checkSingleUseTransparentAddressesAccountUUIDReturnValue
         }
     }
 
@@ -3738,30 +3762,6 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(accountUUID)
         } else {
             return getSingleUseTransparentAddressAccountUUIDReturnValue
-        }
-    }
-
-    // MARK: - checkSingleUseTransparentAddressOver
-
-    var checkSingleUseTransparentAddressOverTorAccountUUIDThrowableError: Error?
-    var checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount = 0
-    var checkSingleUseTransparentAddressOverTorAccountUUIDCalled: Bool {
-        return checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount > 0
-    }
-    var checkSingleUseTransparentAddressOverTorAccountUUIDReceivedArguments: (tor: TorClient, accountUUID: AccountUUID)?
-    var checkSingleUseTransparentAddressOverTorAccountUUIDReturnValue: Bool!
-    var checkSingleUseTransparentAddressOverTorAccountUUIDClosure: ((TorClient, AccountUUID) async throws -> Bool)?
-
-    func checkSingleUseTransparentAddressOver(tor: TorClient, accountUUID: AccountUUID) async throws -> Bool {
-        if let error = checkSingleUseTransparentAddressOverTorAccountUUIDThrowableError {
-            throw error
-        }
-        checkSingleUseTransparentAddressOverTorAccountUUIDCallsCount += 1
-        checkSingleUseTransparentAddressOverTorAccountUUIDReceivedArguments = (tor: tor, accountUUID: accountUUID)
-        if let closure = checkSingleUseTransparentAddressOverTorAccountUUIDClosure {
-            return try await closure(tor, accountUUID)
-        } else {
-            return checkSingleUseTransparentAddressOverTorAccountUUIDReturnValue
         }
     }
 

@@ -485,9 +485,7 @@ public protocol Synchronizer: AnyObject {
     /// following an expoential-backoff-with-jitter algorithm.
     /// - Parameter accountUUID: The account for which the single use transparent addresses are going to be checked.
     /// - Returns `true` if UTXOs were added to the wallet, `false` otherwise.
-    ///
-    /// - Throws checkSingleUseTransparentAddress as a common indicator of the operation failure
-    func checkSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> Bool
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool
 }
 
 public enum SyncStatus: Equatable {

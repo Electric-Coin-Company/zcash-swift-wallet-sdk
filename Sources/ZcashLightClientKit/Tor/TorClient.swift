@@ -405,6 +405,20 @@ public class TorLwdConn {
             throw ZcashError.rustTorLwdGetTreeState("`TorLwdConn.getTreeState` Failed to decode protobuf TreeState: \(error)")
         }
     }
+    
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID
+    ) async throws -> Bool {
+        zcashlc_tor_lwd_conn_check_single_use_taddr(
+            conn,
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+    }
 }
 
 extension FfiHttpResponseBytes {

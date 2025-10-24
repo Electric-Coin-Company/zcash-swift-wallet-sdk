@@ -1030,9 +1030,15 @@ public class SDKSynchronizer: Synchronizer {
         try await initializer.rustBackend.getSingleUseTransparentAddress(accountUUID: accountUUID)
     }
 
-    public func checkSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> Bool {
-        //try await initializer.rustBackend.checkSingleUseTransparentAddressOver(tor: tor, accountUUID: accountUUID)
-        false
+    public func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool {
+        let dbData = initializer.dataDbURL.osStr()
+        
+        return try await initializer.lightWalletService.checkSingleUseTransparentAddresses(
+            dbData: dbData,
+            networkType: network.networkType,
+            accountUUID: accountUUID,
+            mode: .torInGroup("checkSingleUseTransparentAddresses")
+        )
     }
 
     // MARK: Server switch

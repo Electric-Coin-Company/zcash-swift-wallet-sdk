@@ -210,6 +210,15 @@ class DarksideWalletService: LightWalletService {
     func getMempoolStream() throws -> AsyncThrowingStream<RawTransaction, any Error> {
         try service.getMempoolStream()
     }
+    
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> Bool {
+        false
+    }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {

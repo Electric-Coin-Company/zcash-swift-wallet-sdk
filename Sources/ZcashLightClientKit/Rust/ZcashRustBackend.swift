@@ -1256,7 +1256,9 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard let tAddrCStr else {
-            throw ZcashError.rustGetSingleUseTransparentAddress(lastErrorMessage(fallback: "`getSingleUseTransparentAddress` failed with unknown error"))
+            throw ZcashError.rustGetSingleUseTransparentAddress(lastErrorMessage(
+                fallback: "`getSingleUseTransparentAddress` failed with unknown error")
+            )
         }
 
         defer { zcashlc_string_free(tAddrCStr) }
@@ -1266,29 +1268,6 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return address
-    }
-    
-    @DBActor
-    func checkSingleUseTransparentAddressOver(tor: TorClient, accountUUID: AccountUUID) async throws -> Bool {
-//        let tAddrCStr = zcashlc_tor_lwd_conn_check_single_use_taddr(
-//            dbData.0,
-//            dbData.1,
-//            networkType.networkId,
-//            accountUUID.id
-//        )
-//
-//        guard let tAddrCStr else {
-//            throw ZcashError.rustGetSingleUseTransparentAddress(lastErrorMessage(fallback: "`getSingleUseTransparentAddress` failed with unknown error"))
-//        }
-//
-//        defer { zcashlc_string_free(tAddrCStr) }
-//
-//        guard let address = String(validatingUTF8: tAddrCStr) else {
-//            throw ZcashError.rustGetSingleUseTransparentAddressInvalidAddress
-//        }
-//
-//        return address
-        return false
     }
 }
 
