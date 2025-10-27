@@ -1247,27 +1247,27 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     @DBActor
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
-        let tAddrCStr = zcashlc_get_single_use_taddr(
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
+        let singleUseTaddrPtr = zcashlc_get_single_use_taddr(
             dbData.0,
             dbData.1,
             networkType.networkId,
             accountUUID.id
         )
 
-        guard let tAddrCStr else {
-            throw ZcashError.rustGetSingleUseTransparentAddress(lastErrorMessage(
-                fallback: "`getSingleUseTransparentAddress` failed with unknown error")
+        guard let singleUseTaddrPtr else {
+            throw ZcashError.rustGetSingleUseTransparentAddress(
+                lastErrorMessage(fallback: "`getSingleUseTransparentAddress` failed with unknown error")
             )
         }
 
-        defer { zcashlc_string_free(tAddrCStr) }
+        defer { zcashlc_free_single_use_taddr(singleUseTaddrPtr) }
 
-        guard let address = String(validatingUTF8: tAddrCStr) else {
-            throw ZcashError.rustGetSingleUseTransparentAddressInvalidAddress
-        }
-
-        return address
+        return SingleUseTransparentAddress(
+            address: String(cString: singleUseTaddrPtr.pointee.address),
+            gapPosition: singleUseTaddrPtr.pointee.gap_position,
+            gapLimit: singleUseTaddrPtr.pointee.gap_limit
+        )
     }
 }
 

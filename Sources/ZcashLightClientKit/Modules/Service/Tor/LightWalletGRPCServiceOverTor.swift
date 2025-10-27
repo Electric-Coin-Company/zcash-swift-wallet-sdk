@@ -186,7 +186,7 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         networkType: NetworkType,
         accountUUID: AccountUUID,
         mode: ServiceMode
-    ) async throws -> Bool {
+    ) async throws -> SingleUseTransparentResult {
         guard mode != .direct else {
             return try await super.checkSingleUseTransparentAddresses(dbData: dbData, networkType: networkType, accountUUID: accountUUID, mode: mode)
         }

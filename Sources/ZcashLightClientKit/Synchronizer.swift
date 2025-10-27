@@ -473,10 +473,10 @@ public protocol Synchronizer: AnyObject {
     
     /// Get an ephemeral single use transparent address
     /// - Parameter accountUUID: The account for which the single use transparent address is going to be created.
-    /// - Returns The ephemeral transparent address
+    /// - Returns The struct with an ephemeral transparent address and gap limit info
     ///
     /// - Throws rustGetSingleUseTransparentAddress as a common indicator of the operation failure
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress
     
     /// Checks to find any single-use ephemeral addresses exposed in the past day that have not yet
     /// received funds, excluding any whose next check time is in the future. This will then choose the
@@ -484,8 +484,10 @@ public protocol Synchronizer: AnyObject {
     /// add them to the wallet database. If no such UTXOs are found, the check will be rescheduled
     /// following an expoential-backoff-with-jitter algorithm.
     /// - Parameter accountUUID: The account for which the single use transparent addresses are going to be checked.
-    /// - Returns `true` if UTXOs were added to the wallet, `false` otherwise.
-    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool
+    /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
+    ///
+    /// - Throws rustCheckSingleUseTransparentAddresses as a common indicator of the operation failure
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> SingleUseTransparentResult
 }
 
 public enum SyncStatus: Equatable {

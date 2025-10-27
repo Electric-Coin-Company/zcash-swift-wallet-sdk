@@ -410,8 +410,8 @@ public class TorLwdConn {
         dbData: (String, UInt),
         networkType: NetworkType,
         accountUUID: AccountUUID
-    ) async throws -> Bool {
-        let res = zcashlc_tor_lwd_conn_check_single_use_taddr(
+    ) async throws -> SingleUseTransparentResult {
+        let addressCheckResultPtr = zcashlc_tor_lwd_conn_check_single_use_taddr(
             conn,
             dbData.0,
             dbData.1,
@@ -419,13 +419,21 @@ public class TorLwdConn {
             accountUUID.id
         )
         
-        if !res {
-            throw ZcashError.rustTorLwdGetTreeState(
-                lastErrorMessage(fallback: "`TorLwdConn.checkSingleUseTransparentAddresses` failed with unknown error")
+        guard let addressCheckResultPtr else {
+            throw ZcashError.rustCheckSingleUseTransparentAddresses(
+                lastErrorMessage(fallback: "`checkSingleUseTransparentAddresses` failed with unknown error")
             )
         }
-        
-        return res
+
+        defer { zcashlc_free_address_check_result(addressCheckResultPtr) }
+
+        if addressCheckResultPtr.pointee.tag == 0 {
+            return SingleUseTransparentResult.notFound
+        } else {
+            return SingleUseTransparentResult.found(
+                String(cString: addressCheckResultPtr.pointee.found.address)
+            )
+        }
     }
 }
 

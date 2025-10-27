@@ -100,7 +100,7 @@ class MockLightWalletService: LightWalletService {
         networkType: NetworkType,
         accountUUID: AccountUUID,
         mode: ServiceMode
-    ) async throws -> Bool {
-        false
+    ) async throws -> SingleUseTransparentResult {
+        .notFound
     }
 }

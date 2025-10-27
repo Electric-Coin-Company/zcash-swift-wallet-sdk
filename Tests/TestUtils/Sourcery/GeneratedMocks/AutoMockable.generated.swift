@@ -1090,10 +1090,10 @@ class LightWalletServiceMock: LightWalletService {
         return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount > 0
     }
     var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments: (dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode)?
-    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: Bool!
-    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> Bool)?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: SingleUseTransparentResult!
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> SingleUseTransparentResult)?
 
-    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> Bool {
+    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> SingleUseTransparentResult {
         if let error = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError {
             throw error
         }
@@ -2310,10 +2310,10 @@ class SynchronizerMock: Synchronizer {
         return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
     }
     var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
-    var getSingleUseTransparentAddressAccountUUIDReturnValue: String!
-    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> String)?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: SingleUseTransparentAddress!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentAddress)?
 
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
         if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
             throw error
         }
@@ -2334,10 +2334,10 @@ class SynchronizerMock: Synchronizer {
         return checkSingleUseTransparentAddressesAccountUUIDCallsCount > 0
     }
     var checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID: AccountUUID?
-    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: Bool!
-    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> Bool)?
+    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: SingleUseTransparentResult!
+    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentResult)?
 
-    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool {
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> SingleUseTransparentResult {
         if let error = checkSingleUseTransparentAddressesAccountUUIDThrowableError {
             throw error
         }
@@ -3749,10 +3749,10 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
     }
     var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
-    var getSingleUseTransparentAddressAccountUUIDReturnValue: String!
-    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> String)?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: SingleUseTransparentAddress!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentAddress)?
 
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
         if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
             throw error
         }

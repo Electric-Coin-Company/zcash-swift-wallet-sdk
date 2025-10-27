@@ -387,5 +387,5 @@ protocol ZcashRustBackendWelding {
     func fixWitnesses() async
     
     /// Get an ephemeral single use transparent address
-    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress
 }

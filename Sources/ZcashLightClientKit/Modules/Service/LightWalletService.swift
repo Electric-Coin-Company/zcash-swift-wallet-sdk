@@ -228,5 +228,5 @@ protocol LightWalletService: AnyObject {
         networkType: NetworkType,
         accountUUID: AccountUUID,
         mode: ServiceMode
-    ) async throws -> Bool
+    ) async throws -> SingleUseTransparentResult
 }

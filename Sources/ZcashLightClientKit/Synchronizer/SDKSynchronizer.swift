@@ -1026,11 +1026,11 @@ public class SDKSynchronizer: Synchronizer {
         transactionRepository.debugDatabase(sql: sql)
     }
     
-    public func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> String {
+    public func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
         try await initializer.rustBackend.getSingleUseTransparentAddress(accountUUID: accountUUID)
     }
 
-    public func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> Bool {
+    public func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> SingleUseTransparentResult {
         let dbData = initializer.dataDbURL.osStr()
         
         return try await initializer.lightWalletService.checkSingleUseTransparentAddresses(
