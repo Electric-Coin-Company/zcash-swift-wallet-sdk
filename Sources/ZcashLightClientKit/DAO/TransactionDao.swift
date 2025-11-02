@@ -64,6 +64,12 @@ class TransactionSQLDAO: TransactionRepository {
         return conn
     }
 
+    private func debugConnection() throws -> Connection {
+        let conn = try dbProvider.debugConnection()
+        conn.trace(traceClosure)
+        return conn
+    }
+
     func closeDBConnection() {
         dbProvider.close()
     }
@@ -276,7 +282,7 @@ class TransactionSQLDAO: TransactionRepository {
     }
     
     func debugDatabase(sql: String) -> String {
-        guard let connection = try? connection() else {
+        guard let connection = try? debugConnection() else {
             return "Connection failed"
         }
         

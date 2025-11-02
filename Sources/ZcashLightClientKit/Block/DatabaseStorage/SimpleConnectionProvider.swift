@@ -33,7 +33,39 @@ class SimpleConnectionProvider: ConnectionProvider {
         return conn
     }
 
+    /// throws ZcashError.simpleConnectionProvider
+    func debugConnection() throws -> Connection {
+        guard let conn = db else {
+            do {
+                let conn = try Connection(path, readonly: true)
+                try addDebugFunctions(conn: conn)
+                self.db = conn
+                return conn
+            } catch {
+                throw ZcashError.simpleConnectionProvider(error)
+            }
+        }
+        return conn
+    }
+
     func close() {
         self.db = nil
+    }
+}
+
+private func addDebugFunctions(conn: Connection) throws {
+    // `SELECT txid(txid) FROM transactions`
+    _ = try conn.createFunction("txid", deterministic: true) { (txid: SQLite.Blob) in
+        return txid.toHex().toTxIdString()
+    }
+    // `SELECT memo(memo) FROM sapling_received_notes`
+    _ = try conn.createFunction("memo", deterministic: true) { (memoBytes: SQLite.Blob?) -> String? in
+        guard let memoBytes else { return nil }
+        do {
+            let memo = try Memo(bytes: memoBytes.bytes)
+            return memo.toString() ?? memoBytes.toHex()
+        } catch {
+            return nil
+        }
     }
 }
