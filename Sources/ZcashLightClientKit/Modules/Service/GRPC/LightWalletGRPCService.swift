@@ -427,6 +427,7 @@ class LightWalletGRPCService: LightWalletService {
         .notFound
     }
     
+    // swiftlint:disable:next function_parameter_count
     func updateTransparentAddressTransactions(
         address: String,
         start: BlockHeight,

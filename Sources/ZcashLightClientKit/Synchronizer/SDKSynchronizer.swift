@@ -1037,7 +1037,7 @@ public class SDKSynchronizer: Synchronizer {
             dbData: dbData,
             networkType: network.networkType,
             accountUUID: accountUUID,
-            mode: .torInGroup("checkSingleUseTransparentAddresses")
+            mode: .uniqueTor
         )
     }
     
@@ -1050,7 +1050,7 @@ public class SDKSynchronizer: Synchronizer {
             end: -1,
             dbData: dbData,
             networkType: network.networkType,
-            mode: .torInGroup("updateTransparentAddressTransactions-\(address)")
+            mode: .uniqueTor
         )
     }
 

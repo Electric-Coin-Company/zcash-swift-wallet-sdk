@@ -230,6 +230,7 @@ protocol LightWalletService: AnyObject {
         mode: ServiceMode
     ) async throws -> TransparentAddressCheckResult
     
+    // swiftlint:disable:next function_parameter_count
     func updateTransparentAddressTransactions(
         address: String,
         start: BlockHeight,
