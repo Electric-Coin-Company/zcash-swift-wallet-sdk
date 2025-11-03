@@ -487,7 +487,14 @@ public protocol Synchronizer: AnyObject {
     /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
     ///
     /// - Throws rustCheckSingleUseTransparentAddresses as a common indicator of the operation failure
-    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> SingleUseTransparentResult
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult
+
+    /// Finds all transactions associated with the given transparent address within the given block range.
+    /// - Parameter address: The address for which the transactions will be checked.
+    /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
+    ///
+    /// - Throws rustUpdateTransparentAddressTransactions as a common indicator of the operation failure
+    func updateTransparentAddressTransactions(address: String, start: BlockHeight) async throws -> TransparentAddressCheckResult
 }
 
 public enum SyncStatus: Equatable {

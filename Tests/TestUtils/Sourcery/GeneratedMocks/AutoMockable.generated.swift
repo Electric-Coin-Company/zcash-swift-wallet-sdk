@@ -1090,10 +1090,10 @@ class LightWalletServiceMock: LightWalletService {
         return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount > 0
     }
     var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments: (dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode)?
-    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: SingleUseTransparentResult!
-    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> SingleUseTransparentResult)?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: TransparentAddressCheckResult!
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> TransparentAddressCheckResult)?
 
-    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> SingleUseTransparentResult {
+    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> TransparentAddressCheckResult {
         if let error = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError {
             throw error
         }
@@ -1103,6 +1103,30 @@ class LightWalletServiceMock: LightWalletService {
             return try await closure(dbData, networkType, accountUUID, mode)
         } else {
             return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue
+        }
+    }
+
+    // MARK: - updateTransparentAddressTransactions
+
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeThrowableError: Error?
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount = 0
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCalled: Bool {
+        return updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount > 0
+    }
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReceivedArguments: (address: String, start: BlockHeight, end: BlockHeight, dbData: (String, UInt), networkType: NetworkType, mode: ServiceMode)?
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReturnValue: TransparentAddressCheckResult!
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeClosure: ((String, BlockHeight, BlockHeight, (String, UInt), NetworkType, ServiceMode) async throws -> TransparentAddressCheckResult)?
+
+    func updateTransparentAddressTransactions(address: String, start: BlockHeight, end: BlockHeight, dbData: (String, UInt), networkType: NetworkType, mode: ServiceMode) async throws -> TransparentAddressCheckResult {
+        if let error = updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeThrowableError {
+            throw error
+        }
+        updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount += 1
+        updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReceivedArguments = (address: address, start: start, end: end, dbData: dbData, networkType: networkType, mode: mode)
+        if let closure = updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeClosure {
+            return try await closure(address, start, end, dbData, networkType, mode)
+        } else {
+            return updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReturnValue
         }
     }
 
@@ -2334,10 +2358,10 @@ class SynchronizerMock: Synchronizer {
         return checkSingleUseTransparentAddressesAccountUUIDCallsCount > 0
     }
     var checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID: AccountUUID?
-    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: SingleUseTransparentResult!
-    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentResult)?
+    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: TransparentAddressCheckResult!
+    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> TransparentAddressCheckResult)?
 
-    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> SingleUseTransparentResult {
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
         if let error = checkSingleUseTransparentAddressesAccountUUIDThrowableError {
             throw error
         }
@@ -2347,6 +2371,30 @@ class SynchronizerMock: Synchronizer {
             return try await closure(accountUUID)
         } else {
             return checkSingleUseTransparentAddressesAccountUUIDReturnValue
+        }
+    }
+
+    // MARK: - updateTransparentAddressTransactions
+
+    var updateTransparentAddressTransactionsAddressStartThrowableError: Error?
+    var updateTransparentAddressTransactionsAddressStartCallsCount = 0
+    var updateTransparentAddressTransactionsAddressStartCalled: Bool {
+        return updateTransparentAddressTransactionsAddressStartCallsCount > 0
+    }
+    var updateTransparentAddressTransactionsAddressStartReceivedArguments: (address: String, start: BlockHeight)?
+    var updateTransparentAddressTransactionsAddressStartReturnValue: TransparentAddressCheckResult!
+    var updateTransparentAddressTransactionsAddressStartClosure: ((String, BlockHeight) async throws -> TransparentAddressCheckResult)?
+
+    func updateTransparentAddressTransactions(address: String, start: BlockHeight) async throws -> TransparentAddressCheckResult {
+        if let error = updateTransparentAddressTransactionsAddressStartThrowableError {
+            throw error
+        }
+        updateTransparentAddressTransactionsAddressStartCallsCount += 1
+        updateTransparentAddressTransactionsAddressStartReceivedArguments = (address: address, start: start)
+        if let closure = updateTransparentAddressTransactionsAddressStartClosure {
+            return try await closure(address, start)
+        } else {
+            return updateTransparentAddressTransactionsAddressStartReturnValue
         }
     }
 

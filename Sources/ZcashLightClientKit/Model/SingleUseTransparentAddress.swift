@@ -19,7 +19,7 @@ public struct SingleUseTransparentAddress: Equatable {
     }
 }
 
-public enum SingleUseTransparentResult: Equatable {
+public enum TransparentAddressCheckResult: Equatable {
     case notFound
     case found(String)
 }

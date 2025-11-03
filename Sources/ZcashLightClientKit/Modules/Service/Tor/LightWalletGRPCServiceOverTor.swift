@@ -186,7 +186,7 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         networkType: NetworkType,
         accountUUID: AccountUUID,
         mode: ServiceMode
-    ) async throws -> SingleUseTransparentResult {
+    ) async throws -> TransparentAddressCheckResult {
         guard mode != .direct else {
             return try await super.checkSingleUseTransparentAddresses(dbData: dbData, networkType: networkType, accountUUID: accountUUID, mode: mode)
         }
@@ -196,6 +196,39 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
                 dbData: dbData,
                 networkType: networkType,
                 accountUUID: accountUUID
+            )
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
+    }
+    
+    override func updateTransparentAddressTransactions(
+        address: String,
+        start: BlockHeight,
+        end: BlockHeight,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        guard mode != .direct else {
+            return try await super.updateTransparentAddressTransactions(
+                address: address,
+                start: start,
+                end: end,
+                dbData: dbData,
+                networkType: networkType,
+                mode: mode
+            )
+        }
+
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).updateTransparentAddressTransactions(
+                address: address,
+                start: start,
+                end: end,
+                dbData: dbData,
+                networkType: networkType
             )
         } catch {
             await serviceConnections.responseToTorFailure(mode)

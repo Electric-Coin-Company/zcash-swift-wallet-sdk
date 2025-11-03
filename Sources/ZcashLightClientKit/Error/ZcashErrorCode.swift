@@ -249,6 +249,8 @@ public enum ZcashErrorCode: String {
     case rustGetSingleUseTransparentAddressInvalidAddress = "ZRUST0086"
     /// Error from rust layer when calling ZcashRustBackend.checkSingleUseTransparentAddresses
     case rustCheckSingleUseTransparentAddresses = "ZRUST0087"
+    /// Error from rust layer when calling ZcashRustBackend.updateTransparentAddressTransactions
+    case rustUpdateTransparentAddressTransactions = "ZRUST0088"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.
