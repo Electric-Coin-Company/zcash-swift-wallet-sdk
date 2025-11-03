@@ -1047,7 +1047,7 @@ public class SDKSynchronizer: Synchronizer {
         return try await initializer.lightWalletService.updateTransparentAddressTransactions(
             address: address,
             start: start,
-            end: -1,
+            end: 3122145,
             dbData: dbData,
             networkType: network.networkType,
             mode: .uniqueTor
