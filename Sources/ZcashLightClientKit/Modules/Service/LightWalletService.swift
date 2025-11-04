@@ -239,4 +239,12 @@ protocol LightWalletService: AnyObject {
         networkType: NetworkType,
         mode: ServiceMode
     ) async throws -> TransparentAddressCheckResult
+    
+    func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult
 }

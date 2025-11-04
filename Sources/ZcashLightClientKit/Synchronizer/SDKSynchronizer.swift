@@ -1041,15 +1041,27 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
     
-    public func updateTransparentAddressTransactions(address: String, start: BlockHeight) async throws -> TransparentAddressCheckResult {
+    public func updateTransparentAddressTransactions(address: String) async throws -> TransparentAddressCheckResult {
         let dbData = initializer.dataDbURL.osStr()
         
         return try await initializer.lightWalletService.updateTransparentAddressTransactions(
             address: address,
-            start: start,
-            end: 3122145,
+            start: 0,
+            end: -1,
             dbData: dbData,
             networkType: network.networkType,
+            mode: .uniqueTor
+        )
+    }
+    
+    public func fetchUTXOsBy(address: String, accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
+        let dbData = initializer.dataDbURL.osStr()
+        
+        return try await initializer.lightWalletService.fetchUTXOsByAddress(
+            address: address,
+            dbData: dbData,
+            networkType: network.networkType,
+            accountUUID: accountUUID,
             mode: .uniqueTor
         )
     }

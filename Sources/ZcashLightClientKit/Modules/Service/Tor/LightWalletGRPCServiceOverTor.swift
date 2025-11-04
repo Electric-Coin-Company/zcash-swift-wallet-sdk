@@ -236,6 +236,36 @@ class LightWalletGRPCServiceOverTor: LightWalletGRPCService {
         }
     }
     
+    override func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        guard mode != .direct else {
+            return try await super.fetchUTXOsByAddress(
+                address: address,
+                dbData: dbData,
+                networkType: networkType,
+                accountUUID: accountUUID,
+                mode: mode
+            )
+        }
+
+        do {
+            return try await serviceConnections.connectToLightwalletd(mode).fetchUTXOsByAddress(
+                address: address,
+                dbData: dbData,
+                networkType: networkType,
+                accountUUID: accountUUID
+            )
+        } catch {
+            await serviceConnections.responseToTorFailure(mode)
+            throw error
+        }
+    }
+    
     override func closeConnections() async {
         await super.closeConnections()
         await serviceConnections.closeConnections()

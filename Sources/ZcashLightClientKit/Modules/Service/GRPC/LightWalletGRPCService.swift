@@ -439,6 +439,16 @@ class LightWalletGRPCService: LightWalletService {
         .notFound
     }
     
+    func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        .notFound
+    }
+    
     func closeConnections() async {
         _ = channel?.close()
     }

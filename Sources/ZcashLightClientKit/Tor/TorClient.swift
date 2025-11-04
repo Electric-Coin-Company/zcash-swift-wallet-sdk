@@ -469,6 +469,38 @@ public class TorLwdConn {
             )
         }
     }
+
+    func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID
+    ) async throws -> TransparentAddressCheckResult {
+        let addressCheckResultPtr = zcashlc_tor_lwd_conn_fetch_utxos_by_address(
+            conn,
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id,
+            address
+        )
+        
+        guard let addressCheckResultPtr else {
+            throw ZcashError.rustFetchUTXOsByAddress(
+                lastErrorMessage(fallback: "`fetchUTXOsByAddress` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_address_check_result(addressCheckResultPtr) }
+
+        if addressCheckResultPtr.pointee.tag == 0 {
+            return TransparentAddressCheckResult.notFound
+        } else {
+            return TransparentAddressCheckResult.found(
+                String(cString: addressCheckResultPtr.pointee.found.address)
+            )
+        }
+    }
 }
 
 extension FfiHttpResponseBytes {
