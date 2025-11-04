@@ -6,6 +6,12 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.getSingleUseTransparentAddress` Get an ephemeral single use transparent address.
+- `SDKSynchronizer.checkSingleUseTransparentAddresses` Checks to find any single-use ephemeral addresses exposed in the past day that have not yet received funds, excluding any whose next check time is in the future. This will then choose the address that is most overdue for checking, retrieve any UTXOs for that address over Tor, and add them to the wallet database. 
+- `SDKSynchronizer.updateTransparentAddressTransactions` Finds all transactions associated with the given transparent address.
+- `SDKSynchronizer.fetchUTXOsBy(address)` Checks to find any UTXOs associated with the given transparent address. This check will cover the block range starting at the exposure height for that address, if known, or otherwise at the birthday height of the specified account.
+
 ## Fixed
 - [2.3.6 change] Transparent funds are now reported after `UpdateChainTipAction` is processed. Attempt to shield before this action has been failing otherwise. Update: the solution handled only cold start of a client, now it resets the logic with each stop() call of the SDK.
 - Updated to zcash_client_sqlite-0.18.9 to fix problems in transparent UTXO selection for shielding, including incorrect handling of outputs received at ephemeral addresses and selection of dust transparent outputs for shielding.
