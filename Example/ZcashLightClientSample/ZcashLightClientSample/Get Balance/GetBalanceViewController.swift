@@ -22,7 +22,7 @@ class GetBalanceViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let synchronizer = AppDelegate.shared.sharedSynchronizer
-        self.title = "\(Bundle.main.bundleIdentifier)"// "Account 0 Balance"
+        self.title = "Account 0 Balance"
 
         Task { @MainActor [weak self] in
             guard let account = try? await synchronizer.listAccounts().first else {

@@ -84,26 +84,26 @@ public enum SynchronizerEvent {
 public protocol Synchronizer: AnyObject {
     /// Alias used for this instance.
     var alias: ZcashSynchronizerAlias { get }
-    
+
     /// Latest state of the SDK which can be get in synchronous manner.
     var latestState: SynchronizerState { get }
-    
+
     /// reflects current connection state to LightwalletEndpoint
     var connectionState: ConnectionState { get }
-    
+
     /// This stream is backed by `CurrentValueSubject`. This is primary source of information about what is the SDK doing. New values are emitted when
     /// `InternalSyncStatus` is changed inside the SDK.
     ///
     /// Synchronization progress is part of the `InternalSyncStatus` so this stream emits lot of values. `throttle` can be used to control amout of values
     /// delivered. Values are delivered on random background thread.
     var stateStream: AnyPublisher<SynchronizerState, Never> { get }
-    
+
     /// This stream is backed by `PassthroughSubject`. Check `SynchronizerEvent` to see which events may be emitted.
     var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
-    
+
     /// This stream emits the latest known USD/ZEC exchange rate, paired with the time it was queried. See `FiatCurrencyResult`.
     var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { get }
-    
+
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -135,39 +135,39 @@ public protocol Synchronizer: AnyObject {
         name: String,
         keySource: String?
     ) async throws -> Initializer.InitializationResult
-    
+
     /// Starts this synchronizer within the given scope.
     ///
     /// Implementations should leverage structured concurrency and
     /// cancel all jobs when this scope completes.
     func start(retry: Bool) async throws
-    
+
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
     /// It make some time before the SDK stops any activity. It doesn't have to be stopped when this function finishes.
     /// Observe `stateStream` or `latestState` to recognize that the SDK stopped any activity.
     func stop()
-    
+
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountUUID: the  account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
     func getSaplingAddress(accountUUID: AccountUUID) async throws -> SaplingAddress
-    
+
     /// Gets the default unified address for the given account.
     /// - Parameter accountUUID: the account whose address is of interest.
     /// - Returns the address or nil if account index is incorrect
     func getUnifiedAddress(accountUUID: AccountUUID) async throws -> UnifiedAddress
-    
+
     /// Gets the transparent address for the given account.
     /// - Parameter accountUUID: the account whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountUUID: AccountUUID) async throws -> TransparentAddress
-    
+
     /// Obtains a fresh unified address for the given account with the specified receiver types.
     /// - Parameter accountUUID: the account whose address is of interest.
     /// - Parameter receivers: the receiver types to include in the address.
     /// - Returns the address or nil if account index is incorrect
     func getCustomUnifiedAddress(accountUUID: AccountUUID, receivers: Set<ReceiverType>) async throws -> UnifiedAddress
-    
+
     /// Creates a proposal for transferring funds to the given recipient.
     ///
     /// - Parameter accountUUID: the account from which to transfer funds.
@@ -183,7 +183,7 @@ public protocol Synchronizer: AnyObject {
         amount: Zatoshi,
         memo: Memo?
     ) async throws -> Proposal
-    
+
     /// Creates a proposal for shielding any transparent funds received by the given account.
     ///
     /// - Parameter accountUUID: the account for which to shield funds.
@@ -205,7 +205,7 @@ public protocol Synchronizer: AnyObject {
         memo: Memo,
         transparentReceiver: TransparentAddress?
     ) async throws -> Proposal?
-    
+
     /// Creates the transactions in the given proposal.
     ///
     /// - Parameter proposal: the proposal for which to create transactions.
@@ -221,7 +221,7 @@ public protocol Synchronizer: AnyObject {
         proposal: Proposal,
         spendingKey: UnifiedSpendingKey
     ) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
-    
+
     /// Attempts to propose fulfilling a [ZIP-321](https://zips.z.cash/zip-0321) payment URI by spending from the ZIP 32 account with the given index.
     ///  - Parameter uri: a valid ZIP-321 payment URI
     ///  - Parameter accountUUID: the account providing spend authority.
@@ -232,7 +232,7 @@ public protocol Synchronizer: AnyObject {
         _ uri: String,
         accountUUID: AccountUUID
     ) async throws -> Proposal
-    
+
     /// Creates a partially-created (unsigned without proofs) transaction from the given proposal.
     ///
     /// Do not call this multiple times in parallel, or you will generate PCZT instances that, if
@@ -244,7 +244,7 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws rustCreatePCZTFromProposal as a common indicator of the operation failure
     func createPCZTFromProposal(accountUUID: AccountUUID, proposal: Proposal) async throws -> Pczt
-    
+
     /// Redacts information from the given PCZT that is unnecessary for the Signer role.
     ///
     /// - Parameter pczt: The partially created transaction in its serialized format.
@@ -253,14 +253,14 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws  rustRedactPCZTForSigner as a common indicator of the operation failure
     func redactPCZTForSigner(pczt: Pczt) async throws -> Pczt
-    
+
     /// Checks whether the caller needs to have downloaded the Sapling parameters.
     ///
     /// - Parameter pczt: The partially created transaction in its serialized format.
     ///
     /// - Returns `true` if this PCZT requires Sapling proofs.
     func PCZTRequiresSaplingProofs(pczt: Pczt) async -> Bool
-    
+
     /// Adds proofs to the given PCZT.
     ///
     /// - Parameter pczt: The partially created transaction in its serialized format.
@@ -269,7 +269,7 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
     func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
-    
+
     /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
     /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
     ///
@@ -280,30 +280,30 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws  PcztException.ExtractAndStoreTxFromPcztException as a common indicator of the operation failure
     func createTransactionFromPCZT(pcztWithProofs: Pczt, pcztWithSigs: Pczt) async throws -> AsyncThrowingStream<TransactionSubmitResult, Error>
-    
+
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }
-    
+
     /// All transactions that are related to sending funds
     var sentTransactions: [ZcashTransaction.Overview] { get async }
-    
+
     /// all transactions related to receiving funds
     var receivedTransactions: [ZcashTransaction.Overview] { get async }
-    
+
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
-    
+
     /// Get all memos for `transaction.rawID`.
     ///
     // sourcery: mockedName="getMemosForRawID"
     func getMemos(for rawID: Data) async throws -> [Memo]
-    
+
     /// Get all memos for `transaction`.
     ///
     // sourcery: mockedName="getMemosForClearedTransaction"
     func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo]
-    
+
     /// Attempt to get recipients from a Transaction Overview.
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
@@ -311,40 +311,40 @@ public protocol Synchronizer: AnyObject {
     ///
     // sourcery: mockedName="getRecipientsForClearedTransaction"
     func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient]
-    
+
     /// Attempt to get outputs involved in a given Transaction.
     /// - parameter transaction: A transaction overview
     /// - returns the array of outputs involved in this transaction. Transparent outputs might not be tracked
     ///
     // sourcery: mockedName="getTransactionOutputsForTransaction"
     func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output]
-    
+
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     /// - Returns: an array with the given Transactions or an empty array
     func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
-    
+
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight() async throws -> BlockHeight
-    
+
     /// Returns the latests UTXOs for the given address from the specified height on
     ///
     /// If `prepare()` hasn't already been called since creation of the synchronizer instance or since the last wipe then this method throws
     /// `SynchronizerErrors.notPrepared`.
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
-    
+
     /// Accounts balances
     /// - Returns: `[AccountUUID: AccountBalance]`, struct that holds Sapling and unshielded balances per account
     func getAccountsBalances() async throws -> [AccountUUID: AccountBalance]
-    
+
     /// Fetches the latest ZEC-USD exchange rate and updates `exchangeRateUSDSubject`.
     func refreshExchangeRateUSD()
-    
+
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Account]
-    
+
     /// Imports a new account with UnifiedFullViewingKey.
     /// - Parameters:
     ///   - ufvk: unified full viewing key
@@ -360,9 +360,9 @@ public protocol Synchronizer: AnyObject {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID
-    
+
     func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data]
-    
+
     /// Rescans the known blocks with the current keys.
     ///
     /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant
@@ -383,7 +383,7 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Parameter policy: the rewind policy
     func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error>
-    
+
     /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
     /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.
     ///
@@ -404,18 +404,18 @@ public protocol Synchronizer: AnyObject {
     /// this happens it means that some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance won't do anything.
     ///
     func wipe() -> AnyPublisher<Void, Error>
-    
+
     /// This API stops the synchronization and re-initalizes everything according to the new endpoint provided.
     /// It can be called anytime.
     /// - Throws: ZcashError when failures occur and related to `synchronizer.start(retry: Bool)`, it's the only throwing operation
     /// during the whole endpoint change.
     func switchTo(endpoint: LightWalletEndpoint) async throws
-    
+
     /// Checks whether the given seed is relevant to any of the derived accounts in the wallet.
     ///
     /// - parameter seed: byte array of the seed
     func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
-    
+
     /// Takes the list of endpoints and runs it through a series of checks to evaluate its performance.
     /// - Parameters:
     ///    - endpoints: Array of endpoints to evaluate.
@@ -430,28 +430,28 @@ public protocol Synchronizer: AnyObject {
         kServers: Int,
         network: NetworkType
     ) async -> [LightWalletEndpoint]
-    
+
     /// Takes a given date and finds out the closes checkpoint's height for it.
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
-    
+
     /// Allows to setup the Tor opt-in/out runtime.
     /// - Parameters:
     ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls http and lwd service calls.
     /// - Throws: ZcashError when failures of the `TorClient` occur
     func tor(enabled: Bool) async throws
-    
+
     /// Allows to setup exchange rate over Tor.
     /// - Parameters:
     ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls whether exchange rate feature is possible to use or not.
     /// - Throws: ZcashError when failures of the `TorClient` occur
     func exchangeRateOverTor(enabled: Bool) async throws
-    
+
     /// Init of the SDK must always happen but initialization of `TorClient` can fail. This failure is designed to not block SDK initialization.
     /// Instead, a result of the initialization is stored in the `SDKFLags`
     /// - Returns: nil, the initialization hasn't been initiated, true/false = initialization succeeded/failed
     func isTorSuccessfullyInitialized() async -> Bool?
-    
+
     /// Makes an HTTP request over Tor and delivers the `HTTPURLResponse`.
     ///
     /// This request is isolated (using separate circuits) from any other requests or
@@ -464,20 +464,20 @@ public protocol Synchronizer: AnyObject {
     ///    - for: URLRequest
     ///    - retryLimit: How many times the request will be retried in case of failure
     func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
-    
+
     /// Performs an `sql` query on a database and returns some output as a string
     /// Use cautiously!
     /// The connection to the database is created in a read-only mode. it's a hard requirement.
     /// Details: `TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))`
     func debugDatabase(sql: String) -> String
-    
+
     /// Get an ephemeral single use transparent address
     /// - Parameter accountUUID: The account for which the single use transparent address is going to be created.
     /// - Returns The struct with an ephemeral transparent address and gap limit info
     ///
     /// - Throws rustGetSingleUseTransparentAddress as a common indicator of the operation failure
     func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress
-    
+
     /// Checks to find any single-use ephemeral addresses exposed in the past day that have not yet
     /// received funds, excluding any whose next check time is in the future. This will then choose the
     /// address that is most overdue for checking, retrieve any UTXOs for that address over Tor, and
