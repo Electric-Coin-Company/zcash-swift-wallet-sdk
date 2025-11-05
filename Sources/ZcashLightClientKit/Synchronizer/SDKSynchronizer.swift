@@ -1037,7 +1037,7 @@ public class SDKSynchronizer: Synchronizer {
             dbData: dbData,
             networkType: network.networkType,
             accountUUID: accountUUID,
-            mode: .uniqueTor
+            mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
     
@@ -1050,7 +1050,7 @@ public class SDKSynchronizer: Synchronizer {
             end: -1,
             dbData: dbData,
             networkType: network.networkType,
-            mode: .uniqueTor
+            mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
     
@@ -1062,7 +1062,7 @@ public class SDKSynchronizer: Synchronizer {
             dbData: dbData,
             networkType: network.networkType,
             accountUUID: accountUUID,
-            mode: .uniqueTor
+            mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
 
