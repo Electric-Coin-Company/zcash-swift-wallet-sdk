@@ -424,7 +424,7 @@ class LightWalletGRPCService: LightWalletService {
         accountUUID: AccountUUID,
         mode: ServiceMode
     ) async throws -> TransparentAddressCheckResult {
-        .notFound
+        .torRequired
     }
     
     // swiftlint:disable:next function_parameter_count
@@ -436,7 +436,7 @@ class LightWalletGRPCService: LightWalletService {
         networkType: NetworkType,
         mode: ServiceMode
     ) async throws -> TransparentAddressCheckResult {
-        .notFound
+        .torRequired
     }
     
     func fetchUTXOsByAddress(
@@ -446,7 +446,7 @@ class LightWalletGRPCService: LightWalletService {
         accountUUID: AccountUUID,
         mode: ServiceMode
     ) async throws -> TransparentAddressCheckResult {
-        .notFound
+        .torRequired
     }
     
     func closeConnections() async {

@@ -20,6 +20,10 @@ public struct SingleUseTransparentAddress: Equatable {
 }
 
 public enum TransparentAddressCheckResult: Equatable {
-    case notFound
+    /// Some funds found with a string of the address associated with the funds
     case found(String)
+    /// No funds found
+    case notFound
+    /// Fallback for the non-Tor path, there is no grpc method at the moment
+    case torRequired
 }
