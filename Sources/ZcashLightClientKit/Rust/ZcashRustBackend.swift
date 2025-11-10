@@ -966,12 +966,14 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
                         saplingBalance: PoolBalance(
                             spendableValue: .zero,
                             changePendingConfirmation: accountBalance.saplingBalance.changePendingConfirmation,
-                            valuePendingSpendability: accountBalance.saplingBalance.valuePendingSpendability + accountBalance.saplingBalance.spendableValue
+                            valuePendingSpendability: accountBalance.saplingBalance.valuePendingSpendability
+                            + accountBalance.saplingBalance.spendableValue
                         ),
                         orchardBalance: PoolBalance(
                             spendableValue: .zero,
                             changePendingConfirmation: accountBalance.orchardBalance.changePendingConfirmation,
-                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability + accountBalance.orchardBalance.spendableValue
+                            valuePendingSpendability: accountBalance.orchardBalance.valuePendingSpendability
+                            + accountBalance.orchardBalance.spendableValue
                         ),
                         unshielded: .zero,
                         awaitingResolution: accountBalance.unshielded
@@ -1242,6 +1244,30 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
     @DBActor
     func fixWitnesses() async {
         zcashlc_fix_witnesses(dbData.0, dbData.1, networkType.networkId)
+    }
+    
+    @DBActor
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
+        let singleUseTaddrPtr = zcashlc_get_single_use_taddr(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+
+        guard let singleUseTaddrPtr else {
+            throw ZcashError.rustGetSingleUseTransparentAddress(
+                lastErrorMessage(fallback: "`getSingleUseTransparentAddress` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_single_use_taddr(singleUseTaddrPtr) }
+
+        return SingleUseTransparentAddress(
+            address: String(cString: singleUseTaddrPtr.pointee.address),
+            gapPosition: singleUseTaddrPtr.pointee.gap_position,
+            gapLimit: singleUseTaddrPtr.pointee.gap_limit
+        )
     }
 }
 

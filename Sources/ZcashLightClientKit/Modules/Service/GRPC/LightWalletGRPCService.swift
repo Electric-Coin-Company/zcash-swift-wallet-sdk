@@ -418,6 +418,37 @@ class LightWalletGRPCService: LightWalletService {
         }
     }
     
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        .torRequired
+    }
+    
+    // swiftlint:disable:next function_parameter_count
+    func updateTransparentAddressTransactions(
+        address: String,
+        start: BlockHeight,
+        end: BlockHeight,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        .torRequired
+    }
+    
+    func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID,
+        mode: ServiceMode
+    ) async throws -> TransparentAddressCheckResult {
+        .torRequired
+    }
+    
     func closeConnections() async {
         _ = channel?.close()
     }

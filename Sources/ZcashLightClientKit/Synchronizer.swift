@@ -103,7 +103,7 @@ public protocol Synchronizer: AnyObject {
 
     /// This stream emits the latest known USD/ZEC exchange rate, paired with the time it was queried. See `FiatCurrencyResult`.
     var exchangeRateUSDStream: AnyPublisher<FiatCurrencyResult?, Never> { get }
-    
+
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -269,7 +269,7 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
     func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
-    
+
     /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
     /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
     ///
@@ -289,7 +289,7 @@ public protocol Synchronizer: AnyObject {
 
     /// all transactions related to receiving funds
     var receivedTransactions: [ZcashTransaction.Overview] { get async }
-    
+
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
@@ -314,7 +314,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Attempt to get outputs involved in a given Transaction.
     /// - parameter transaction: A transaction overview
-    /// - returns the array of outputs involved in this transaction. Transparent outputs might not be tracked 
+    /// - returns the array of outputs involved in this transaction. Transparent outputs might not be tracked
     ///
     // sourcery: mockedName="getTransactionOutputsForTransaction"
     func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output]
@@ -344,7 +344,7 @@ public protocol Synchronizer: AnyObject {
 
     /// Returns a list of the accounts in the wallet.
     func listAccounts() async throws -> [Account]
-    
+
     /// Imports a new account with UnifiedFullViewingKey.
     /// - Parameters:
     ///   - ufvk: unified full viewing key
@@ -360,7 +360,7 @@ public protocol Synchronizer: AnyObject {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID
-    
+
     func fetchTxidsWithMemoContaining(searchTerm: String) async throws -> [Data]
 
     /// Rescans the known blocks with the current keys.
@@ -402,9 +402,9 @@ public protocol Synchronizer: AnyObject {
     ///
     /// Returned publisher emits `initializerAliasAlreadyInUse` if the updating of paths in `Initilizer` according to alias fails. When
     /// this happens it means that some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance won't do anything.
-    /// 
+    ///
     func wipe() -> AnyPublisher<Void, Error>
-    
+
     /// This API stops the synchronization and re-initalizes everything according to the new endpoint provided.
     /// It can be called anytime.
     /// - Throws: ZcashError when failures occur and related to `synchronizer.start(retry: Bool)`, it's the only throwing operation
@@ -415,7 +415,7 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - parameter seed: byte array of the seed
     func isSeedRelevantToAnyDerivedAccount(seed: [UInt8]) async throws -> Bool
-    
+
     /// Takes the list of endpoints and runs it through a series of checks to evaluate its performance.
     /// - Parameters:
     ///    - endpoints: Array of endpoints to evaluate.
@@ -430,7 +430,7 @@ public protocol Synchronizer: AnyObject {
         kServers: Int,
         network: NetworkType
     ) async -> [LightWalletEndpoint]
-    
+
     /// Takes a given date and finds out the closes checkpoint's height for it.
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
@@ -464,12 +464,47 @@ public protocol Synchronizer: AnyObject {
     ///    - for: URLRequest
     ///    - retryLimit: How many times the request will be retried in case of failure
     func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8) async throws -> (data: Data, response: HTTPURLResponse)
-    
+
     /// Performs an `sql` query on a database and returns some output as a string
     /// Use cautiously!
     /// The connection to the database is created in a read-only mode. it's a hard requirement.
     /// Details: `TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))`
     func debugDatabase(sql: String) -> String
+
+    /// Get an ephemeral single use transparent address
+    /// - Parameter accountUUID: The account for which the single use transparent address is going to be created.
+    /// - Returns The struct with an ephemeral transparent address and gap limit info
+    ///
+    /// - Throws rustGetSingleUseTransparentAddress as a common indicator of the operation failure
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress
+
+    /// Checks to find any single-use ephemeral addresses exposed in the past day that have not yet
+    /// received funds, excluding any whose next check time is in the future. This will then choose the
+    /// address that is most overdue for checking, retrieve any UTXOs for that address over Tor, and
+    /// add them to the wallet database. If no such UTXOs are found, the check will be rescheduled
+    /// following an expoential-backoff-with-jitter algorithm.
+    /// - Parameter accountUUID: The account for which the single use transparent addresses are going to be checked.
+    /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
+    ///
+    /// - Throws rustCheckSingleUseTransparentAddresses as a common indicator of the operation failure
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult
+
+    /// Finds all transactions associated with the given transparent address.
+    /// - Parameter address: The address for which the transactions will be checked.
+    /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
+    ///
+    /// - Throws rustUpdateTransparentAddressTransactions as a common indicator of the operation failure
+    func updateTransparentAddressTransactions(address: String) async throws -> TransparentAddressCheckResult
+
+    /// Checks to find any UTXOs associated with the given transparent address. This check will cover the block range starting at the exposure height for that address,
+    /// if known, or otherwise at the birthday height of the specified account.
+    /// - Parameters:
+    ///    - address: The address for which the transactions will be checked.
+    ///    - accountUUID: The account for which the single use transparent addresses are going to be checked.
+    /// - Returns `.found(String)` an address found if UTXOs were added to the wallet, `.notFound` otherwise.
+    ///
+    /// - Throws rustFetchUTXOsByAddress as a common indicator of the operation failure
+    func fetchUTXOsBy(address: String, accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult
 }
 
 public enum SyncStatus: Equatable {

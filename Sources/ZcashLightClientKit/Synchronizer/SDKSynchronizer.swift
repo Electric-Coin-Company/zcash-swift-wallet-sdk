@@ -217,6 +217,8 @@ public class SDKSynchronizer: Synchronizer {
         // downloading is really done. Which could block execution of the code on the client side. So it's better strategy to spin up new task and
         // exit fast on client side.
         Task(priority: .high) {
+            await sdkFlags.sdkStopped()
+            
             let status = await self.status
             guard status != .stopped, status != .disconnected else {
                 logger.info("attempted to stop when status was: \(status)")
@@ -1024,6 +1026,46 @@ public class SDKSynchronizer: Synchronizer {
         transactionRepository.debugDatabase(sql: sql)
     }
     
+    public func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
+        try await initializer.rustBackend.getSingleUseTransparentAddress(accountUUID: accountUUID)
+    }
+
+    public func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
+        let dbData = initializer.dataDbURL.osStr()
+        
+        return try await initializer.lightWalletService.checkSingleUseTransparentAddresses(
+            dbData: dbData,
+            networkType: network.networkType,
+            accountUUID: accountUUID,
+            mode: await sdkFlags.ifTor(.uniqueTor)
+        )
+    }
+    
+    public func updateTransparentAddressTransactions(address: String) async throws -> TransparentAddressCheckResult {
+        let dbData = initializer.dataDbURL.osStr()
+        
+        return try await initializer.lightWalletService.updateTransparentAddressTransactions(
+            address: address,
+            start: 0,
+            end: -1,
+            dbData: dbData,
+            networkType: network.networkType,
+            mode: await sdkFlags.ifTor(.uniqueTor)
+        )
+    }
+    
+    public func fetchUTXOsBy(address: String, accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
+        let dbData = initializer.dataDbURL.osStr()
+        
+        return try await initializer.lightWalletService.fetchUTXOsByAddress(
+            address: address,
+            dbData: dbData,
+            networkType: network.networkType,
+            accountUUID: accountUUID,
+            mode: await sdkFlags.ifTor(.uniqueTor)
+        )
+    }
+
     // MARK: Server switch
 
     public func switchTo(endpoint: LightWalletEndpoint) async throws {

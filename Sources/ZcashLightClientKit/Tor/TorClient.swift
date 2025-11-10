@@ -405,6 +405,102 @@ public class TorLwdConn {
             throw ZcashError.rustTorLwdGetTreeState("`TorLwdConn.getTreeState` Failed to decode protobuf TreeState: \(error)")
         }
     }
+    
+    func checkSingleUseTransparentAddresses(
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID
+    ) async throws -> TransparentAddressCheckResult {
+        let addressCheckResultPtr = zcashlc_tor_lwd_conn_check_single_use_taddr(
+            conn,
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+        
+        guard let addressCheckResultPtr else {
+            throw ZcashError.rustCheckSingleUseTransparentAddresses(
+                lastErrorMessage(fallback: "`checkSingleUseTransparentAddresses` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_address_check_result(addressCheckResultPtr) }
+
+        if addressCheckResultPtr.pointee.tag == 0 {
+            return TransparentAddressCheckResult.notFound
+        } else {
+            return TransparentAddressCheckResult.found(
+                String(cString: addressCheckResultPtr.pointee.found.address)
+            )
+        }
+    }
+    
+    func updateTransparentAddressTransactions(
+        address: String,
+        start: BlockHeight,
+        end: BlockHeight,
+        dbData: (String, UInt),
+        networkType: NetworkType
+    ) async throws -> TransparentAddressCheckResult {
+        let addressCheckResultPtr = zcashlc_tor_lwd_conn_update_transparent_address_transactions(
+            conn,
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            address,
+            UInt32(start),
+            Int64(end)
+        )
+        
+        guard let addressCheckResultPtr else {
+            throw ZcashError.rustUpdateTransparentAddressTransactions(
+                lastErrorMessage(fallback: "`updateTransparentAddressTransactions` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_address_check_result(addressCheckResultPtr) }
+
+        if addressCheckResultPtr.pointee.tag == 0 {
+            return TransparentAddressCheckResult.notFound
+        } else {
+            return TransparentAddressCheckResult.found(
+                String(cString: addressCheckResultPtr.pointee.found.address)
+            )
+        }
+    }
+
+    func fetchUTXOsByAddress(
+        address: String,
+        dbData: (String, UInt),
+        networkType: NetworkType,
+        accountUUID: AccountUUID
+    ) async throws -> TransparentAddressCheckResult {
+        let addressCheckResultPtr = zcashlc_tor_lwd_conn_fetch_utxos_by_address(
+            conn,
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id,
+            address
+        )
+        
+        guard let addressCheckResultPtr else {
+            throw ZcashError.rustFetchUTXOsByAddress(
+                lastErrorMessage(fallback: "`fetchUTXOsByAddress` failed with unknown error")
+            )
+        }
+
+        defer { zcashlc_free_address_check_result(addressCheckResultPtr) }
+
+        if addressCheckResultPtr.pointee.tag == 0 {
+            return TransparentAddressCheckResult.notFound
+        } else {
+            return TransparentAddressCheckResult.found(
+                String(cString: addressCheckResultPtr.pointee.found.address)
+            )
+        }
+    }
 }
 
 extension FfiHttpResponseBytes {

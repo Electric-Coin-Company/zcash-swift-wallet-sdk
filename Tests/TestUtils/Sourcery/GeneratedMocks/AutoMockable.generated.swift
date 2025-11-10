@@ -1082,6 +1082,78 @@ class LightWalletServiceMock: LightWalletService {
         }
     }
 
+    // MARK: - checkSingleUseTransparentAddresses
+
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError: Error?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount = 0
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCalled: Bool {
+        return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount > 0
+    }
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments: (dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode)?
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue: TransparentAddressCheckResult!
+    var checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure: (((String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> TransparentAddressCheckResult)?
+
+    func checkSingleUseTransparentAddresses(dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> TransparentAddressCheckResult {
+        if let error = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeThrowableError {
+            throw error
+        }
+        checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeCallsCount += 1
+        checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReceivedArguments = (dbData: dbData, networkType: networkType, accountUUID: accountUUID, mode: mode)
+        if let closure = checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeClosure {
+            return try await closure(dbData, networkType, accountUUID, mode)
+        } else {
+            return checkSingleUseTransparentAddressesDbDataNetworkTypeAccountUUIDModeReturnValue
+        }
+    }
+
+    // MARK: - updateTransparentAddressTransactions
+
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeThrowableError: Error?
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount = 0
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCalled: Bool {
+        return updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount > 0
+    }
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReceivedArguments: (address: String, start: BlockHeight, end: BlockHeight, dbData: (String, UInt), networkType: NetworkType, mode: ServiceMode)?
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReturnValue: TransparentAddressCheckResult!
+    var updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeClosure: ((String, BlockHeight, BlockHeight, (String, UInt), NetworkType, ServiceMode) async throws -> TransparentAddressCheckResult)?
+
+    func updateTransparentAddressTransactions(address: String, start: BlockHeight, end: BlockHeight, dbData: (String, UInt), networkType: NetworkType, mode: ServiceMode) async throws -> TransparentAddressCheckResult {
+        if let error = updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeThrowableError {
+            throw error
+        }
+        updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeCallsCount += 1
+        updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReceivedArguments = (address: address, start: start, end: end, dbData: dbData, networkType: networkType, mode: mode)
+        if let closure = updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeClosure {
+            return try await closure(address, start, end, dbData, networkType, mode)
+        } else {
+            return updateTransparentAddressTransactionsAddressStartEndDbDataNetworkTypeModeReturnValue
+        }
+    }
+
+    // MARK: - fetchUTXOsByAddress
+
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeThrowableError: Error?
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeCallsCount = 0
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeCalled: Bool {
+        return fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeCallsCount > 0
+    }
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeReceivedArguments: (address: String, dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode)?
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeReturnValue: TransparentAddressCheckResult!
+    var fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeClosure: ((String, (String, UInt), NetworkType, AccountUUID, ServiceMode) async throws -> TransparentAddressCheckResult)?
+
+    func fetchUTXOsByAddress(address: String, dbData: (String, UInt), networkType: NetworkType, accountUUID: AccountUUID, mode: ServiceMode) async throws -> TransparentAddressCheckResult {
+        if let error = fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeThrowableError {
+            throw error
+        }
+        fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeCallsCount += 1
+        fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeReceivedArguments = (address: address, dbData: dbData, networkType: networkType, accountUUID: accountUUID, mode: mode)
+        if let closure = fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeClosure {
+            return try await closure(address, dbData, networkType, accountUUID, mode)
+        } else {
+            return fetchUTXOsByAddressAddressDbDataNetworkTypeAccountUUIDModeReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -2275,6 +2347,102 @@ class SynchronizerMock: Synchronizer {
             return closure(sql)
         } else {
             return debugDatabaseSqlReturnValue
+        }
+    }
+
+    // MARK: - getSingleUseTransparentAddress
+
+    var getSingleUseTransparentAddressAccountUUIDThrowableError: Error?
+    var getSingleUseTransparentAddressAccountUUIDCallsCount = 0
+    var getSingleUseTransparentAddressAccountUUIDCalled: Bool {
+        return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    }
+    var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: SingleUseTransparentAddress!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentAddress)?
+
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
+        if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
+            throw error
+        }
+        getSingleUseTransparentAddressAccountUUIDCallsCount += 1
+        getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getSingleUseTransparentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
+        } else {
+            return getSingleUseTransparentAddressAccountUUIDReturnValue
+        }
+    }
+
+    // MARK: - checkSingleUseTransparentAddresses
+
+    var checkSingleUseTransparentAddressesAccountUUIDThrowableError: Error?
+    var checkSingleUseTransparentAddressesAccountUUIDCallsCount = 0
+    var checkSingleUseTransparentAddressesAccountUUIDCalled: Bool {
+        return checkSingleUseTransparentAddressesAccountUUIDCallsCount > 0
+    }
+    var checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID: AccountUUID?
+    var checkSingleUseTransparentAddressesAccountUUIDReturnValue: TransparentAddressCheckResult!
+    var checkSingleUseTransparentAddressesAccountUUIDClosure: ((AccountUUID) async throws -> TransparentAddressCheckResult)?
+
+    func checkSingleUseTransparentAddresses(accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
+        if let error = checkSingleUseTransparentAddressesAccountUUIDThrowableError {
+            throw error
+        }
+        checkSingleUseTransparentAddressesAccountUUIDCallsCount += 1
+        checkSingleUseTransparentAddressesAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = checkSingleUseTransparentAddressesAccountUUIDClosure {
+            return try await closure(accountUUID)
+        } else {
+            return checkSingleUseTransparentAddressesAccountUUIDReturnValue
+        }
+    }
+
+    // MARK: - updateTransparentAddressTransactions
+
+    var updateTransparentAddressTransactionsAddressThrowableError: Error?
+    var updateTransparentAddressTransactionsAddressCallsCount = 0
+    var updateTransparentAddressTransactionsAddressCalled: Bool {
+        return updateTransparentAddressTransactionsAddressCallsCount > 0
+    }
+    var updateTransparentAddressTransactionsAddressReceivedAddress: String?
+    var updateTransparentAddressTransactionsAddressReturnValue: TransparentAddressCheckResult!
+    var updateTransparentAddressTransactionsAddressClosure: ((String) async throws -> TransparentAddressCheckResult)?
+
+    func updateTransparentAddressTransactions(address: String) async throws -> TransparentAddressCheckResult {
+        if let error = updateTransparentAddressTransactionsAddressThrowableError {
+            throw error
+        }
+        updateTransparentAddressTransactionsAddressCallsCount += 1
+        updateTransparentAddressTransactionsAddressReceivedAddress = address
+        if let closure = updateTransparentAddressTransactionsAddressClosure {
+            return try await closure(address)
+        } else {
+            return updateTransparentAddressTransactionsAddressReturnValue
+        }
+    }
+
+    // MARK: - fetchUTXOsBy
+
+    var fetchUTXOsByAddressAccountUUIDThrowableError: Error?
+    var fetchUTXOsByAddressAccountUUIDCallsCount = 0
+    var fetchUTXOsByAddressAccountUUIDCalled: Bool {
+        return fetchUTXOsByAddressAccountUUIDCallsCount > 0
+    }
+    var fetchUTXOsByAddressAccountUUIDReceivedArguments: (address: String, accountUUID: AccountUUID)?
+    var fetchUTXOsByAddressAccountUUIDReturnValue: TransparentAddressCheckResult!
+    var fetchUTXOsByAddressAccountUUIDClosure: ((String, AccountUUID) async throws -> TransparentAddressCheckResult)?
+
+    func fetchUTXOsBy(address: String, accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult {
+        if let error = fetchUTXOsByAddressAccountUUIDThrowableError {
+            throw error
+        }
+        fetchUTXOsByAddressAccountUUIDCallsCount += 1
+        fetchUTXOsByAddressAccountUUIDReceivedArguments = (address: address, accountUUID: accountUUID)
+        if let closure = fetchUTXOsByAddressAccountUUIDClosure {
+            return try await closure(address, accountUUID)
+        } else {
+            return fetchUTXOsByAddressAccountUUIDReturnValue
         }
     }
 
@@ -3667,6 +3835,30 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     func fixWitnesses() async {
         fixWitnessesCallsCount += 1
         await fixWitnessesClosure!()
+    }
+
+    // MARK: - getSingleUseTransparentAddress
+
+    var getSingleUseTransparentAddressAccountUUIDThrowableError: Error?
+    var getSingleUseTransparentAddressAccountUUIDCallsCount = 0
+    var getSingleUseTransparentAddressAccountUUIDCalled: Bool {
+        return getSingleUseTransparentAddressAccountUUIDCallsCount > 0
+    }
+    var getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID: AccountUUID?
+    var getSingleUseTransparentAddressAccountUUIDReturnValue: SingleUseTransparentAddress!
+    var getSingleUseTransparentAddressAccountUUIDClosure: ((AccountUUID) async throws -> SingleUseTransparentAddress)?
+
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress {
+        if let error = getSingleUseTransparentAddressAccountUUIDThrowableError {
+            throw error
+        }
+        getSingleUseTransparentAddressAccountUUIDCallsCount += 1
+        getSingleUseTransparentAddressAccountUUIDReceivedAccountUUID = accountUUID
+        if let closure = getSingleUseTransparentAddressAccountUUIDClosure {
+            return try await closure(accountUUID)
+        } else {
+            return getSingleUseTransparentAddressAccountUUIDReturnValue
+        }
     }
 
 }

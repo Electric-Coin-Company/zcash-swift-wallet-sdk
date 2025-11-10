@@ -58,7 +58,7 @@ protocol ZcashRustBackendWelding {
         name: String,
         keySource: String?
     ) async throws -> AccountUUID
-        
+
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
     ///
@@ -330,7 +330,7 @@ protocol ZcashRustBackendWelding {
     ///
     /// - Throws  rustAddProofsToPCZT as a common indicator of the operation failure
     func addProofsToPCZT(pczt: Pczt) async throws -> Pczt
-    
+
     /// Takes a PCZT that has been separately proven and signed, finalizes it, and stores
     /// it in the wallet. Internally, this logic also submits and checks the newly stored and encoded transaction.
     ///
@@ -381,8 +381,11 @@ protocol ZcashRustBackendWelding {
     /// scanning; as a consequence, the wallet must actively query to determine whether such
     /// transactions have been mined.
     func setTransactionStatus(txId: Data, status: TransactionStatus) async throws
-    
+
     /// Fix witnesses - addressing note commitment tree bug.
     /// This function is supposed to be called occasionaly. It's handled by the SDK Synchronizer and called only once per version.
     func fixWitnesses() async
+
+    /// Get an ephemeral single use transparent address
+    func getSingleUseTransparentAddress(accountUUID: AccountUUID) async throws -> SingleUseTransparentAddress
 }
