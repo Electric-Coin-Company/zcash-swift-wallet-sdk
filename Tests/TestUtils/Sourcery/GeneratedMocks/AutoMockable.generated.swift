@@ -2250,6 +2250,26 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - estimateTimestamp
+
+    var estimateTimestampForCallsCount = 0
+    var estimateTimestampForCalled: Bool {
+        return estimateTimestampForCallsCount > 0
+    }
+    var estimateTimestampForReceivedHeight: BlockHeight?
+    var estimateTimestampForReturnValue: TimeInterval?
+    var estimateTimestampForClosure: ((BlockHeight) -> TimeInterval?)?
+
+    func estimateTimestamp(for height: BlockHeight) -> TimeInterval? {
+        estimateTimestampForCallsCount += 1
+        estimateTimestampForReceivedHeight = height
+        if let closure = estimateTimestampForClosure {
+            return closure(height)
+        } else {
+            return estimateTimestampForReturnValue
+        }
+    }
+
     // MARK: - tor
 
     var torEnabledThrowableError: Error?

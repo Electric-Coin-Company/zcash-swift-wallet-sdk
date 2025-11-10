@@ -945,6 +945,10 @@ public class SDKSynchronizer: Synchronizer {
     public func estimateBirthdayHeight(for date: Date) -> BlockHeight {
         initializer.container.resolve(CheckpointSource.self).estimateBirthdayHeight(for: date)
     }
+    
+    public func estimateTimestamp(for height: BlockHeight) -> TimeInterval? {
+        initializer.container.resolve(CheckpointSource.self).estimateTimestamp(for: height)
+    }
 
     public func tor(enabled: Bool) async throws {
         let isExchangeRateEnabled = await sdkFlags.exchangeRateEnabled
