@@ -6,7 +6,7 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
-# 2.4.0 - 2025-11-05
+# 2.4.0 - 2025-11-10
 
 ## Added
 - `SDKSynchronizer.getSingleUseTransparentAddress` Get an ephemeral single use transparent address.
@@ -25,7 +25,7 @@ Mainnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3107500.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3122500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3127500.json
 ````
 
 Testnet
@@ -33,7 +33,7 @@ Testnet
 ````
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3640000.json
 ...
-Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3660000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3670000.json
 ````
 
 # 2.3.7 - 2025-10-20
