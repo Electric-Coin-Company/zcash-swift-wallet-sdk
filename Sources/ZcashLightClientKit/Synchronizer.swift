@@ -471,7 +471,12 @@ public protocol Synchronizer: AnyObject {
     /// Performs an `sql` query on a database and returns some output as a string
     /// Use cautiously!
     /// The connection to the database is created in a read-only mode. it's a hard requirement.
-    /// Details: `TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: urls.dataDbURL.path, readonly: true))`
+    ///
+    /// The following custom SQLite functions are provided:
+    /// - `txid(Blob) -> String`: converts a transaction ID from its byte form to the user-facing
+    ///   hex-encoded-reverse-bytes string.
+    /// - `memo(Blob?) -> String?`: prints the given blob as a string if it is a text memo, and as
+    ///   hex-encoded bytes otherwise.
     func debugDatabase(sql: String) -> String
 
     /// Get an ephemeral single use transparent address

@@ -106,6 +106,11 @@ class InMemoryDbProvider: ConnectionProvider {
         return conn
     }
 
+    func debugConnection() throws -> Connection {
+        // We don't use any custom functions in tests.
+        try connection()
+    }
+
     func close() {
         self.conn = nil
     }
