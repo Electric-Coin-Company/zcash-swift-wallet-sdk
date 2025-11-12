@@ -435,6 +435,9 @@ public protocol Synchronizer: AnyObject {
     /// Each checkpoint has a timestamp stored so it can be used for the calculations.
     func estimateBirthdayHeight(for date: Date) -> BlockHeight
 
+    /// Takes a given height and finds out the closes checkpoint's timestamp for it.
+    func estimateTimestamp(for height: BlockHeight) -> TimeInterval?
+
     /// Allows to setup the Tor opt-in/out runtime.
     /// - Parameters:
     ///    - enabled: When true, the SDK ensures `TorClient` is ready. This flag controls http and lwd service calls.

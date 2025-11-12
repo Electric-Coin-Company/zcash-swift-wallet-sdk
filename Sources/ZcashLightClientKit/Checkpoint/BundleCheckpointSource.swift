@@ -118,4 +118,26 @@ struct BundleCheckpointSource: CheckpointSource {
 
         return saplingActivationHeight
     }
+    
+    func estimateTimestamp(for height: BlockHeight) -> TimeInterval? {
+        let blockInterval: BlockHeight = network == .mainnet ? 2500 : 10_000
+        var checkpointHeight = (height / blockInterval) * blockInterval
+        
+        var checkpoint: Checkpoint?
+        
+        while checkpoint == nil || checkpointHeight > blockInterval {
+            checkpoint = Checkpoint.birthday(
+                with: BlockHeight(checkpointHeight),
+                checkpointDirectory: BundleCheckpointURLProvider.default.url(self.network)
+            )
+            
+            if let checkpoint {
+                return TimeInterval(checkpoint.time)
+            }
+            
+            checkpointHeight -= blockInterval
+        }
+        
+        return nil
+    }
 }

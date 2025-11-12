@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.estimateTimestamp(for height: Blockheight)`: Get an estimated timestamp for a given block height.
+
 # 2.4.0 - 2025-11-10
 
 ## Added
