@@ -35,17 +35,14 @@ class SimpleConnectionProvider: ConnectionProvider {
 
     /// throws ZcashError.simpleConnectionProvider
     func debugConnection() throws -> Connection {
-        guard let conn = db else {
-            do {
-                let conn = try Connection(path, readonly: true)
-                try addDebugFunctions(conn: conn)
-                self.db = conn
-                return conn
-            } catch {
-                throw ZcashError.simpleConnectionProvider(error)
-            }
+        do {
+            let conn = try Connection(path, readonly: true)
+            try addDebugFunctions(conn: conn)
+            self.db = conn
+            return conn
+        } catch {
+            throw ZcashError.simpleConnectionProvider(error)
         }
-        return conn
     }
 
     func close() {
