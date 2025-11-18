@@ -146,7 +146,7 @@ private extension SaplingParameterDownloader {
                 return
             } else if let localUrl = url {
                 do {
-                    try FileManager.default.moveItem(at: localUrl, to: destination)
+                    _ = try FileManager.default.replaceItemAt(destination, withItemAt: localUrl)
                     result(.success(destination))
                 } catch {
                     result(.failure(ZcashError.saplingParamsCantMoveDownloadedFile(error, sourceURL, destination)))
