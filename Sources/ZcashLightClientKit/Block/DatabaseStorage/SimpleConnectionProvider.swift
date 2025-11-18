@@ -38,7 +38,6 @@ class SimpleConnectionProvider: ConnectionProvider {
         do {
             let conn = try Connection(path, readonly: true)
             try addDebugFunctions(conn: conn)
-            self.db = conn
             return conn
         } catch {
             throw ZcashError.simpleConnectionProvider(error)
