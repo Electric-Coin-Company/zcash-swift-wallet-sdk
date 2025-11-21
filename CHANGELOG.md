@@ -7,6 +7,10 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 # Unreleased
 
 ## Added
+- Custom SQL functions to `Synchronizer.debugDatabase`:
+  - `txid(Blob) -> String`: converts a transaction ID from its byte form to a user-facing string.
+  - `memo(Blob?) -> String?`: prints the given blob as a string if it is a text memo, and as hex-encoded bytes otherwise.
+
 - `SDKSynchronizer.estimateTimestamp(for height: Blockheight)`: Get an estimated timestamp for a given block height.
 
 # 2.4.0 - 2025-11-10
