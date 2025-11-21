@@ -2466,6 +2466,25 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - enhanceTransactionBy
+
+    var enhanceTransactionByIdThrowableError: Error?
+    var enhanceTransactionByIdCallsCount = 0
+    var enhanceTransactionByIdCalled: Bool {
+        return enhanceTransactionByIdCallsCount > 0
+    }
+    var enhanceTransactionByIdReceivedId: String?
+    var enhanceTransactionByIdClosure: ((String) async throws -> Void)?
+
+    func enhanceTransactionBy(id: String) async throws {
+        if let error = enhanceTransactionByIdThrowableError {
+            throw error
+        }
+        enhanceTransactionByIdCallsCount += 1
+        enhanceTransactionByIdReceivedId = id
+        try await enhanceTransactionByIdClosure!(id)
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 

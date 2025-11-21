@@ -513,6 +513,13 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws rustFetchUTXOsByAddress as a common indicator of the operation failure
     func fetchUTXOsBy(address: String, accountUUID: AccountUUID) async throws -> TransparentAddressCheckResult
+
+    /// Calls `enhance` action for the provided txid.
+    /// - Parameters:
+    ///    - id: Transaction ID
+    ///
+    /// - Throws an error lwd related (fetching the transaction) or decryption related.
+    func enhanceTransactionBy(id: String) async throws -> Void
 }
 
 public enum SyncStatus: Equatable {

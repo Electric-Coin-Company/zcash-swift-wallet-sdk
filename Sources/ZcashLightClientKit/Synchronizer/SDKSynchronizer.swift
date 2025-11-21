@@ -1069,6 +1069,24 @@ public class SDKSynchronizer: Synchronizer {
             mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
+    
+    public func enhanceTransactionBy(id: String) async throws -> Void {
+        let txIdData = id.txIdToBytes().data
+        
+        let response = try await initializer.blockDownloaderService.fetchTransaction(
+            txId: txIdData,
+            mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txIdData))
+        )
+
+        if response.status == .txidNotRecognized {
+            try await initializer.rustBackend.setTransactionStatus(txId: txIdData, status: .txidNotRecognized)
+        } else if let fetchedTransaction = response.tx {
+            _ = try await initializer.rustBackend.decryptAndStoreTransaction(
+                txBytes: fetchedTransaction.raw.bytes,
+                minedHeight: fetchedTransaction.minedHeight
+            )
+        }
+    }
 
     // MARK: Server switch
 
