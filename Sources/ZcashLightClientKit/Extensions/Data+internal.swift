@@ -33,11 +33,13 @@ extension String {
         while index < endIndex {
             let nextIndex = self.index(index, offsetBy: 2)
             let byteString = self[index..<nextIndex]
+            
             if let byte = UInt8(byteString, radix: 16) {
                 bytes.append(byte)
             } else {
-                return [] // or throw error
+                return nil
             }
+            
             index = nextIndex
         }
         

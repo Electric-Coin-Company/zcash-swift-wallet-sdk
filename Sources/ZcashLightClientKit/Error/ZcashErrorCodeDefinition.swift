@@ -819,4 +819,7 @@ enum ZcashErrorDefinition {
     /// The spending key does not belong to the wallet.
     // sourcery: code="ZSYNCO0008"
     case synchronizerSpendingKeyDoesNotBelongToTheWallet
+    /// Enhance transaction by ID called with input that is not 32 bytes.
+    // sourcery: code="ZSYNCO0009"
+    case synchronizerEnhanceTransactionById32Bytes
 }

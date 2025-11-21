@@ -427,4 +427,6 @@ public enum ZcashErrorCode: String {
     case synchronizerServerSwitch = "ZSYNCO0007"
     /// The spending key does not belong to the wallet.
     case synchronizerSpendingKeyDoesNotBelongToTheWallet = "ZSYNCO0008"
+    /// Enhance transaction by ID called with input that is not 32 bytes.
+    case synchronizerEnhanceTransactionById32Bytes = "ZSYNCO0009"
 }
