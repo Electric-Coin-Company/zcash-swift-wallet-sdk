@@ -20,7 +20,11 @@ extension String {
         return id
     }
     
-    func txIdToBytes() -> [UInt8] {
+    func txIdToBytes() -> [UInt8]? {
+        guard self.count == 64 else {
+            return nil
+        }
+        
         var bytes: [UInt8] = []
         bytes.reserveCapacity(count / 2)
         
