@@ -5,6 +5,8 @@
 //  Created by Lukáš Korba on 2025-07-18.
 //
 
+import Foundation
+
 /// A singleton actor with control flags for the SDK.
 actor SDKFlags {
     /// `torEnabled` controls `SeviceMode` for the connection to the `LightWalletService`.
@@ -25,6 +27,7 @@ actor SDKFlags {
     
     /// Runtime helper flag used to mark whether chainTip CBP action has been done.
     var chainTipUpdated = false
+    var chainTipUpdatedTimestamp: TimeInterval = 0.0
     
     init(
         torEnabled: Bool,
@@ -58,8 +61,18 @@ actor SDKFlags {
     /// Use to update the `chainTipUpdated` flag
     func markChainTipAsUpdated() {
         chainTipUpdated = true
+        chainTipUpdatedTimestamp = Date().timeIntervalSince1970
     }
-    
+
+    /// The client using the SDK called `start()`.
+    /// Use this to reset or update any relevant flags if needed.
+    func sdkStarted() {
+        // If chain tip has been updated recently and is set to false, re-enable it
+        if !chainTipUpdated && Date().timeIntervalSince1970 - chainTipUpdatedTimestamp < 120 {
+            chainTipUpdated = true
+        }
+    }
+
     /// The client using the SDK called `stop()`, for example when the app is about to enter the background lifecycle.
     /// Use this to reset or update any relevant flags if needed.
     func sdkStopped() {
