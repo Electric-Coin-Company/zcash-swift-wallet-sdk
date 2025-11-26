@@ -1069,10 +1069,10 @@ public class SDKSynchronizer: Synchronizer {
             mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
-    
+
     public func enhanceTransactionBy(txId: TxId) async throws -> Void {
         let txIdData = txId.id.data
-        
+
         let response = try await initializer.blockDownloaderService.fetchTransaction(
             txId: txIdData,
             mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txIdData))
