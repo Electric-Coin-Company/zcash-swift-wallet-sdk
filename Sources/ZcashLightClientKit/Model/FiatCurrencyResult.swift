@@ -22,4 +22,10 @@ public struct FiatCurrencyResult: Equatable {
     public let date: Date
     public let rate: NSDecimalNumber
     public var state: State
+    
+    public init(date: Date, rate: NSDecimalNumber, state: State) {
+        self.date = date
+        self.rate = rate
+        self.state = state
+    }
 }

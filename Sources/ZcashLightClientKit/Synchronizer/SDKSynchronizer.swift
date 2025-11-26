@@ -179,6 +179,7 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
+            await sdkFlags.sdkStarted()
             let walletSummary = try? await initializer.rustBackend.getWalletSummary()
             let recoveryProgress = walletSummary?.recoveryProgress
             
@@ -208,7 +209,6 @@ public class SDKSynchronizer: Synchronizer {
             await updateStatus(.syncing(syncProgress, areFundsSpendable))
             await exchangeRateTor?.wake()
             await httpTor?.wake()
-            await sdkFlags.sdkStarted()
             await blockProcessor.start(retry: retry)
         }
     }
