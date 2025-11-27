@@ -19,32 +19,6 @@ extension String {
             }
         return id
     }
-    
-    func txIdToBytes() -> [UInt8]? {
-        guard self.count == 64 else {
-            return nil
-        }
-        
-        var bytes: [UInt8] = []
-        bytes.reserveCapacity(count / 2)
-        
-        var index = startIndex
-        
-        while index < endIndex {
-            let nextIndex = self.index(index, offsetBy: 2)
-            let byteString = self[index..<nextIndex]
-            
-            if let byte = UInt8(byteString, radix: 16) {
-                bytes.append(byte)
-            } else {
-                return nil
-            }
-            
-            index = nextIndex
-        }
-        
-        return bytes
-    }
 }
 
 extension Collection {

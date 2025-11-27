@@ -519,7 +519,7 @@ public protocol Synchronizer: AnyObject {
     ///    - id: Transaction ID
     ///
     /// - Throws an error lwd related (fetching the transaction) or decryption related.
-    func enhanceTransactionBy(id: String) async throws -> Void
+    func enhanceTransactionBy(txId: TxId) async throws -> Void
 }
 
 public enum SyncStatus: Equatable {

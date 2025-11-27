@@ -1070,10 +1070,8 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
     
-    public func enhanceTransactionBy(id: String) async throws -> Void {
-        guard let txIdData = id.txIdToBytes()?.data else {
-            throw ZcashError.synchronizerEnhanceTransactionById32Bytes
-        }
+    public func enhanceTransactionBy(txId: TxId) async throws -> Void {
+        let txIdData = txId.id.data
         
         let response = try await initializer.blockDownloaderService.fetchTransaction(
             txId: txIdData,

@@ -745,9 +745,12 @@ public enum ZcashError: Equatable, Error {
     /// The spending key does not belong to the wallet.
     /// ZSYNCO0008
     case synchronizerSpendingKeyDoesNotBelongToTheWallet
-    /// Enhance transaction by ID called with input that is not 32 bytes.
-    /// ZSYNCO0009
-    case synchronizerEnhanceTransactionById32Bytes
+    /// Attempt to init TxId with input that is not 32 bytes.
+    /// ZMODEL0001
+    case txIdNot32Bytes
+    /// Attempt to init TxId with invalid hex encoding.
+    /// ZMODEL0002
+    case txIdInvalidHexEncoding
 
     public var message: String {
         switch self {
@@ -960,7 +963,8 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerDisconnected: return "Indicates that this Synchronizer is disconnected from its lightwalletd server."
         case .synchronizerServerSwitch: return "The attempt to switch endpoints failed. Check that the hostname and port are correct, and are formatted as <hostname>:<port>."
         case .synchronizerSpendingKeyDoesNotBelongToTheWallet: return "The spending key does not belong to the wallet."
-        case .synchronizerEnhanceTransactionById32Bytes: return "Enhance transaction by ID called with input that is not 32 bytes."
+        case .txIdNot32Bytes: return "Attempt to init TxId with input that is not 32 bytes."
+        case .txIdInvalidHexEncoding: return "Attempt to init TxId with invalid hex encoding."
         }
     }
 
@@ -1175,7 +1179,8 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerDisconnected: return .synchronizerDisconnected
         case .synchronizerServerSwitch: return .synchronizerServerSwitch
         case .synchronizerSpendingKeyDoesNotBelongToTheWallet: return .synchronizerSpendingKeyDoesNotBelongToTheWallet
-        case .synchronizerEnhanceTransactionById32Bytes: return .synchronizerEnhanceTransactionById32Bytes
+        case .txIdNot32Bytes: return .txIdNot32Bytes
+        case .txIdInvalidHexEncoding: return .txIdInvalidHexEncoding
         }
     }
 

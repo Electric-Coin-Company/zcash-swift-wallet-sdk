@@ -2468,21 +2468,21 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - enhanceTransactionBy
 
-    var enhanceTransactionByIdThrowableError: Error?
-    var enhanceTransactionByIdCallsCount = 0
-    var enhanceTransactionByIdCalled: Bool {
-        return enhanceTransactionByIdCallsCount > 0
+    var enhanceTransactionByTxIdThrowableError: Error?
+    var enhanceTransactionByTxIdCallsCount = 0
+    var enhanceTransactionByTxIdCalled: Bool {
+        return enhanceTransactionByTxIdCallsCount > 0
     }
-    var enhanceTransactionByIdReceivedId: String?
-    var enhanceTransactionByIdClosure: ((String) async throws -> Void)?
+    var enhanceTransactionByTxIdReceivedTxId: TxId?
+    var enhanceTransactionByTxIdClosure: ((TxId) async throws -> Void)?
 
-    func enhanceTransactionBy(id: String) async throws {
-        if let error = enhanceTransactionByIdThrowableError {
+    func enhanceTransactionBy(txId: TxId) async throws {
+        if let error = enhanceTransactionByTxIdThrowableError {
             throw error
         }
-        enhanceTransactionByIdCallsCount += 1
-        enhanceTransactionByIdReceivedId = id
-        try await enhanceTransactionByIdClosure!(id)
+        enhanceTransactionByTxIdCallsCount += 1
+        enhanceTransactionByTxIdReceivedTxId = txId
+        try await enhanceTransactionByTxIdClosure!(txId)
     }
 
 }
