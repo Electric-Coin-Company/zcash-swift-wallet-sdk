@@ -151,14 +151,14 @@ public class SDKSynchronizer: Synchronizer {
         ) {
             return .seedRequired
         }
-        
+
         await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
         await latestBlocksDataProvider.updateScannedData()
-        
+
         await updateStatus(.disconnected, updateExternalStatus: false)
 
         await resolveWitnessesFix()
-        
+
         return .success
     }
 
@@ -237,17 +237,11 @@ public class SDKSynchronizer: Synchronizer {
     
     private func resolveWitnessesFix() async {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let lastVersionCall = UserDefaults.standard.string(forKey: Constants.fixWitnessesLastVersionCall)
         
-        guard let lastVersionCall = UserDefaults.standard.object(forKey: Constants.fixWitnessesLastVersionCall) as? String else {
-            UserDefaults.standard.set(appVersion, forKey: Constants.fixWitnessesLastVersionCall)
-            await initializer.rustBackend.fixWitnesses()
-            return
-        }
+        guard lastVersionCall == nil || lastVersionCall! < appVersion else { return }
         
-        guard lastVersionCall < appVersion else {
-            return
-        }
-
+        UserDefaults.standard.set(appVersion, forKey: Constants.fixWitnessesLastVersionCall)
         await initializer.rustBackend.fixWitnesses()
     }
 
