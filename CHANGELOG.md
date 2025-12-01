@@ -13,6 +13,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SDKSynchronizer.estimateTimestamp(for height: Blockheight)`: Get an estimated timestamp for a given block height.
 
+## Fixed
+- The Sapling parameter files download logic replaces the files atomically rather than moving them into the final destination. This prevents errors caused by partially downloaded files.
+
 # 2.4.0 - 2025-11-10
 
 ## Added
