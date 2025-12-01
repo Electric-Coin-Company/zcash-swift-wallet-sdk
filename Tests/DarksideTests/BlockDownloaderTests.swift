@@ -10,7 +10,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class BlockDownloaderTests: XCTestCase {
+class BlockDownloaderTests: ZcashTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
 
@@ -21,10 +21,14 @@ class BlockDownloaderTests: XCTestCase {
     var storage: CompactBlockRepository!
     var network = DarksideWalletDNetwork()
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
+
+        mockContainer.mock(type: CheckpointSource.self, isSingleton: true) { _ in
+            return DarksideMainnetCheckpointSource()
+        }
+        
         testTempDirectory = Environment.uniqueTestTempDirectory
 
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
