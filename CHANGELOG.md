@@ -18,6 +18,24 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 - The Sapling parameter files download logic replaces the files atomically rather than moving them into the final destination. This prevents errors caused by partially downloaded files.
 
+## Checkpoints
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3130000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/3155000.json
+````
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3680000.json
+...
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/3710000.json
+````
+
 # 2.4.0 - 2025-11-10
 
 ## Added
