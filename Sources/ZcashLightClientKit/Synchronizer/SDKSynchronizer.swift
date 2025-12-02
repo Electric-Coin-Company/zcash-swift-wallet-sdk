@@ -1004,7 +1004,10 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {
-        guard await sdkFlags.torEnabled else {
+        let torEnabled = await sdkFlags.torEnabled
+        let exchangeRateEnabled = await sdkFlags.exchangeRateEnabled
+        
+        guard torEnabled || exchangeRateEnabled else {
             throw ZcashError.torNotEnabled
         }
         

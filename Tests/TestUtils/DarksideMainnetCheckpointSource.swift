@@ -9,6 +9,7 @@ import Foundation
 @testable import ZcashLightClientKit
 
 struct DarksideMainnetCheckpointSource: CheckpointSource {
+    // swiftlint:disable line_length
     private let treeState = Checkpoint(
         height: 663150,
         hash: "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc",
@@ -31,5 +32,13 @@ struct DarksideMainnetCheckpointSource: CheckpointSource {
 
     func birthday(for height: BlockHeight) -> Checkpoint {
         treeState
+    }
+    
+    func estimateBirthdayHeight(for date: Date) -> ZcashLightClientKit.BlockHeight {
+        663150
+    }
+    
+    func estimateTimestamp(for height: ZcashLightClientKit.BlockHeight) -> TimeInterval? {
+        1576821833
     }
 }
