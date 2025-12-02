@@ -151,14 +151,14 @@ public class SDKSynchronizer: Synchronizer {
         ) {
             return .seedRequired
         }
-        
+
         await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
         await latestBlocksDataProvider.updateScannedData()
-        
+
         await updateStatus(.disconnected, updateExternalStatus: false)
 
         await resolveWitnessesFix()
-        
+
         return .success
     }
 
@@ -173,11 +173,13 @@ public class SDKSynchronizer: Synchronizer {
             logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
             await exchangeRateTor?.wake()
             await httpTor?.wake()
+            await sdkFlags.sdkStarted()
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
+            await sdkFlags.sdkStarted()
             let walletSummary = try? await initializer.rustBackend.getWalletSummary()
             let recoveryProgress = walletSummary?.recoveryProgress
             
@@ -235,17 +237,11 @@ public class SDKSynchronizer: Synchronizer {
     
     private func resolveWitnessesFix() async {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let lastVersionCall = UserDefaults.standard.string(forKey: Constants.fixWitnessesLastVersionCall)
         
-        guard let lastVersionCall = UserDefaults.standard.object(forKey: Constants.fixWitnessesLastVersionCall) as? String else {
-            UserDefaults.standard.set(appVersion, forKey: Constants.fixWitnessesLastVersionCall)
-            await initializer.rustBackend.fixWitnesses()
-            return
-        }
+        guard lastVersionCall == nil || lastVersionCall! < appVersion else { return }
         
-        guard lastVersionCall < appVersion else {
-            return
-        }
-
+        UserDefaults.standard.set(appVersion, forKey: Constants.fixWitnessesLastVersionCall)
         await initializer.rustBackend.fixWitnesses()
     }
 
@@ -1008,7 +1004,10 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func httpRequestOverTor(for request: URLRequest, retryLimit: UInt8 = 3) async throws -> (data: Data, response: HTTPURLResponse) {
-        guard await sdkFlags.torEnabled else {
+        let torEnabled = await sdkFlags.torEnabled
+        let exchangeRateEnabled = await sdkFlags.exchangeRateEnabled
+        
+        guard torEnabled || exchangeRateEnabled else {
             throw ZcashError.torNotEnabled
         }
         
@@ -1069,10 +1068,10 @@ public class SDKSynchronizer: Synchronizer {
             mode: await sdkFlags.ifTor(.uniqueTor)
         )
     }
-    
+
     public func enhanceTransactionBy(txId: TxId) async throws -> Void {
         let txIdData = txId.id.data
-        
+
         let response = try await initializer.blockDownloaderService.fetchTransaction(
             txId: txIdData,
             mode: await sdkFlags.ifTor(ServiceMode.txIdGroup(prefix: "fetch", txId: txIdData))
