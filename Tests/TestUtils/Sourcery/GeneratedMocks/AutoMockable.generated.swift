@@ -2466,6 +2466,25 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - enhanceTransactionBy
+
+    var enhanceTransactionByTxIdThrowableError: Error?
+    var enhanceTransactionByTxIdCallsCount = 0
+    var enhanceTransactionByTxIdCalled: Bool {
+        return enhanceTransactionByTxIdCallsCount > 0
+    }
+    var enhanceTransactionByTxIdReceivedTxId: TxId?
+    var enhanceTransactionByTxIdClosure: ((TxId) async throws -> Void)?
+
+    func enhanceTransactionBy(txId: TxId) async throws {
+        if let error = enhanceTransactionByTxIdThrowableError {
+            throw error
+        }
+        enhanceTransactionByTxIdCallsCount += 1
+        enhanceTransactionByTxIdReceivedTxId = txId
+        try await enhanceTransactionByTxIdClosure!(txId)
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
