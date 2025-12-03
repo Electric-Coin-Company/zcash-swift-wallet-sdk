@@ -6,6 +6,8 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+# 2.4.1 - 2025-12-03
+
 ## Added
 - Custom SQL functions to `Synchronizer.debugDatabase`:
   - `txid(Blob) -> String`: converts a transaction ID from its byte form to a user-facing string.
