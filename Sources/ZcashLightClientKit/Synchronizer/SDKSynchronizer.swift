@@ -1086,6 +1086,10 @@ public class SDKSynchronizer: Synchronizer {
             )
         }
     }
+    
+    public func deleteAccount(_ accountUUID: AccountUUID) async throws {
+        try await initializer.rustBackend.deleteAccount(accountUUID)
+    }
 
     // MARK: Server switch
 

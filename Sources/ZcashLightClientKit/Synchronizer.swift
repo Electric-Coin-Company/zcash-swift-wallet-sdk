@@ -520,6 +520,12 @@ public protocol Synchronizer: AnyObject {
     ///
     /// - Throws an error lwd related (fetching the transaction) or decryption related.
     func enhanceTransactionBy(txId: TxId) async throws -> Void
+    
+    /// Deletes the specified account, and all transactions that exclusively involve it, from the wallet database.
+    /// - Parameter accountUUID: The account which is required to be deleted.
+    ///
+    /// - Throws rustDeleteAccount as a common indicator of the operation failure
+    func deleteAccount(_ accountUUID: AccountUUID) async throws -> Void
 }
 
 public enum SyncStatus: Equatable {

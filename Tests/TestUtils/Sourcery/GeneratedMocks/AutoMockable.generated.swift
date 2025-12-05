@@ -2485,6 +2485,25 @@ class SynchronizerMock: Synchronizer {
         try await enhanceTransactionByTxIdClosure!(txId)
     }
 
+    // MARK: - deleteAccount
+
+    var deleteAccountThrowableError: Error?
+    var deleteAccountCallsCount = 0
+    var deleteAccountCalled: Bool {
+        return deleteAccountCallsCount > 0
+    }
+    var deleteAccountReceivedAccountUUID: AccountUUID?
+    var deleteAccountClosure: ((AccountUUID) async throws -> Void)?
+
+    func deleteAccount(_ accountUUID: AccountUUID) async throws {
+        if let error = deleteAccountThrowableError {
+            throw error
+        }
+        deleteAccountCallsCount += 1
+        deleteAccountReceivedAccountUUID = accountUUID
+        try await deleteAccountClosure!(accountUUID)
+    }
+
 }
 class TransactionRepositoryMock: TransactionRepository {
 
@@ -3898,6 +3917,25 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         } else {
             return getSingleUseTransparentAddressAccountUUIDReturnValue
         }
+    }
+
+    // MARK: - deleteAccount
+
+    var deleteAccountThrowableError: Error?
+    var deleteAccountCallsCount = 0
+    var deleteAccountCalled: Bool {
+        return deleteAccountCallsCount > 0
+    }
+    var deleteAccountReceivedAccountUUID: AccountUUID?
+    var deleteAccountClosure: ((AccountUUID) async throws -> Void)?
+
+    func deleteAccount(_ accountUUID: AccountUUID) async throws {
+        if let error = deleteAccountThrowableError {
+            throw error
+        }
+        deleteAccountCallsCount += 1
+        deleteAccountReceivedAccountUUID = accountUUID
+        try await deleteAccountClosure!(accountUUID)
     }
 
 }
