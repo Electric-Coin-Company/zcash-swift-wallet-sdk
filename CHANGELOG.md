@@ -6,6 +6,9 @@ and this library adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Unreleased
 
+## Added
+- `SDKSynchronizer.deleteAccount(AccountUUID)`: Deletes the specified account, and all transactions that exclusively involve it, from the wallet database.
+
 # 2.4.1 - 2025-12-03
 
 ## Added

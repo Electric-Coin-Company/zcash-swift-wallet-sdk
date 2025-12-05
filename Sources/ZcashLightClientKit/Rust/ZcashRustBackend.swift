@@ -1269,6 +1269,22 @@ struct ZcashRustBackend: ZcashRustBackendWelding {
             gapLimit: singleUseTaddrPtr.pointee.gap_limit
         )
     }
+    
+    @DBActor
+    func deleteAccount(_ accountUUID: AccountUUID) async throws {
+        let success = zcashlc_delete_account(
+            dbData.0,
+            dbData.1,
+            networkType.networkId,
+            accountUUID.id
+        )
+        
+        guard success else {
+            throw ZcashError.rustDeleteAccount(
+                lastErrorMessage(fallback: "`deleteAccount` failed with unknown error")
+            )
+        }
+    }
 }
 
 private extension ZcashRustBackend {
