@@ -676,8 +676,7 @@ fn reconcile_mined(ctx: &mut CallCtx) -> anyhow::Result<Option<MigrationState>> 
 
 /// Computes a fresh preview plan against the account's live balance and caches it under a fresh
 /// [`migration_plan_cache::PlanHandle`] (a later commit echoes the handle back and signs exactly
-/// this plan, not an independently re-randomized one). `immediate` records that the preview came
-/// through the immediate lane, so the commit rewrites the transfer schedule to "all due at once".
+/// this plan, not an independently re-randomized one).
 ///
 /// Returns the plan alongside the tip at plan time (the "now" reference the schedule encoders
 /// stamp into `FfiTransferProposal::anchor_height` and measure durations from) and the handle
@@ -687,16 +686,11 @@ fn reconcile_mined(ctx: &mut CallCtx) -> anyhow::Result<Option<MigrationState>> 
 /// dust floor) — the "ask rust whether anything remains" answer after a completed run.
 fn plan_and_cache(
     ctx: &mut CallCtx,
-    immediate: bool,
 ) -> anyhow::Result<Option<(MigrationPlan, BlockHeight, migration_plan_cache::PlanHandle)>> {
     match compute_plan(ctx)? {
         Some((plan, reference_height)) => {
-            let handle = migration_plan_cache::set(
-                ctx.db_path.clone(),
-                ctx.account_bytes,
-                plan.clone(),
-                immediate,
-            );
+            let handle =
+                migration_plan_cache::set(ctx.db_path.clone(), ctx.account_bytes, plan.clone());
             Ok(Some((plan, reference_height, handle)))
         }
         None => Ok(None),
@@ -1049,9 +1043,7 @@ fn encode_schedule_from_state(
 /// key and checks it against the account's before building anything, so a foreign key is refused
 /// as [`engine::CommitError::WrongSpendAuthority`] rather than silently signing nothing. A
 /// terminal stored run (a completed or cancelled previous migration) is REPLACED — that is the
-/// sequential-runs path. When the cached preview came through the immediate lane, the committed
-/// transfers' scheduled heights are rewritten to the commit tip (everything due at once;
-/// preparation mining order still gates transfers via their dependencies).
+/// sequential-runs path.
 fn commit_or_resume(
     ctx: &mut CallCtx,
     sk: Option<&SpendingKey>,
@@ -3239,7 +3231,7 @@ pub unsafe extern "C" fn zcashlc_migration_prepare_note_split(
 ) -> *mut FfiNoteSplitProposal {
     let res = catch_panic(|| {
         let mut ctx = unsafe { open(db_data, db_data_len, account_uuid_bytes, network_id)? };
-        let (values, fee, proposal_handle) = match plan_and_cache(&mut ctx, false)? {
+        let (values, fee, proposal_handle) = match plan_and_cache(&mut ctx)? {
             Some((plan, _, handle)) => {
                 let split = plan.denominations();
                 let values: Vec<i64> = split
@@ -3559,7 +3551,7 @@ pub unsafe extern "C" fn zcashlc_migration_propose_transfers(
 ) -> *mut FfiMigrationSchedule {
     let res = catch_panic(|| {
         let mut ctx = unsafe { open(db_data, db_data_len, account_uuid_bytes, network_id)? };
-        match plan_and_cache(&mut ctx, false)? {
+        match plan_and_cache(&mut ctx)? {
             Some((plan, reference_height, handle)) => {
                 encode_schedule_from_plan(&plan, reference_height, handle)
             }
@@ -3993,7 +3985,7 @@ pub unsafe extern "C" fn zcashlc_migration_restart_step(
                 .map(|_outcome| ())
                 .map_err(|e| anyhow!("cancelling the migration failed: {e}"))?;
         }
-        match plan_and_cache(&mut ctx, false)? {
+        match plan_and_cache(&mut ctx)? {
             Some((plan, reference_height, handle)) => {
                 encode_schedule_from_plan(&plan, reference_height, handle)
             }
@@ -5623,7 +5615,7 @@ mod tests {
         }
         .expect("the fixture context opens");
 
-        let (plan, _reference_height, _handle) = plan_and_cache(&mut ctx, false)
+        let (plan, _reference_height, _handle) = plan_and_cache(&mut ctx)
             .expect("planning must succeed")
             .expect("the funded account has a real migration plan");
 
@@ -6107,7 +6099,7 @@ mod tests {
         }
         .expect("the fixture context opens");
 
-        let (plan, _reference_height, handle) = plan_and_cache(&mut ctx, false)
+        let (plan, _reference_height, handle) = plan_and_cache(&mut ctx)
             .expect("planning must succeed")
             .expect("the funded account has a real migration plan");
         assert_ne!(handle, 0, "a real cached plan must mint a non-zero handle");
@@ -6180,10 +6172,10 @@ mod tests {
         }
         .expect("the fixture context opens");
 
-        let (_plan1, _ref1, handle1) = plan_and_cache(&mut ctx, false)
+        let (_plan1, _ref1, handle1) = plan_and_cache(&mut ctx)
             .expect("the first planning call must succeed")
             .expect("the funded account has a real migration plan");
-        let (_plan2, _ref2, handle2) = plan_and_cache(&mut ctx, false)
+        let (_plan2, _ref2, handle2) = plan_and_cache(&mut ctx)
             .expect("the second planning call must succeed")
             .expect("the funded account still has a real migration plan (nothing was spent)");
         assert_ne!(
@@ -6242,7 +6234,7 @@ mod tests {
         }
         .expect("the fixture context opens");
 
-        let (plan, _reference_height, handle) = plan_and_cache(&mut ctx, false)
+        let (plan, _reference_height, handle) = plan_and_cache(&mut ctx)
             .expect("planning must succeed")
             .expect("the funded account has a real migration plan");
         assert_ne!(handle, 0, "a real cached plan must mint a non-zero handle");
@@ -6371,7 +6363,7 @@ mod tests {
         }
         .expect("the fixture context opens");
 
-        let (_plan, _reference_height, handle) = plan_and_cache(&mut ctx, false)
+        let (_plan, _reference_height, handle) = plan_and_cache(&mut ctx)
             .expect("planning must succeed")
             .expect("the funded account has a real migration plan");
 
@@ -6600,7 +6592,7 @@ mod tests {
             )
         }
         .expect("the fixture context opens");
-        let (_plan, _reference_height, handle) = plan_and_cache(&mut ctx, false)
+        let (_plan, _reference_height, handle) = plan_and_cache(&mut ctx)
             .expect("planning must succeed")
             .expect("the funded account has a real migration plan");
 
